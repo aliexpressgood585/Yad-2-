@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import type { Session } from "next-auth";
-import { ZodError, type ZodSchema } from "zod";
+import { ZodError, type ZodSchema, type z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { rateLimit, type RateLimitKey } from "@/lib/rate-limit";
@@ -92,7 +92,10 @@ export async function enforceRateLimit(
 }
 
 /** קורא ומאמת גוף בקשה מול סכמת Zod. */
-export async function parseBody<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
+export async function parseBody<S extends ZodSchema>(
+  req: Request,
+  schema: S,
+): Promise<z.infer<S>> {
   let raw: unknown;
   try {
     raw = await req.json();
@@ -103,7 +106,7 @@ export async function parseBody<T>(req: Request, schema: ZodSchema<T>): Promise<
 }
 
 /** קורא ומאמת פרמטרי query מול סכמת Zod. */
-export function parseQuery<T>(url: string, schema: ZodSchema<T>): T {
+export function parseQuery<S extends ZodSchema>(url: string, schema: S): z.infer<S> {
   const params = new URL(url).searchParams;
   const obj: Record<string, string | string[]> = {};
   for (const key of new Set(params.keys())) {
