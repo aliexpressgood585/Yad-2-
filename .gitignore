@@ -21,5 +21,6 @@ next-env.d.ts
 !/public/uploads/.gitkeep
 !/public/uploads/demo/
 
-# עמוד תצוגה מקדימה שנוצר מצילומי מסך (1.7MB, לא חלק מהאפליקציה)
+# עמודים שנוצרו לצורך סקירה, לא חלק מהאפליקציה
 /preview.html
+/deploy-guide.html
