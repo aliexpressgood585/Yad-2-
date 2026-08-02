@@ -1,0 +1,417 @@
+import { Prisma, prisma } from "@/lib/db";
+import { expandSynonyms, normalizeHebrew, tokenizeQuery } from "@/lib/listing-text";
+
+/** מילים קצרות שאין טעם לחפש לבדן — הן מופיעות כמעט בכל מודעה. */
+const NOISE = new Set(["של", "עם", "ללא", "או", "גם", "יש", "לא", "על", "אל"]);
+
+/**
+ * בונה שתי שאילתות tsquery מאותו חיפוש:
+ * - `all` דורשת את כל המילים (התאמה מדויקת, מקבלת ניקוד גבוה)
+ * - `any` מסתפקת במילה אחת, מרחיבה במילים נרדפות ומאפשרת התאמת
+ *   תחילית (`:*`) — כך ששאילתה מרובת מילים לא תחזיר אפס תוצאות
+ *   רק כי מילה אחת חסרה, וחיפוש "טויוט" ימצא גם "טויוטה".
+ */
+function buildTsQueries(q: string): { all: string; any: string } | null {
+  const terms = tokenizeQuery(q).filter((t) => !NOISE.has(t));
+  if (!terms.length) return null;
+
+  const prefix = (t: string) => (t.length >= 3 ? `${t}:*` : t);
+
+  // מספרים קצרים ("3" בתוך "דירה 3 חדרים") רועשים מדי כמילת OR עצמאית,
+  // אך נשארים בדרישת ה-AND שמדרגת התאמות מדויקות.
+  const anyTerms = expandSynonyms(
+    terms.filter((t) => !(/^\d{1,3}$/.test(t))),
+  );
+
+  return {
+    all: terms.map(prefix).join(" & "),
+    any: (anyTerms.length ? anyTerms : terms).map(prefix).join(" | "),
+  };
+}
+
+export type SortMode =
+  | "relevance"
+  | "date"
+  | "price_asc"
+  | "price_desc"
+  | "distance"
+  | "views";
+
+/** פילטר על שדה דינמי אחד, לאחר שהמפתח תורגם למזהי Attribute. */
+export type AttributeFilter =
+  | { attributeIds: string[]; kind: "values"; values: string[] }
+  | { attributeIds: string[]; kind: "range"; min?: number; max?: number }
+  | { attributeIds: string[]; kind: "bool"; value: boolean };
+
+export type SearchQuery = {
+  q?: string;
+  categoryIds?: string[];
+  cities?: string[];
+  priceMin?: number;
+  priceMax?: number;
+  /** מיקום המשתמש — נדרש למיון וסינון לפי מרחק */
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
+  attributes?: AttributeFilter[];
+  sellerId?: string;
+  promotedOnly?: boolean;
+  withImages?: boolean;
+  excludeIds?: string[];
+  sort?: SortMode;
+  page?: number;
+  perPage?: number;
+};
+
+export type SearchResult = {
+  ids: string[];
+  total: number;
+  page: number;
+  perPage: number;
+  hasMore: boolean;
+  /** מרחק בק"מ לכל מודעה — קיים רק כשנמסר מיקום */
+  distances?: Map<string, number>;
+};
+
+const EARTH_KM = 6371;
+
+/** ביטוי SQL למרחק Haversine בין המשתמש למודעה. */
+function distanceSql(lat: number, lng: number): Prisma.Sql {
+  return Prisma.sql`(
+    ${EARTH_KM} * 2 * asin(sqrt(
+      power(sin(radians(l."displayLat" - ${lat}) / 2), 2) +
+      cos(radians(${lat})) * cos(radians(l."displayLat")) *
+      power(sin(radians(l."displayLng" - ${lng}) / 2), 2)
+    ))
+  )`;
+}
+
+/** בונה את תנאי ה-WHERE המשותפים לשאילתת התוצאות ולשאילתת הספירה. */
+function buildWhere(query: SearchQuery): Prisma.Sql {
+  const conditions: Prisma.Sql[] = [
+    Prisma.sql`l."status" = 'ACTIVE'`,
+    Prisma.sql`l."deletedAt" IS NULL`,
+  ];
+
+  const q = query.q ? normalizeHebrew(query.q) : "";
+  const ts = q.length >= 2 ? buildTsQueries(q) : null;
+  if (ts) {
+    // התאמת מילים (FTS, לפחות מילה אחת) או התאמה מקורבת (trigram)
+    // שסופגת שגיאות כתיב בעברית
+    conditions.push(Prisma.sql`(
+      to_tsvector('simple', l."searchText") @@ to_tsquery('simple', ${ts.any})
+      OR ${q} <% l."searchText"
+    )`);
+  }
+
+  if (query.categoryIds?.length) {
+    conditions.push(Prisma.sql`l."categoryId" IN (${Prisma.join(query.categoryIds)})`);
+  }
+  if (query.cities?.length) {
+    conditions.push(Prisma.sql`l."city" IN (${Prisma.join(query.cities)})`);
+  }
+  if (query.priceMin !== undefined) {
+    conditions.push(Prisma.sql`l."price" >= ${query.priceMin}`);
+  }
+  if (query.priceMax !== undefined) {
+    conditions.push(Prisma.sql`l."price" <= ${query.priceMax}`);
+  }
+  if (query.sellerId) {
+    conditions.push(Prisma.sql`l."userId" = ${query.sellerId}`);
+  }
+  if (query.promotedOnly) {
+    conditions.push(Prisma.sql`l."isPromoted" = true AND l."promotedUntil" > now()`);
+  }
+  if (query.withImages) {
+    conditions.push(
+      Prisma.sql`EXISTS (SELECT 1 FROM "ListingImage" i WHERE i."listingId" = l.id)`,
+    );
+  }
+  if (query.excludeIds?.length) {
+    conditions.push(Prisma.sql`l.id NOT IN (${Prisma.join(query.excludeIds)})`);
+  }
+
+  if (
+    query.lat !== undefined &&
+    query.lng !== undefined &&
+    query.radiusKm !== undefined
+  ) {
+    conditions.push(Prisma.sql`l."displayLat" IS NOT NULL`);
+    conditions.push(
+      Prisma.sql`${distanceSql(query.lat, query.lng)} <= ${query.radiusKm}`,
+    );
+  }
+
+  for (const filter of query.attributes ?? []) {
+    if (!filter.attributeIds.length) continue;
+    const attrIn = Prisma.sql`la."attributeId" IN (${Prisma.join(filter.attributeIds)})`;
+
+    if (filter.kind === "values") {
+      if (!filter.values.length) continue;
+      conditions.push(Prisma.sql`EXISTS (
+        SELECT 1 FROM "ListingAttribute" la
+        WHERE la."listingId" = l.id AND ${attrIn}
+          AND la."valueText" IN (${Prisma.join(filter.values)})
+      )`);
+    } else if (filter.kind === "range") {
+      const bounds: Prisma.Sql[] = [];
+      if (filter.min !== undefined) bounds.push(Prisma.sql`la."valueNumber" >= ${filter.min}`);
+      if (filter.max !== undefined) bounds.push(Prisma.sql`la."valueNumber" <= ${filter.max}`);
+      if (!bounds.length) continue;
+      conditions.push(Prisma.sql`EXISTS (
+        SELECT 1 FROM "ListingAttribute" la
+        WHERE la."listingId" = l.id AND ${attrIn}
+          AND ${Prisma.join(bounds, " AND ")}
+      )`);
+    } else {
+      conditions.push(Prisma.sql`EXISTS (
+        SELECT 1 FROM "ListingAttribute" la
+        WHERE la."listingId" = l.id AND ${attrIn}
+          AND la."valueBool" = ${filter.value}
+      )`);
+    }
+  }
+
+  return Prisma.join(conditions, " AND ");
+}
+
+/** ORDER BY לפי מצב המיון שנבחר. */
+function buildOrder(query: SearchQuery, hasQuery: boolean): Prisma.Sql {
+  const sort = query.sort ?? (hasQuery ? "relevance" : "date");
+  // מודעות מקודמות עולות לראש רק במיונים שאינם מיון מפורש לפי מחיר/מרחק
+  const promoted = Prisma.sql`(l."isPromoted" AND l."promotedUntil" > now()) DESC`;
+  const recency = Prisma.sql`COALESCE(l."bumpedAt", l."publishedAt", l."createdAt") DESC`;
+
+  switch (sort) {
+    case "price_asc":
+      return Prisma.sql`ORDER BY l."price" ASC NULLS LAST, ${recency}`;
+    case "price_desc":
+      return Prisma.sql`ORDER BY l."price" DESC NULLS LAST, ${recency}`;
+    case "views":
+      return Prisma.sql`ORDER BY ${promoted}, l."viewCount" DESC, ${recency}`;
+    case "distance":
+      return query.lat !== undefined && query.lng !== undefined
+        ? Prisma.sql`ORDER BY distance ASC NULLS LAST, ${recency}`
+        : Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+    case "relevance":
+      // בחיפוש לפי רלוונטיות הקידום הוא בונוס ולא עקיפה: מודעה מקודמת
+      // שאינה רלוונטית לא תעלה מעל תוצאה מתאימה באמת.
+      return hasQuery
+        ? Prisma.sql`ORDER BY rank DESC, ${recency}`
+        : Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+    default:
+      return Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+  }
+}
+
+/**
+ * מריצה את שאילתת החיפוש ומחזירה מזהי מודעות בסדר הנכון.
+ * ההידרציה עצמה נעשית ב-`fetchListingCards` כדי לשמור על שאילתה אחת קלה.
+ */
+export async function searchListings(query: SearchQuery): Promise<SearchResult> {
+  const page = Math.max(1, query.page ?? 1);
+  const perPage = Math.min(48, Math.max(1, query.perPage ?? 24));
+  const offset = (page - 1) * perPage;
+
+  const q = query.q ? normalizeHebrew(query.q) : "";
+  const ts = q.length >= 2 ? buildTsQueries(q) : null;
+  const hasQuery = ts !== null;
+  const where = buildWhere(query);
+
+  // התאמה לכל המילים שוקלת פי 4 מהתאמה חלקית, ודמיון trigram מוסיף
+  // ניקוד קטן כדי לדרג נכון גם התאמות עם שגיאות כתיב.
+  // דירוג: התאמה לכל המילים שוקלת הכי הרבה, אחריה התאמה בכותרת,
+  // ואז התאמה חלקית ודמיון trigram שסופג שגיאות כתיב.
+  const rankSelect = ts
+    ? Prisma.sql`, (
+        ts_rank(to_tsvector('simple', l."searchText"), to_tsquery('simple', ${ts.all})) * 8
+        + (CASE WHEN to_tsvector('simple', l."title") @@ to_tsquery('simple', ${ts.all})
+                THEN 1.0 ELSE 0 END)
+        + (CASE WHEN to_tsvector('simple', l."title") @@ to_tsquery('simple', ${ts.any})
+                THEN 0.4 ELSE 0 END)
+        + ts_rank(to_tsvector('simple', l."searchText"), to_tsquery('simple', ${ts.any}))
+        + word_similarity(${q}, l."searchText") * 0.5
+        + (CASE WHEN l."isPromoted" AND l."promotedUntil" > now() THEN 0.15 ELSE 0 END)
+      ) AS rank`
+    : Prisma.empty;
+
+  const hasGeo = query.lat !== undefined && query.lng !== undefined;
+  const distSelect = hasGeo
+    ? Prisma.sql`, ${distanceSql(query.lat!, query.lng!)} AS distance`
+    : Prisma.empty;
+
+  const orderBy = buildOrder(query, hasQuery);
+
+  const [rows, countRows] = await Promise.all([
+    prisma.$queryRaw<{ id: string; distance: number | null }[]>(Prisma.sql`
+      SELECT l.id${rankSelect}${distSelect}
+      FROM "Listing" l
+      WHERE ${where}
+      ${orderBy}
+      LIMIT ${perPage} OFFSET ${offset}
+    `),
+    prisma.$queryRaw<{ count: bigint }[]>(Prisma.sql`
+      SELECT COUNT(*)::bigint AS count FROM "Listing" l WHERE ${where}
+    `),
+  ]);
+
+  const total = Number(countRows[0]?.count ?? 0);
+  const ids = rows.map((r) => r.id);
+
+  return {
+    ids,
+    total,
+    page,
+    perPage,
+    hasMore: offset + ids.length < total,
+    distances: hasGeo
+      ? new Map(rows.map((r) => [r.id, Number(r.distance ?? 0)]))
+      : undefined,
+  };
+}
+
+/** ספירת תוצאות לכל תת-קטגוריה — משמשת למספרים שליד הפילטרים. */
+export async function countByCategory(
+  query: SearchQuery,
+): Promise<Map<string, number>> {
+  const scoped: SearchQuery = { ...query, categoryIds: query.categoryIds };
+  const where = buildWhere(scoped);
+  const rows = await prisma.$queryRaw<{ categoryId: string; count: bigint }[]>(
+    Prisma.sql`
+      SELECT l."categoryId" AS "categoryId", COUNT(*)::bigint AS count
+      FROM "Listing" l WHERE ${where}
+      GROUP BY l."categoryId"
+    `,
+  );
+  return new Map(rows.map((r) => [r.categoryId, Number(r.count)]));
+}
+
+/** ספירת תוצאות לכל עיר — למיון רשימת הערים בפילטר לפי כמות. */
+export async function countByCity(
+  query: SearchQuery,
+  limit = 30,
+): Promise<{ city: string; count: number }[]> {
+  const where = buildWhere({ ...query, cities: undefined });
+  const rows = await prisma.$queryRaw<{ city: string; count: bigint }[]>(Prisma.sql`
+    SELECT l."city" AS city, COUNT(*)::bigint AS count
+    FROM "Listing" l WHERE ${where}
+    GROUP BY l."city" ORDER BY count DESC LIMIT ${limit}
+  `);
+  return rows.map((r) => ({ city: r.city, count: Number(r.count) }));
+}
+
+/** טווח המחירים בתוצאות — לקביעת גבולות מחוון המחיר. */
+export async function priceBounds(
+  query: SearchQuery,
+): Promise<{ min: number; max: number; median: number } | null> {
+  const where = buildWhere({ ...query, priceMin: undefined, priceMax: undefined });
+  const rows = await prisma.$queryRaw<
+    { min: number | null; max: number | null; median: number | null }[]
+  >(Prisma.sql`
+    SELECT
+      MIN(l."price")::int AS min,
+      MAX(l."price")::int AS max,
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY l."price")::int AS median
+    FROM "Listing" l
+    WHERE ${where} AND l."price" IS NOT NULL AND l."price" > 0
+  `);
+  const row = rows[0];
+  if (!row || row.min === null || row.max === null) return null;
+  return { min: row.min, max: row.max, median: row.median ?? row.min };
+}
+
+/* -------------------------------------------------------------------------- */
+/* הידרציה                                                                     */
+/* -------------------------------------------------------------------------- */
+
+const CARD_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  price: true,
+  currency: true,
+  city: true,
+  neighborhood: true,
+  isPromoted: true,
+  promotedUntil: true,
+  publishedAt: true,
+  bumpedAt: true,
+  createdAt: true,
+  viewCount: true,
+  favoriteCount: true,
+  status: true,
+  displayLat: true,
+  displayLng: true,
+  categoryId: true,
+  userId: true,
+  category: { select: { id: true, slug: true, name: true, priceLabel: true } },
+  user: {
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      businessName: true,
+      businessSlug: true,
+      ratingAvg: true,
+      ratingCount: true,
+      verifiedAt: true,
+    },
+  },
+  images: {
+    orderBy: { order: "asc" as const },
+    take: 3,
+    select: { url: true, thumbUrl: true, blurhash: true, width: true, height: true },
+  },
+  attributes: {
+    where: { attribute: { isHighlight: true } },
+    select: {
+      valueText: true,
+      valueNumber: true,
+      valueBool: true,
+      attribute: { select: { key: true, label: true, unit: true, type: true, order: true } },
+      value: { select: { label: true } },
+    },
+  },
+} satisfies Prisma.ListingSelect;
+
+export type ListingCard = Prisma.ListingGetPayload<{ select: typeof CARD_SELECT }> & {
+  distanceKm?: number;
+};
+
+/** טוען מודעות לפי מזהים, ומחזיר אותן בסדר שנמסר. */
+export async function fetchListingCards(
+  ids: string[],
+  distances?: Map<string, number>,
+): Promise<ListingCard[]> {
+  if (!ids.length) return [];
+  const rows = await prisma.listing.findMany({
+    where: { id: { in: ids } },
+    select: CARD_SELECT,
+  });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids
+    .map((id) => {
+      const row = byId.get(id);
+      if (!row) return null;
+      const d = distances?.get(id);
+      return d === undefined ? row : { ...row, distanceKm: d };
+    })
+    .filter((r): r is ListingCard => r !== null);
+}
+
+/** חיפוש + הידרציה בקריאה אחת. */
+export async function searchListingCards(query: SearchQuery) {
+  const result = await searchListings(query);
+  const items = await fetchListingCards(result.ids, result.distances);
+  return { ...result, items };
+}
+
+/** מציג ערך של שדה דינמי כטקסט קריא. */
+export function formatAttributeValue(attr: ListingCard["attributes"][number]): string {
+  if (attr.valueBool !== null) return attr.valueBool ? "יש" : "אין";
+  if (attr.valueNumber !== null) {
+    const n = attr.valueNumber.toLocaleString("he-IL");
+    return attr.attribute.unit ? `${n} ${attr.attribute.unit}` : n;
+  }
+  return attr.value?.label ?? attr.valueText ?? "";
+}

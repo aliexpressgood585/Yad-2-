@@ -70,3 +70,48 @@ export function tokenizeQuery(q: string): string[] {
     .filter((t) => t.length >= 2)
     .slice(0, 10);
 }
+
+/**
+ * מילים נרדפות בין עברית לאנגלית. משתמשים מחפשים "אייפון" אבל
+ * המודעה כתובה "iPhone" — ההרחבה גורמת לשתי הצורות למצוא זו את זו.
+ */
+const SYNONYMS: Record<string, string[]> = {
+  אייפון: ["iphone", "apple"],
+  איפון: ["iphone", "apple"],
+  אפל: ["apple", "iphone", "macbook"],
+  סמסונג: ["samsung", "galaxy"],
+  שיאומי: ["xiaomi", "redmi"],
+  מקבוק: ["macbook", "apple"],
+  לנובו: ["lenovo"],
+  אסוס: ["asus"],
+  פלייסטיישן: ["playstation", "ps5", "sony"],
+  אקסבוקס: ["xbox"],
+  נינטנדו: ["nintendo", "switch"],
+  בוש: ["bosch"],
+  אלקטרה: ["electra"],
+  טסלה: ["tesla"],
+  יונדאי: ["hyundai"],
+  מאזדה: ["mazda"],
+  איקאה: ["ikea"],
+  נייק: ["nike"],
+  אדידס: ["adidas"],
+  זארה: ["zara"],
+  לפטופ: ["מחשב", "נייד", "laptop"],
+  מקרר: ["מקרר"],
+  רכב: ["רכב", "מכונית", "אוטו"],
+  אוטו: ["רכב", "מכונית"],
+  מכונית: ["רכב", "אוטו"],
+  דירה: ["דירת", "דירות"],
+  דירת: ["דירה", "דירות"],
+  בית: ["בית", "בתים"],
+  אופניים: ["אופניים", "אופני"],
+};
+
+/** מרחיב מילות חיפוש במילים נרדפות (ללא כפילויות). */
+export function expandSynonyms(terms: string[]): string[] {
+  const out = new Set(terms);
+  for (const t of terms) {
+    for (const syn of SYNONYMS[t] ?? []) out.add(syn);
+  }
+  return [...out].slice(0, 20);
+}
