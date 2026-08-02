@@ -190,11 +190,24 @@ vercel env add NEXT_PUBLIC_SITE_URL production
 vercel --prod
 ```
 
-### 3. מיגרציות וזריעה בפרודקשן
+**המיגרציות רצות אוטומטית בפריסה.** Vercel מריץ את הסקריפט `vercel-build`
+אם הוא קיים, ואצלנו הוא מוגדר כ:
+
+```
+prisma generate && prisma migrate deploy && next build
+```
+
+זה חשוב כי הבנייה עצמה ניגשת לבסיס הנתונים (דף הבית מרונדר מראש וקורא
+מודעות). בלי הרצת המיגרציות לפני הבנייה, הפריסה הראשונה נכשלת עם
+`Can't reach database server` או `table does not exist`.
+
+> שימו לב: בפריסת preview המיגרציות ירוצו על בסיס הנתונים שאליו מצביעים
+> משתני הסביבה של אותה סביבה. אם רוצים להפריד, הגדירו ב-Vercel
+> `DATABASE_URL`/`DIRECT_URL` שונים ל-Preview ול-Production.
+
+### 3. זריעת נתוני דמו (אופציונלי)
 
 ```bash
-DATABASE_URL="$DIRECT_URL" npx prisma migrate deploy
-# אופציונלי, רק לסביבת הדגמה:
 DATABASE_URL="$DIRECT_URL" npm run db:seed
 ```
 
