@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 import { ListingCard, ListingCardSkeleton } from "@/components/listing/listing-card";
 import { densityClass } from "@/components/listing/listing-grid";
-import type { Density } from "@/stores/density";
+import { useDensity } from "@/stores/density";
 import { Button } from "@/components/ui/button";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { formatCount } from "@/lib/format";
@@ -18,7 +18,6 @@ type Props = {
   total: number;
   /** slug של הקטגוריה לצמצום החיפוש (אם קיים) */
   categorySlug?: string;
-  density?: Density;
 };
 
 /**
@@ -30,8 +29,10 @@ export function InfiniteListings({
   initialHasMore,
   total,
   categorySlug,
-  density = "grid",
 }: Props) {
+  // הצפיפות נקראת כאן ולא מגיעה כ-prop: היא העדפה של המשתמש ולא של
+  // המסך, והרכיב הזה ממילא רץ בלקוח.
+  const { density } = useDensity();
   const searchParams = useSearchParams();
   const key = searchParams.toString();
 

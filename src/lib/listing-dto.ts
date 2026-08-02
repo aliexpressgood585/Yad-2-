@@ -45,6 +45,29 @@ export type ListingCardDto = {
   };
 };
 
+/**
+ * שלושת שדות המפרט שיוצגו בכרטיס.
+ *
+ * שדה שערכו כבר מופיע בכותרת מסונן החוצה. הכותרת "BYD דולפין 2007"
+ * הופכת את "BYD · דולפין · 2007" לשורה שאומרת בדיוק אותו דבר פעמיים —
+ * וזה בזבוז של שלוש המשבצות היחידות שיש לכרטיס. במקומן נכנסים יד,
+ * קילומטראז' ותיבת הילוכים, שהם מה שבאמת מבדיל בין שתי מודעות.
+ *
+ * אם הסינון מותיר פחות משני שדות, מוותרים עליו וחוזרים לרשימה המלאה:
+ * שורת מפרט קצרה מדי גרועה יותר משורה שחוזרת על הכותרת.
+ */
+function pickHighlights(listing: ListingCard): AttributeEntry[] {
+  const all = [...listing.attributes]
+    .sort((a, b) => a.attribute.order - b.attribute.order)
+    .map(formatAttributeEntry)
+    .filter((e): e is AttributeEntry => e !== null);
+
+  const title = listing.title;
+  const fresh = all.filter((e) => !title.includes(e.value));
+
+  return (fresh.length >= 2 ? fresh : all).slice(0, 3);
+}
+
 export function toListingCardDto(
   listing: ListingCard,
   priceMeter: PriceMeter | null = null,
@@ -71,11 +94,7 @@ export function toListingCardDto(
     priceMeter,
     blurDataURL: image?.blurhash ? blurDataUrl(image.blurhash) : null,
     imageCount: listing.images.length,
-    highlights: [...listing.attributes]
-      .sort((a, b) => a.attribute.order - b.attribute.order)
-      .map(formatAttributeEntry)
-      .filter((e): e is AttributeEntry => e !== null)
-      .slice(0, 3),
+    highlights: pickHighlights(listing),
     distanceKm: listing.distanceKm,
     seller: {
       id: listing.user.id,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { ActiveFilterChips } from "@/components/filters/active-filter-chips";
+import { DensityToggle } from "@/components/browse/density-toggle";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { MobileFilterSheet } from "@/components/filters/mobile-filter-sheet";
 import { SortSelect } from "@/components/filters/sort-select";
@@ -163,6 +164,7 @@ async function BrowseResults({
                 initialTotal={result.total}
               />
               <SortSelect hasQuery={hasQuery} />
+              <DensityToggle className="hidden sm:flex" />
             </div>
           </div>
 
