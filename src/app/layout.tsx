@@ -5,6 +5,8 @@ import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
+import { CompareBar } from "@/components/compare/compare-bar";
+import { PwaRegister } from "@/components/pwa-register";
 import { SITE } from "@/lib/site";
 
 import "./globals.css";
@@ -81,7 +83,9 @@ export default function RootLayout({
             </main>
             <SiteFooter />
           </div>
+          <CompareBar />
           <MobileTabBar />
+          <PwaRegister />
         </Providers>
       </body>
     </html>
