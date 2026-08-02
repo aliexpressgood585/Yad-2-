@@ -25,7 +25,8 @@ import { blurDataUrl } from "@/lib/blur";
 import { computeTrust } from "@/lib/trust";
 import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
-import { formatPrice, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
+import { formatPrice, formatCount, formatAttributeValue } from "@/lib/format";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -129,14 +130,7 @@ export default async function ListingPage({ params }: Props) {
       key: a.attribute.key,
       label: a.attribute.label,
       order: a.attribute.order,
-      value:
-        a.valueBool !== null
-          ? a.valueBool
-            ? "יש"
-            : "אין"
-          : a.valueNumber !== null
-            ? `${a.valueNumber.toLocaleString("he-IL")}${a.attribute.unit ? ` ${a.attribute.unit}` : ""}`
-            : (a.value?.label ?? a.valueText ?? ""),
+      value: formatAttributeValue(a),
     }))
     .filter((s) => s.value)
     .sort((a, b) => a.order - b.order);
@@ -283,7 +277,7 @@ export default async function ListingPage({ params }: Props) {
               </li>
               <li className="flex items-center gap-1">
                 <Eye className="size-4" aria-hidden />
-                <span className="num">{listing.viewCount.toLocaleString("he-IL")}</span> צפיות
+                <span className="num">{formatCount(listing.viewCount)}</span> צפיות
               </li>
               {listing.favoriteCount > 0 ? (
                 <li className="flex items-center gap-1">

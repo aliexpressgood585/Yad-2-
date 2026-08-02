@@ -1,5 +1,6 @@
 import { blurDataUrl } from "@/lib/blur";
-import { formatAttributeValue, type ListingCard } from "@/lib/listings";
+import { formatAttributeEntry, type AttributeEntry } from "@/lib/format";
+import type { ListingCard } from "@/lib/listings";
 
 /**
  * ייצוג מודעה לכרטיס — מבנה שטוח וניתן לסריאליזציה.
@@ -21,7 +22,12 @@ export type ListingCardDto = {
   imageUrl: string | null;
   blurDataURL: string | null;
   imageCount: number;
-  highlights: string[];
+  /**
+   * שלושת השדות הדינמיים הבולטים, כל אחד עם התווית שלו.
+   * מבנה ולא מחרוזת, כדי שהכרטיס יוכל לאכוף שערך מספרי עירום
+   * לא מוצג בלי תווית (ראה DESIGN.md).
+   */
+  highlights: AttributeEntry[];
   distanceKm?: number;
   seller: {
     id: string;
@@ -57,9 +63,9 @@ export function toListingCardDto(listing: ListingCard): ListingCardDto {
     imageCount: listing.images.length,
     highlights: [...listing.attributes]
       .sort((a, b) => a.attribute.order - b.attribute.order)
-      .slice(0, 3)
-      .map(formatAttributeValue)
-      .filter(Boolean),
+      .map(formatAttributeEntry)
+      .filter((e): e is AttributeEntry => e !== null)
+      .slice(0, 3),
     distanceKm: listing.distanceKm,
     seller: {
       id: listing.user.id,

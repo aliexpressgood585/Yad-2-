@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useFilterParams } from "@/hooks/use-filter-params";
 import type { ResolvedAttribute } from "@/lib/categories";
 import { ATTR_PREFIX, countActiveFilters } from "@/lib/filters";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 type Chip = { label: string; onRemove: () => void };
 

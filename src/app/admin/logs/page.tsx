@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "יומן פעולות",
@@ -52,7 +53,7 @@ export default async function AdminLogsPage({
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         כל פעולה משמעותית באתר נרשמת כאן —{" "}
-        <span className="num font-medium text-foreground">{total.toLocaleString("he-IL")}</span>{" "}
+        <span className="num font-medium text-foreground">{formatCount(total)}</span>{" "}
         רשומות.
       </p>
 

@@ -6,7 +6,7 @@ import { Eye, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { PublishFormState } from "@/components/publish/publish-wizard";
 import type { CategoryNode, ResolvedAttribute } from "@/lib/categories";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 /** שלב 4: תצוגה מקדימה — כך המודעה תיראה לגולשים. */
 export function StepPreview({

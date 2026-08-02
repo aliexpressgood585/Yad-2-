@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { CategoryNode } from "@/lib/categories";
+import { formatCount } from "@/lib/format";
 
 const POPULAR = [
   "דירה 3 חדרים",
@@ -53,7 +54,7 @@ export function HomeHero({
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-pretty text-muted-foreground">
             <span className="num font-semibold text-foreground">
-              {totalListings.toLocaleString("he-IL")}
+              {formatCount(totalListings)}
             </span>{" "}
             מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — בלי באנרים מהבהבים ובלי לחכות לטעינה.
           </p>

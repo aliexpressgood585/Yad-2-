@@ -8,7 +8,8 @@ import { FavoriteButton } from "@/components/listing/favorite-button";
 import { CompareToggle } from "@/components/listing/compare-toggle";
 import { Badge } from "@/components/ui/badge";
 import type { ListingCardDto } from "@/lib/listing-dto";
-import { cn, formatPrice, timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
+import { formatPrice, formatCount, formatDistance } from "@/lib/format";
 
 type Props = {
   listing: ListingCardDto;
@@ -112,9 +113,12 @@ export function ListingCard({
         {listing.highlights.length ? (
           <ul className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
             {listing.highlights.map((h, i) => (
-              <li key={`${h}-${i}`} className="flex items-center gap-1.5">
+              <li key={h.key} className="flex items-center gap-1.5">
                 {i > 0 ? <span aria-hidden>·</span> : null}
-                <span className="num">{h}</span>
+                {/* כלל גלובלי: ערך שלא מסביר את עצמו לא מוצג בלי תווית.
+                    "₪120,000" לבד הוא מספר עירום; "מחזור חודשי ₪120,000" הוא מידע. */}
+                {h.selfEvident ? null : <span>{h.label}</span>}
+                <span className="num">{h.value}</span>
               </li>
             ))}
           </ul>
@@ -127,12 +131,7 @@ export function ListingCard({
             {listing.neighborhood ? `, ${listing.neighborhood}` : ""}
           </span>
           {listing.distanceKm !== undefined ? (
-            <span className="num shrink-0">
-              ·{" "}
-              {listing.distanceKm < 1
-                ? `${Math.round(listing.distanceKm * 1000)} מ'`
-                : `${listing.distanceKm.toFixed(1)} ק"מ`}
-            </span>
+            <span className="num shrink-0">· {formatDistance(listing.distanceKm)}</span>
           ) : null}
           <span aria-hidden>·</span>
           <time dateTime={listing.date} className="shrink-0">
@@ -161,7 +160,7 @@ export function ListingCard({
           {listing.viewCount > 50 ? (
             <span className="ms-auto flex items-center gap-0.5">
               <Eye className="size-3" aria-hidden />
-              <span className="num">{listing.viewCount.toLocaleString("he-IL")}</span>
+              <span className="num">{formatCount(listing.viewCount)}</span>
             </span>
           ) : null}
         </div>

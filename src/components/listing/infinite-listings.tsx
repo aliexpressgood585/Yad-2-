@@ -9,6 +9,7 @@ import { GRID_CLASS } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 type Props = {
   /** העמוד הראשון, מרונדר בשרת */
@@ -129,7 +130,7 @@ export function InfiniteListings({
           </Button>
         ) : items.length ? (
           <p>
-            הוצגו כל <span className="num">{total.toLocaleString("he-IL")}</span> התוצאות
+            הוצגו כל <span className="num">{formatCount(total)}</span> התוצאות
           </p>
         ) : null}
       </div>

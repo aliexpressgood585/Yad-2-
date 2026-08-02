@@ -12,7 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/db";
-import { formatCompact, timeAgo, truncate } from "@/lib/utils";
+import { timeAgo, truncate } from "@/lib/utils";
+import { formatCompact } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "פאנל ניהול",

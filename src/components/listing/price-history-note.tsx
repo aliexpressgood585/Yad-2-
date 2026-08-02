@@ -2,7 +2,8 @@
 
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { formatPrice, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 type Entry = { price: number; createdAt: string };
 

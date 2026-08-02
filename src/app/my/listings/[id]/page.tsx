@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatPrice, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
+import { formatPrice, formatCount } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "סטטיסטיקות מודעה",
@@ -99,7 +100,7 @@ export default async function ListingStatsPage({
                   {c.label}
                 </span>
                 <p className="num mt-1 font-heading text-2xl font-extrabold">
-                  {c.value.toLocaleString("he-IL")}
+                  {formatCount(c.value)}
                 </p>
               </CardContent>
             </Card>

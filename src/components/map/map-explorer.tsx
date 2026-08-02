@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ISRAEL_BOUNDS, mapStyle } from "@/lib/map-style";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, formatCount } from "@/lib/format";
 
 type Category = { id: string; slug: string; name: string };
 
@@ -288,7 +288,7 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
             ) : (
               <>
                 <span className="num font-medium text-foreground">
-                  {count.toLocaleString("he-IL")}
+                  {formatCount(count)}
                 </span>{" "}
                 מודעות על המפה
               </>

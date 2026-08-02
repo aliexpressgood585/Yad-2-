@@ -5,7 +5,7 @@ import { BarChart3, Rocket, Store, Users } from "lucide-react";
 import { ContentPage } from "@/components/content-page";
 import { Button } from "@/components/ui/button";
 import { BOOST_PACKAGES, SITE } from "@/lib/site";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "פתרונות לעסקים",

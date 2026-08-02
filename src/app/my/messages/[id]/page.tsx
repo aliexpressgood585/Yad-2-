@@ -8,7 +8,8 @@ import { ChatThread } from "@/components/my/chat-thread";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatPrice, truncate } from "@/lib/utils";
+import { truncate } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "שיחה",

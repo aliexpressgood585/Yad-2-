@@ -7,7 +7,8 @@ import { EmptyResults } from "@/components/listing/listing-grid";
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { cn, formatPrice, timeAgo, truncate } from "@/lib/utils";
+import { cn, timeAgo, truncate } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "ההודעות שלי",

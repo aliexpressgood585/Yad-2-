@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/db";
 import { formatPhone, timeAgo } from "@/lib/utils";
 import type { Prisma } from "@prisma/client";
+import { formatCount } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "ניהול משתמשים",
@@ -72,7 +73,7 @@ export default async function AdminUsersPage({
       />
 
       <p className="text-sm text-muted-foreground">
-        <span className="num font-medium text-foreground">{total.toLocaleString("he-IL")}</span>{" "}
+        <span className="num font-medium text-foreground">{formatCount(total)}</span>{" "}
         משתמשים
       </p>
 

@@ -17,7 +17,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/misc";
 import { Label } from "@/components/ui/label";
 import { BOOST_PACKAGES } from "@/lib/site";
-import { formatPrice, truncate } from "@/lib/utils";
+import { truncate } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 /**
  * בחירת חבילת קידום למודעה.

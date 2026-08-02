@@ -22,6 +22,7 @@ import { countByCategory, countByCity, priceBounds, searchListingCards } from "@
 import { PAGE_SIZE } from "@/lib/site";
 import { Breadcrumbs } from "@/components/browse/breadcrumbs";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { formatCount } from "@/lib/format";
 
 type Props = {
   category?: CategoryNode | null;
@@ -146,7 +147,7 @@ async function BrowseResults({
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
               <span className="num font-semibold text-foreground">
-                {result.total.toLocaleString("he-IL")}
+                {formatCount(result.total)}
               </span>{" "}
               מודעות
             </p>

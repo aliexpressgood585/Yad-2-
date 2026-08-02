@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
 import { SITE, absoluteUrl } from "@/lib/site";
 import { decodeSlugParam } from "@/lib/slug";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export const alt = "מודעה בלוח";
 export const size = { width: 1200, height: 630 };

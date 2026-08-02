@@ -406,12 +406,4 @@ export async function searchListingCards(query: SearchQuery) {
   return { ...result, items };
 }
 
-/** מציג ערך של שדה דינמי כטקסט קריא. */
-export function formatAttributeValue(attr: ListingCard["attributes"][number]): string {
-  if (attr.valueBool !== null) return attr.valueBool ? "יש" : "אין";
-  if (attr.valueNumber !== null) {
-    const n = attr.valueNumber.toLocaleString("he-IL");
-    return attr.attribute.unit ? `${n} ${attr.attribute.unit}` : n;
-  }
-  return attr.value?.label ?? attr.valueText ?? "";
-}
+// פורמט ערכי השדות הדינמיים נמצא ב-@/lib/format.

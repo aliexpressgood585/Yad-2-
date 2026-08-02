@@ -6,23 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** מעצב מחיר בשקלים. `null` → "לא צוין מחיר". */
-export function formatPrice(
-  price: number | null | undefined,
-  opts: { currency?: string; free?: string; empty?: string } = {},
-): string {
-  const { currency = "ILS", free = "חינם", empty = "לא צוין מחיר" } = opts;
-  if (price === null || price === undefined) return empty;
-  if (price === 0) return free;
-  const symbol = currency === "ILS" ? "₪" : currency === "USD" ? "$" : "€";
-  return `${symbol}${price.toLocaleString("he-IL")}`;
-}
-
-/** מקצר מספרים גדולים: 1200 → "1.2K". */
-export function formatCompact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+// פורמט מספרים חי כולו ב-@/lib/format — ראה את ההסבר בראש הקובץ.
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyResults } from "@/components/listing/listing-grid";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCompare } from "@/stores/compare";
-import { cn, formatPrice, timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
+import { formatPrice, formatCount } from "@/lib/format";
 
 type CompareListing = {
   id: string;
@@ -200,7 +201,7 @@ export function CompareTable() {
             <Row label="צפיות">
               {data.map((l) => (
                 <Cell key={l.id}>
-                  <span className="num">{l.viewCount.toLocaleString("he-IL")}</span>
+                  <span className="num">{formatCount(l.viewCount)}</span>
                 </Cell>
               ))}
             </Row>

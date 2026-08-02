@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import type { ResolvedAttribute } from "@/lib/categories";
 import { CITY_NAMES, neighborhoodsOf } from "@/lib/cities";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 import type { PublishFormState } from "@/components/publish/publish-wizard";
 
 type Props = {

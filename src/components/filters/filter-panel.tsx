@@ -13,7 +13,8 @@ import { DistanceFilter } from "@/components/filters/distance-filter";
 import { useFilterParams } from "@/hooks/use-filter-params";
 import type { ResolvedAttribute } from "@/lib/categories";
 import { countActiveFilters } from "@/lib/filters";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export type CityFacet = { city: string; count: number };
 

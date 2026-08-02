@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { ResolvedAttribute } from "@/lib/categories";
 import { countActiveFilters, parseFilters } from "@/lib/filters";
+import { formatCount } from "@/lib/format";
 
 type Props = {
   attributes: ResolvedAttribute[];
@@ -104,7 +105,7 @@ export function MobileFilterSheet({
         </div>
 
         <Button size="lg" className="w-full" onClick={() => setOpen(false)} loading={counting}>
-          הצגת <span className="num">{total.toLocaleString("he-IL")}</span> תוצאות
+          הצגת <span className="num">{formatCount(total)}</span> תוצאות
         </Button>
       </SheetContent>
     </Dialog>

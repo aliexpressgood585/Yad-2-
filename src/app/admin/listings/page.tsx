@@ -6,7 +6,8 @@ import { ModerationActions } from "@/components/admin/moderation-actions";
 import { AdminSearchForm } from "@/components/admin/admin-search-form";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/db";
-import { formatPrice, timeAgo, truncate } from "@/lib/utils";
+import { timeAgo, truncate } from "@/lib/utils";
+import { formatPrice, formatCount } from "@/lib/format";
 import type { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = {
@@ -76,7 +77,7 @@ export default async function AdminListingsPage({
       />
 
       <p className="text-sm text-muted-foreground">
-        <span className="num font-medium text-foreground">{total.toLocaleString("he-IL")}</span>{" "}
+        <span className="num font-medium text-foreground">{formatCount(total)}</span>{" "}
         מודעות
       </p>
 

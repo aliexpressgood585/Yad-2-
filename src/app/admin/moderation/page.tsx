@@ -7,7 +7,8 @@ import { ModerationActions } from "@/components/admin/moderation-actions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
-import { formatPrice, timeAgo, truncate } from "@/lib/utils";
+import { timeAgo, truncate } from "@/lib/utils";
+import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "תור מודרציה",

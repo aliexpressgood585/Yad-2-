@@ -29,7 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatPrice, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
+import { formatPrice, formatCount } from "@/lib/format";
 
 export type MyListing = {
   id: string;
@@ -155,7 +156,7 @@ export function MyListingRow({ listing }: { listing: MyListing }) {
             {stats.map((s) => (
               <li key={s.label} className="flex items-center gap-1">
                 <s.icon className="size-3.5" aria-hidden />
-                <span className="num">{s.value.toLocaleString("he-IL")}</span>
+                <span className="num">{formatCount(s.value)}</span>
                 <span className="sr-only">{s.label}</span>
               </li>
             ))}

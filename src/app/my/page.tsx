@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyResults } from "@/components/listing/listing-grid";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { cn, formatCompact } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCompact } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "המודעות שלי",

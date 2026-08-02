@@ -1,5 +1,6 @@
 import { handleError, ok } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { formatAttributeValue } from "@/lib/format";
 import { MAX_COMPARE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -56,14 +57,7 @@ export async function GET(req: Request) {
         const specs: Record<string, { label: string; value: string; order: number }> = {};
         for (const a of l.attributes) {
           const key = a.attribute.key;
-          const value =
-            a.valueBool !== null
-              ? a.valueBool
-                ? "יש"
-                : "אין"
-              : a.valueNumber !== null
-                ? `${a.valueNumber.toLocaleString("he-IL")}${a.attribute.unit ? ` ${a.attribute.unit}` : ""}`
-                : (a.value?.label ?? a.valueText ?? "");
+          const value = formatAttributeValue(a);
           if (!value) continue;
 
           specs[key] = specs[key]
