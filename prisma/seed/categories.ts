@@ -65,7 +65,7 @@ const CAR_MODELS: Record<string, string[]> = {
   "סיאט": ["איביזה", "לאון", "אטקה", "ארונה"],
   "MG": ["ZS", "HS", "5", "4"],
   "BYD": ["אטו 3", "דולפין", "סיל"],
-  "שירי": ["טיגו 4", "טיגו 8", "אריזו 5"],
+  "צ'רי": ["טיגו 4", "טיגו 8", "אריזו 5"],
 };
 
 const carModelOptions: AttrOption[] = Object.entries(CAR_MODELS).flatMap(
@@ -316,27 +316,54 @@ const VEHICLES: CatDef = {
 /* נדל"ן                                                                       */
 /* -------------------------------------------------------------------------- */
 
-const REALESTATE_ATTRS: AttrDef[] = [
-  {
+/**
+ * סוג הנכס מוגדר בכל תת-קטגוריה בנפרד ולא ב-REALESTATE_ATTRS המשותף.
+ *
+ * כשהוא ישב על ההורה, כל תת-קטגוריה ירשה את אותה רשימה — ומודעת שותפים
+ * קיבלה "בית פרטי" או "משק חקלאי", ערכים ששייכים למכירה בלבד. הפרדה
+ * לפי עלה גם מונעת כפילות מול commercialType ומול zoning, שכבר מתארים
+ * את סוג הנכס בקטגוריות שלהם.
+ */
+function propertyTypeAttr(options: string[]): AttrDef {
+  return {
     key: "propertyType",
     label: "סוג הנכס",
     type: "SELECT",
     required: true,
     highlight: true,
-    options: [
-      "דירה",
-      "דירת גן",
-      "פנטהאוז",
-      "דופלקס",
-      "בית פרטי",
-      "דו משפחתי",
-      "קוטג'",
-      "מרתף",
-      "יחידת דיור",
-      "מגרש",
-      "משק חקלאי",
-    ],
-  },
+    options,
+  };
+}
+
+const RESIDENTIAL_SALE_TYPES = [
+  "דירה",
+  "דירת גן",
+  "פנטהאוז",
+  "דופלקס",
+  "בית פרטי",
+  "דו משפחתי",
+  "קוטג'",
+  "יחידת דיור",
+  "משק חקלאי",
+];
+
+const RESIDENTIAL_RENT_TYPES = [
+  "דירה",
+  "דירת גן",
+  "פנטהאוז",
+  "דופלקס",
+  "בית פרטי",
+  "קוטג'",
+  "יחידת דיור",
+  "מרתף",
+];
+
+/** בשותפים משכירים חדר בתוך דירה — לא בית פרטי ולא משק חקלאי. */
+const ROOMMATE_TYPES = ["דירה", "דירת גן", "פנטהאוז", "דופלקס", "יחידת דיור"];
+
+const VACATION_TYPES = ["דירה", "וילה", "בקתה", "צימר", "בית פרטי", "לופט"];
+
+const REALESTATE_ATTRS: AttrDef[] = [
   {
     key: "rooms",
     label: "חדרים",
@@ -389,13 +416,19 @@ const REALESTATE: CatDef = {
   description: "דירות למכירה ולהשכרה, שותפים, נכסים מסחריים ומגרשים",
   attributes: REALESTATE_ATTRS,
   children: [
-    { slug: "apartments-sale", name: "דירות למכירה", icon: "Building2" },
+    {
+      slug: "apartments-sale",
+      name: "דירות למכירה",
+      icon: "Building2",
+      attributes: [propertyTypeAttr(RESIDENTIAL_SALE_TYPES)],
+    },
     {
       slug: "apartments-rent",
       name: "דירות להשכרה",
       icon: "Key",
       priceLabel: "שכר דירה חודשי",
       attributes: [
+        propertyTypeAttr(RESIDENTIAL_RENT_TYPES),
         { key: "houseCommittee", label: "ועד בית לחודש", type: "NUMBER", unit: "₪", min: 0, max: 3000, step: 10 },
         { key: "propertyTax", label: "ארנונה לחודשיים", type: "NUMBER", unit: "₪", min: 0, max: 10_000, step: 50 },
         { key: "petsAllowed", label: "מותר בעלי חיים", type: "BOOLEAN" },
@@ -408,6 +441,7 @@ const REALESTATE: CatDef = {
       icon: "Users",
       priceLabel: "מחיר לשותף",
       attributes: [
+        propertyTypeAttr(ROOMMATE_TYPES),
         { key: "currentRoommates", label: "שותפים בדירה", type: "NUMBER", min: 0, max: 10, step: 1, highlight: true },
         { key: "roommateGender", label: "מין השותף המבוקש", type: "SELECT", highlight: true, options: ["גברים", "נשים", "מעורב", "לא משנה"] },
         { key: "privateBathroom", label: "שירותים צמודים", type: "BOOLEAN" },
@@ -444,6 +478,7 @@ const REALESTATE: CatDef = {
       icon: "Palmtree",
       priceLabel: "מחיר ללילה",
       attributes: [
+        propertyTypeAttr(VACATION_TYPES),
         { key: "sleeps", label: "מספר אורחים", type: "NUMBER", highlight: true, min: 1, max: 30, step: 1 },
         { key: "pool", label: "בריכה", type: "BOOLEAN", highlight: true },
         { key: "jacuzzi", label: "ג'קוזי", type: "BOOLEAN" },
@@ -699,7 +734,9 @@ const BUSINESSES: CatDef = {
       options: ["מסעדנות ובתי קפה", "קמעונאות", "מספרה וטיפוח", "מכולת / סופר", "מוסך", "אונליין ואיקומרס", "שירותים", "ייצור", "חדר כושר", "קיוסק", "פרנצ'ייז"],
     },
     { key: "monthlyRevenue", label: "מחזור חודשי", type: "NUMBER", unit: "₪", highlight: true, min: 0, max: 5_000_000, step: 1000 },
-    { key: "monthlyProfit", label: "רווח חודשי", type: "NUMBER", unit: "₪", highlight: true, min: 0, max: 2_000_000, step: 500 },
+    // "רווח תפעולי" ולא "רווח חודשי": זה הרווח לפני מימון ומס, וזה המונח
+    // שקונה עסק מחפש. הקצב החודשי משתמע מ"מחזור חודשי" שלצידו.
+    { key: "monthlyProfit", label: "רווח תפעולי", type: "NUMBER", unit: "₪", highlight: true, min: 0, max: 2_000_000, step: 500 },
     { key: "yearsActive", label: "ותק בשנים", type: "NUMBER", min: 0, max: 100, step: 1 },
     { key: "employees", label: "מספר עובדים", type: "NUMBER", min: 0, max: 500, step: 1 },
     { key: "monthlyRent", label: "שכירות חודשית", type: "NUMBER", unit: "₪", min: 0, max: 200_000, step: 500 },
@@ -755,4 +792,10 @@ export const CATEGORY_TREE: CatDef[] = [
   SERVICES,
 ];
 
-export { CAR_MODELS };
+export {
+  CAR_MODELS,
+  RESIDENTIAL_SALE_TYPES,
+  RESIDENTIAL_RENT_TYPES,
+  ROOMMATE_TYPES,
+  VACATION_TYPES,
+};

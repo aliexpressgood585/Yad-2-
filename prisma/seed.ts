@@ -53,6 +53,54 @@ function demoImage(topic: string, index: number): DemoImage {
 const TOTAL_LISTINGS = 300;
 const TOTAL_USERS = 30;
 
+/**
+ * ענפי העסקים שמופיעים בלוח.
+ *
+ * `rootSlug` קושר את העסק לקטגוריית השורש שבה מותר לו לפרסם — סוחר רכב
+ * לא ימכור ספה. `names` מייצר שם מותאם לענף מתוך שם פרטי ושם משפחה.
+ */
+const BUSINESS_TRADES = [
+  {
+    rootSlug: "vehicles",
+    names: (first: string, last: string) => [
+      `${last} מוטורס`,
+      `סוכנות רכב ${last}`,
+      `${first} ${last} רכב`,
+    ],
+  },
+  {
+    rootSlug: "realestate",
+    names: (first: string, last: string) => [
+      `${last} נדל"ן`,
+      `תיווך ${last}`,
+      `${first} ${last} נכסים`,
+    ],
+  },
+  {
+    rootSlug: "second-hand",
+    names: (first: string, last: string) => [
+      `${last} ובניו`,
+      `בית המכירות ${last}`,
+      `${first} סחר`,
+    ],
+  },
+  {
+    rootSlug: "services",
+    names: (first: string, last: string) => [
+      `${last} שירותים`,
+      `${first} ${last} עבודות`,
+      `קבוצת ${last}`,
+    ],
+  },
+  {
+    rootSlug: "businesses",
+    names: (_first: string, last: string) => [
+      `${last} עסקים`,
+      `${last} השקעות`,
+    ],
+  },
+] as const;
+
 /** כמה מודעות לייצר בכל תת-קטגוריה. */
 const DISTRIBUTION: Record<string, number> = {
   "private-cars": 35,
@@ -214,7 +262,10 @@ function normalizeOptions(a: AttrDef) {
   );
 }
 
-async function seedUsers() {
+/** משתמש שנזרע, יחד עם הענף שבו מותר לו לפרסם (null = פרטי). */
+type SeedUser = { id: string; phone: string | null; name: string; businessRoot: string | null };
+
+async function seedUsers(): Promise<SeedUser[]> {
   console.log("👥 יוצר משתמשים…");
   const passwordHash = await bcrypt.hash("Password123!", 10);
   const rng = makeRng(7);
@@ -247,27 +298,25 @@ async function seedUsers() {
     },
   });
 
-  const users = [admin, demo];
+  const users: SeedUser[] = [
+    { id: admin.id, phone: admin.phone, name: admin.name, businessRoot: null },
+    { id: demo.id, phone: demo.phone, name: demo.name, businessRoot: null },
+  ];
 
   for (let i = 0; i < TOTAL_USERS - 2; i++) {
     const first = rng.pick(HEBREW_FIRST_NAMES);
     const last = rng.pick(HEBREW_LAST_NAMES);
     const isBusiness = rng.bool(0.2);
     const name = `${first} ${last}`;
-    const businessName = isBusiness
-      ? rng.pick([
-          `${last} מוטורס`,
-          `נדל"ן ${last}`,
-          `${last} ובניו`,
-          `סוכנות ${first}`,
-          `${last} טכנולוגיות`,
-        ])
-      : null;
+
+    // לעסק יש ענף אחד, והשם נגזר ממנו. בלי זה "לוי מוטורס" היה מוכר ספה:
+    // השם נבחר מרשימה מעורבת, והמודעות חולקו למשתמשים באקראי.
+    const trade = isBusiness ? rng.pick(BUSINESS_TRADES) : null;
+    const businessName = trade ? rng.pick(trade.names(first, last)) : null;
 
     const ratingCount = rng.int(0, 60);
-    users.push(
-      await prisma.user.create({
-        data: {
+    const created = await prisma.user.create({
+      data: {
           email: `user${i + 1}@example.com`,
           phone: `05${rng.int(0, 8)}${String(rng.int(1_000_000, 9_999_999))}`.slice(0, 10),
           name,
@@ -287,10 +336,16 @@ async function seedUsers() {
                 businessAbout: `${businessName} — עוסקים בתחום כבר ${rng.int(3, 25)} שנים. שירות אמין, מחירים הוגנים וליווי אישי מהפנייה הראשונה ועד סגירת העסקה.`,
                 businessCity: rng.pick(UNIQUE_CITIES).name,
               }
-            : {}),
-        },
-      }),
-    );
+          : {}),
+      },
+    });
+
+    users.push({
+      id: created.id,
+      phone: created.phone,
+      name: created.name,
+      businessRoot: trade?.rootSlug ?? null,
+    });
   }
 
   console.log(`   ✓ ${users.length} משתמשים`);
@@ -339,12 +394,29 @@ async function collectLeaves(
     });
 }
 
-async function seedListings(
-  users: { id: string; phone: string | null; name: string }[],
-  leaves: LeafInfo[],
-) {
+async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
   console.log("📋 יוצר מודעות…");
   const rng = makeRng(20260802);
+
+  // מוכרים פרטיים מפרסמים בכל מקום; עסק מפרסם רק בענף שלו.
+  const privateUsers = users.filter((u) => u.businessRoot === null);
+  const byRoot = new Map<string, SeedUser[]>();
+  for (const u of users) {
+    if (!u.businessRoot) continue;
+    const list = byRoot.get(u.businessRoot) ?? [];
+    list.push(u);
+    byRoot.set(u.businessRoot, list);
+  }
+
+  /**
+   * בוחר מפרסם למודעה. בערך שליש מהמודעות בענף שיש בו סוחרים מגיעות
+   * מסוחר — יחס שנראה נכון בלוח אמיתי בלי להטביע את המוכרים הפרטיים.
+   */
+  const pickOwner = (rootSlug: string): SeedUser => {
+    const dealers = byRoot.get(rootSlug);
+    if (dealers?.length && rng.bool(0.35)) return rng.pick(dealers);
+    return rng.pick(privateUsers);
+  };
   let created = 0;
   const listingIds: string[] = [];
 
@@ -355,7 +427,7 @@ async function seedListings(
       const city = rng.pick(UNIQUE_CITIES);
       const hoods = neighborhoodsOf(city.name);
       const neighborhood = hoods.length && rng.bool(0.6) ? rng.pick(hoods) : null;
-      const owner = rng.pick(users);
+      const owner = pickOwner(leaf.rootSlug);
 
       const gen = generateListing(rng, leaf.rootSlug, leaf.slug, city.name, city.region);
 

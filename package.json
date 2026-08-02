@@ -18,7 +18,8 @@
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
     "e2e": "node scripts/e2e-check.mjs",
-    "check:format": "tsx scripts/checks/format-check.ts"
+    "check:format": "tsx scripts/checks/format-check.ts",
+    "check:seed": "tsx scripts/checks/seed-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

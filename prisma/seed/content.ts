@@ -3,7 +3,13 @@
  * כל מחולל מקבל RNG דטרמיניסטי ומחזיר מודעה עם שדות דינמיים תואמים
  * לקטגוריה שלה — כדי שהפילטרים באתר יעבדו על נתונים אמיתיים.
  */
-import { CAR_MODELS } from "./categories";
+import {
+  CAR_MODELS,
+  RESIDENTIAL_SALE_TYPES,
+  RESIDENTIAL_RENT_TYPES,
+  ROOMMATE_TYPES,
+  VACATION_TYPES,
+} from "./categories";
 
 export type Rng = {
   int: (min: number, max: number) => number;
@@ -212,9 +218,22 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
   const isCommercial = sub === "commercial";
   const isLot = sub === "lots";
 
-  const propertyType = isLot
-    ? "מגרש"
-    : rng.pick(["דירה", "דירה", "דירה", "דירת גן", "פנטהאוז", "דופלקס", "בית פרטי", "קוטג'"]);
+  // סוג הנכס נבחר מרשימת האפשרויות של אותה תת-קטגוריה בדיוק, ולא מרשימה
+  // כללית — אחרת נוצרות מודעות שהערך שלהן לא קיים בפילטר של הקטגוריה.
+  const propertyTypePool = isLot
+    ? null
+    : isRoommate
+      ? ROOMMATE_TYPES
+      : isVacation
+        ? VACATION_TYPES
+        : isRent
+          ? RESIDENTIAL_RENT_TYPES
+          : RESIDENTIAL_SALE_TYPES;
+
+  // "דירה" מוטה כלפי מעלה כי זה הנכס הנפוץ בפועל
+  const propertyType = propertyTypePool
+    ? rng.pick([propertyTypePool[0]!, propertyTypePool[0]!, ...propertyTypePool])
+    : "מגרש";
 
   let price: number;
   if (isRent) price = Math.round((3200 + size * rng.int(28, 55)) / 50) * 50;
@@ -225,7 +244,8 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
   else price = Math.round((size * rng.int(18_000, 42_000)) / 10_000) * 10_000;
 
   const attrs = clean({
-    propertyType,
+    // commercial ו-lots מתארים את סוג הנכס דרך commercialType / zoning
+    propertyType: isCommercial || isLot ? undefined : propertyType,
     rooms: isLot ? undefined : rooms,
     size,
     floor: isLot ? undefined : floor,
