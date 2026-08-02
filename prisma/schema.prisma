@@ -327,6 +327,11 @@ model Listing {
   contentHash  String?
   fraudScore   Int    @default(0)
 
+  /// ערך ההשוואה של המודעה (שנת ייצור ברכב, מספר חדרים בנדל"ן).
+  /// מנורמל מהשדות הדינמיים כדי ש"מד המחיר" יוכל לאתר מודעות דומות
+  /// באינדקס אחד במקום ב-join אל טבלת השדות בכל שאילתה.
+  comparableBand Float?
+
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   images       ListingImage[]
@@ -347,6 +352,8 @@ model Listing {
   @@index([city, status])
   @@index([price])
   @@index([isPromoted, promotedUntil])
+  /// מד המחיר: אחוזון מחיר בתוך קטגוריה + טווח השוואה
+  @@index([categoryId, status, comparableBand, price])
   @@index([contentHash])
   @@index([expiresAt])
 }

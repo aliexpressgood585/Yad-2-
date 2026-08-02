@@ -88,7 +88,7 @@ export default async function HomePage() {
                 </Link>
               </Button>
             </div>
-            <ListingGrid listings={toListingCardDtos(promoted.items)} priorityCount={4} />
+            <ListingGrid listings={toListingCardDtos(promoted.items, promoted.meters)} priorityCount={4} />
           </section>
         ) : null}
 
@@ -111,7 +111,7 @@ export default async function HomePage() {
             </Button>
           </div>
           <Suspense fallback={<ListingGridSkeleton count={12} />}>
-            <ListingGrid listings={toListingCardDtos(latest.items)} priorityCount={0} />
+            <ListingGrid listings={toListingCardDtos(latest.items, latest.meters)} priorityCount={0} />
           </Suspense>
         </section>
 
@@ -123,7 +123,7 @@ export default async function HomePage() {
           <ul className="grid gap-5 sm:grid-cols-3">
             {ADVANTAGES.map((a) => (
               <li key={a.title} className="flex gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-background text-primary shadow-soft">
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-background text-primary shadow-lifted">
                   <a.icon className="size-5" aria-hidden />
                 </span>
                 <div>

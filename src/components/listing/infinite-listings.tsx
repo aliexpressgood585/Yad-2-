@@ -5,10 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { ListingCard, ListingCardSkeleton } from "@/components/listing/listing-card";
-import { GRID_CLASS } from "@/components/listing/listing-grid";
+import { densityClass } from "@/components/listing/listing-grid";
+import type { Density } from "@/stores/density";
 import { Button } from "@/components/ui/button";
 import type { ListingCardDto } from "@/lib/listing-dto";
-import { cn } from "@/lib/utils";
 import { formatCount } from "@/lib/format";
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
   total: number;
   /** slug של הקטגוריה לצמצום החיפוש (אם קיים) */
   categorySlug?: string;
-  layout?: "grid" | "row";
+  density?: Density;
 };
 
 /**
@@ -30,7 +30,7 @@ export function InfiniteListings({
   initialHasMore,
   total,
   categorySlug,
-  layout = "grid",
+  density = "grid",
 }: Props) {
   const searchParams = useSearchParams();
   const key = searchParams.toString();
@@ -95,13 +95,13 @@ export function InfiniteListings({
 
   return (
     <>
-      <div className={cn(layout === "grid" ? GRID_CLASS : "flex flex-col gap-3")}>
+      <div className={densityClass(density)}>
         {items.map((listing, i) => (
-          <ListingCard key={listing.id} listing={listing} layout={layout} priority={i < 4} />
+          <ListingCard key={listing.id} listing={listing} density={density} priority={i < 4} />
         ))}
         {loading
           ? Array.from({ length: 4 }, (_, i) => (
-              <ListingCardSkeleton key={`sk-${i}`} layout={layout} />
+              <ListingCardSkeleton key={`sk-${i}`} density={density} />
             ))
           : null}
       </div>

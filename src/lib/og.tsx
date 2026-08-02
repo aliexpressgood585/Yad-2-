@@ -1,24 +1,16 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { PALETTE } from "@/lib/palette";
 import { SITE } from "@/lib/site";
 
 /**
  * חלקים משותפים לתמונות השיתוף (`opengraph-image.tsx`).
- *
- * הצבעים כתובים כאן כערכים קשיחים ולא כטוקני CSS בכוונה: `next/og`
- * מרנדר ב-Satori, שלא מריץ CSS ולא מכיר `var(--…)`. זה המקום היחיד
- * באפליקציה שמותר לו לשכפל את ערכי הפלטה — ראה DESIGN.md.
+ * הצבעים מגיעים מ-@/lib/palette כי Satori לא מכיר טוקני CSS.
  */
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 export const OG_CONTENT_TYPE = "image/png";
 
-export const OG = {
-  ink: "#14171A",
-  paper: "#F7F5F0",
-  sign: "#005F3C",
-  stone: "#DDD8CE",
-  muted: "#5A5F66",
-} as const;
+export const OG = PALETTE;
 
 const shellStyle: CSSProperties = {
   width: "100%",

@@ -12,9 +12,29 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // כותרות — Heebo, גוף — Assistant
-        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
+        /*
+         * שלושה תפקידים, שלושה גופנים:
+         *   display — Frank Ruhl Libre, סריף עברי. כותרות מסך ומחיר ראשי בלבד.
+         *   sans    — Assistant. כל טקסט הממשק.
+         *   data    — Rubik עם tabular-nums. מחירים, ק"מ, מ"ר, שנה, טלפון.
+         */
+        heading: ["var(--font-display)", "Georgia", "serif"],
         sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        data: ["var(--font-data)", "var(--font-body)", "system-ui", "sans-serif"],
+      },
+
+      /*
+       * סקאלת טיפוגרפיה סגורה: 12 / 14 / 16 / 20 / 26 / 34 / 46.
+       * אין גדלים אחרים — `text-[15px]` בקוד הוא באג, לא בחירה.
+       */
+      fontSize: {
+        xs: ["0.75rem", { lineHeight: "1.1rem" }],
+        sm: ["0.875rem", { lineHeight: "1.25rem" }],
+        base: ["1rem", { lineHeight: "1.5rem" }],
+        lg: ["1.25rem", { lineHeight: "1.65rem" }],
+        xl: ["1.625rem", { lineHeight: "2rem" }],
+        "2xl": ["2.125rem", { lineHeight: "2.4rem" }],
+        "3xl": ["2.875rem", { lineHeight: "3.1rem" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -34,6 +54,10 @@ const config: Config = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -60,19 +84,37 @@ const config: Config = {
           foreground: "hsl(var(--popover-foreground))",
         },
       },
+      /* 10px כרטיסים, 8px כפתורים, 999px צ'יפים בלבד */
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 4px)",
-        sm: "calc(var(--radius) - 6px)",
-        xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 10px)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 2px)",
+        "2xl": "calc(var(--radius) + 6px)",
       },
+      /*
+       * צל אחד במערכת, ורק ב-hover. במנוחה משטח מופרד בגבול --stone.
+       * ערבוב של כמה עומקי צל הוא מה שגורם ללוחות מודעות להיראות רועשים.
+       */
       boxShadow: {
-        soft: "0 1px 2px hsl(var(--shadow-color) / 0.05), 0 1px 3px hsl(var(--shadow-color) / 0.06)",
-        card: "0 2px 8px hsl(var(--shadow-color) / 0.06), 0 1px 2px hsl(var(--shadow-color) / 0.04)",
-        lifted:
-          "0 8px 24px hsl(var(--shadow-color) / 0.10), 0 2px 6px hsl(var(--shadow-color) / 0.06)",
-        pop: "0 12px 40px hsl(var(--shadow-color) / 0.16)",
+        lifted: "0 1px 2px hsl(var(--shadow-color) / 0.06)",
+        /*
+         * החריג היחיד ל"צל אחד".
+         * תפריט, דיאלוג וטולטיפ מרחפים מעל התוכן בלי גבול שמפריד אותם
+         * ממנו; ב-0 1px 2px הם נראים כאילו נפלו לתוך הדף. הצל הזה מיועד
+         * אך ורק לשכבות פורטל — לא לכרטיס ולא למשטח בתוך הזרימה.
+         */
+        overlay: "0 8px 28px hsl(var(--shadow-color) / 0.16)",
+      },
+
+      /* תקציב התנועה: משך אחד, easing אחד. ראה DESIGN.md. */
+      transitionTimingFunction: {
+        DEFAULT: "cubic-bezier(.2,0,0,1)",
+        ui: "cubic-bezier(.2,0,0,1)",
+      },
+      transitionDuration: {
+        DEFAULT: "180ms",
+        ui: "180ms",
       },
       keyframes: {
         "accordion-down": {
@@ -92,12 +134,11 @@ const config: Config = {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.18s ease-out",
-        "accordion-up": "accordion-up 0.18s ease-out",
+        "accordion-down": "accordion-down 0.18s cubic-bezier(.2,0,0,1)",
+        "accordion-up": "accordion-up 0.18s cubic-bezier(.2,0,0,1)",
         shimmer: "shimmer 1.6s infinite",
-        "fade-up": "fade-up 0.18s ease-out both",
+        "fade-up": "fade-up 0.12s cubic-bezier(.2,0,0,1) both",
       },
-      transitionDuration: { DEFAULT: "160ms" },
     },
   },
   plugins: [animate],

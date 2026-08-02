@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Assistant, Heebo } from "next/font/google";
+import { Assistant, Frank_Ruhl_Libre, Rubik } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -13,18 +13,34 @@ import { SITE } from "@/lib/site";
 import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const heebo = Heebo({
+/*
+ * שלושה גופנים, שלושה תפקידים — ראה DESIGN.md.
+ *
+ * Frank Ruhl Libre הוא סריף עברי אמיתי ולא גרוטסק, וזה מה שנותן לדף
+ * אופי במקום להיראות כמו כל לוח אחר. בשימוש מצומצם: כותרות מסך והמחיר
+ * הראשי בדף מודעה, ולכן נטענים ממנו שני משקלים בלבד.
+ */
+const display = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "700", "800"],
-  variable: "--font-heading",
+  weight: ["500", "700"],
+  variable: "--font-display",
   display: "swap",
-  fallback: ["system-ui", "Arial"],
+  fallback: ["Georgia", "serif"],
 });
 
 const assistant = Assistant({
   subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
   variable: "--font-body",
+  display: "swap",
+  fallback: ["system-ui", "Arial"],
+});
+
+/* ספרות ברוחב קבוע, כדי שעמודת מחירים בגריד תתיישר לאורך השורות. */
+const data = Rubik({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-data",
   display: "swap",
   fallback: ["system-ui", "Arial"],
 });
@@ -57,8 +73,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfbf9" },
-    { media: "(prefers-color-scheme: dark)", color: "#141312" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#16181A" },
   ],
 };
 
@@ -70,7 +86,7 @@ export default function RootLayout({
       lang="he"
       dir="rtl"
       suppressHydrationWarning
-      className={`${heebo.variable} ${assistant.variable}`}
+      className={`${display.variable} ${assistant.variable} ${data.variable}`}
     >
       <body className="min-h-dvh font-sans">
         <SiteJsonLd />

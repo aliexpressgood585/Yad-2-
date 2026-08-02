@@ -81,6 +81,7 @@ export async function POST(req: Request) {
         { ...input, title, description },
         labels,
         existing.slug,
+        input.attributes,
       );
 
       const priceChanged =
@@ -162,7 +163,12 @@ export async function POST(req: Request) {
     }
 
     const slug = await uniqueSlug(title);
-    const derived = await deriveListingFields({ ...input, title, description }, labels, slug);
+    const derived = await deriveListingFields(
+      { ...input, title, description },
+      labels,
+      slug,
+      input.attributes,
+    );
     const now = new Date();
 
     const listing = await prisma.listing.create({

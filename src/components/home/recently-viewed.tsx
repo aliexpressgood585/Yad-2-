@@ -56,7 +56,7 @@ export function RecentlyViewed() {
         {items === null
           ? Array.from({ length: 4 }, (_, i) => <ListingCardSkeleton key={i} />)
           : items.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} showCompare={false} />
+              <ListingCard key={listing.id} listing={listing}  />
             ))}
       </div>
     </section>

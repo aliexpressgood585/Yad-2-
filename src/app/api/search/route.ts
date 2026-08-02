@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       total: result.total,
       page: result.page,
       hasMore: result.hasMore,
-      items: countOnly ? [] : toListingCardDtos(result.items),
+      items: countOnly ? [] : toListingCardDtos(result.items, result.meters),
     });
   } catch (err) {
     return handleError(err);

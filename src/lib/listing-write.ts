@@ -1,5 +1,6 @@
 import { Prisma, prisma } from "@/lib/db";
 import { getAttributesForCategory, getCategoryPath } from "@/lib/categories";
+import { comparableBandFor } from "@/lib/price-meter";
 import { buildSearchText, contentFingerprint } from "@/lib/listing-text";
 import { detectFraud, persistFraudFlags } from "@/lib/fraud";
 import { getCity } from "@/lib/cities";
@@ -93,6 +94,7 @@ export async function deriveListingFields(
   input: ListingInput,
   attributeLabels: string[],
   slug: string,
+  attributeValues: Record<string, unknown> = {},
 ) {
   const path = await getCategoryPath(input.categoryId);
   const city = getCity(input.city);
@@ -121,6 +123,7 @@ export async function deriveListingFields(
       price: input.price,
       categoryId: input.categoryId,
     }),
+    comparableBand: comparableBandFor(path[0]?.slug, attributeValues),
   };
 }
 

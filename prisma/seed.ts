@@ -20,6 +20,7 @@ import {
 } from "./seed/content";
 import { UNIQUE_CITIES, neighborhoodsOf } from "../src/lib/cities";
 import { buildSearchText, contentFingerprint } from "../src/lib/listing-text";
+import { comparableBandFor } from "../src/lib/price-meter";
 import { fuzzLocation, slugify } from "../src/lib/utils";
 
 const prisma = new PrismaClient();
@@ -482,6 +483,7 @@ async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
           createdAt: publishedAt,
           expiresAt: new Date(publishedAt.getTime() + 45 * 864e5),
           searchText,
+          comparableBand: comparableBandFor(leaf.rootSlug, gen.attrs),
           contentHash: contentFingerprint({
             title: gen.title,
             description: gen.description,

@@ -1,6 +1,7 @@
 import { handleError, ok } from "@/lib/api";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { fetchListingCards } from "@/lib/listings";
+import { priceMetersFor } from "@/lib/price-meter";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,8 @@ export async function GET(req: Request) {
     const listings = await fetchListingCards(ids);
     // מודעות שנמחקו או נחסמו לא יוחזרו
     const visible = listings.filter((l) => l.status === "ACTIVE");
-    return ok({ items: toListingCardDtos(visible) });
+    const meters = await priceMetersFor(visible.map((l) => l.id));
+    return ok({ items: toListingCardDtos(visible, meters) });
   } catch (err) {
     return handleError(err);
   }

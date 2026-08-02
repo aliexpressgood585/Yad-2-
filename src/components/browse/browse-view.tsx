@@ -101,7 +101,7 @@ async function BrowseResults({
       : Promise.resolve(new Map<string, number>()),
   ]);
 
-  const items = toListingCardDtos(result.items);
+  const items = toListingCardDtos(result.items, result.meters);
   const hasQuery = Boolean(state.q);
 
   return (

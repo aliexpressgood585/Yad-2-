@@ -1,5 +1,6 @@
 import { blurDataUrl } from "@/lib/blur";
 import { formatAttributeEntry, type AttributeEntry } from "@/lib/format";
+import type { PriceMeter } from "@/lib/price-meter";
 import type { ListingCard } from "@/lib/listings";
 
 /**
@@ -21,6 +22,10 @@ export type ListingCardDto = {
   viewCount: number;
   imageUrl: string | null;
   blurDataURL: string | null;
+  /** אייקון הקטגוריה — משמש כאילוסטרציה כשאין תמונה */
+  categoryIcon: string;
+  /** מיקום המחיר ביחס למודעות דומות. null = אין מספיק בסיס להשוואה. */
+  priceMeter: PriceMeter | null;
   imageCount: number;
   /**
    * שלושת השדות הדינמיים הבולטים, כל אחד עם התווית שלו.
@@ -40,7 +45,10 @@ export type ListingCardDto = {
   };
 };
 
-export function toListingCardDto(listing: ListingCard): ListingCardDto {
+export function toListingCardDto(
+  listing: ListingCard,
+  priceMeter: PriceMeter | null = null,
+): ListingCardDto {
   const image = listing.images[0];
   const now = Date.now();
 
@@ -59,6 +67,8 @@ export function toListingCardDto(listing: ListingCard): ListingCardDto {
     date: (listing.bumpedAt ?? listing.publishedAt ?? listing.createdAt).toISOString(),
     viewCount: listing.viewCount,
     imageUrl: image ? (image.thumbUrl ?? image.url) : null,
+    categoryIcon: listing.category?.icon ?? "Package",
+    priceMeter,
     blurDataURL: image?.blurhash ? blurDataUrl(image.blurhash) : null,
     imageCount: listing.images.length,
     highlights: [...listing.attributes]
@@ -79,6 +89,9 @@ export function toListingCardDto(listing: ListingCard): ListingCardDto {
   };
 }
 
-export function toListingCardDtos(listings: ListingCard[]): ListingCardDto[] {
-  return listings.map(toListingCardDto);
+export function toListingCardDtos(
+  listings: ListingCard[],
+  meters?: Map<string, PriceMeter>,
+): ListingCardDto[] {
+  return listings.map((l) => toListingCardDto(l, meters?.get(l.id) ?? null));
 }

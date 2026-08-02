@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { ISRAEL_BOUNDS, mapStyle } from "@/lib/map-style";
 import { formatPrice, formatCount } from "@/lib/format";
+import { PALETTE } from "@/lib/palette";
 
 type Category = { id: string; slug: string; name: string };
 
@@ -92,7 +93,7 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
         source: SOURCE_ID,
         filter: ["has", "point_count"],
         paint: {
-          "circle-color": "#0f6d55",
+          "circle-color": PALETTE.sign,
           "circle-opacity": 0.85,
           "circle-radius": ["step", ["get", "point_count"], 16, 10, 22, 50, 30, 200, 38],
           "circle-stroke-width": 3,
@@ -120,7 +121,7 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
         source: SOURCE_ID,
         filter: ["!", ["has", "point_count"]],
         paint: {
-          "circle-color": "#e8720c",
+          "circle-color": PALETTE.signal,
           "circle-radius": 7,
           "circle-stroke-width": 2,
           "circle-stroke-color": "#ffffff",

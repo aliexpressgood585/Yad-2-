@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { fetchListingCards } from "@/lib/listings";
+import { priceMetersFor } from "@/lib/price-meter";
 
 export const metadata: Metadata = {
   title: "המועדפים שלי",
@@ -26,6 +27,7 @@ export default async function FavoritesPage() {
   const listings = await fetchListingCards(favorites.map((f) => f.listingId));
   // מודעות שנמחקו או נחסמו לא מוצגות, אבל נשארות במועדפים
   const visible = listings.filter((l) => l.status !== "BANNED");
+  const meters = await priceMetersFor(visible.map((l) => l.id));
 
   return (
     <div className="space-y-5">
@@ -48,7 +50,7 @@ export default async function FavoritesPage() {
           }
         />
       ) : (
-        <ListingGrid listings={toListingCardDtos(visible)} priorityCount={4} />
+        <ListingGrid listings={toListingCardDtos(visible, meters)} priorityCount={4} />
       )}
     </div>
   );

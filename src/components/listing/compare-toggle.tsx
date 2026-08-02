@@ -44,7 +44,7 @@ export function CompareToggle({
       aria-pressed={mounted ? selected : false}
       aria-label={selected ? "הסרה מההשוואה" : "הוספה להשוואה"}
       className={cn(
-        "relative z-10 grid size-8 place-items-center rounded-full bg-background/85 shadow-soft backdrop-blur transition-colors",
+        "relative z-10 grid size-8 place-items-center rounded-full bg-background/85 shadow-lifted backdrop-blur transition-colors",
         "hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         mounted && selected && "bg-primary text-primary-foreground hover:bg-primary",
         className,

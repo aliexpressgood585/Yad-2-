@@ -5,6 +5,7 @@ import maplibregl from "maplibre-gl";
 import { useTheme } from "next-themes";
 
 import { mapStyle } from "@/lib/map-style";
+import { PALETTE } from "@/lib/palette";
 
 /**
  * מפה של מודעה בודדת. מוצג עיגול רדיוס במקום סמן נקודתי,
@@ -63,10 +64,10 @@ export function ListingMap({
             18,
             radiusMeters / (156_543 / Math.pow(2, 18)) / Math.cos((lat * Math.PI) / 180),
           ],
-          "circle-color": "#0f6d55",
+          "circle-color": PALETTE.sign,
           "circle-opacity": 0.18,
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#0f6d55",
+          "circle-stroke-color": PALETTE.sign,
           "circle-stroke-opacity": 0.55,
         },
       });

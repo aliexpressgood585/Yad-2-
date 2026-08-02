@@ -93,7 +93,7 @@ export function Gallery({ images, title }: { images: GalleryImage[]; title: stri
         <Button
           variant="secondary"
           size="icon-sm"
-          className="absolute bottom-3 end-3 shadow-soft"
+          className="absolute bottom-3 end-3 shadow-lifted"
           onClick={() => setOpen(true)}
           aria-label="מסך מלא"
         >

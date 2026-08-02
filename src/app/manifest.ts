@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { SITE } from "@/lib/site";
+import { PALETTE } from "@/lib/palette";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -11,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#fcfbf9",
+    background_color: PALETTE.paper,
     theme_color: SITE.themeColor,
     lang: "he",
     dir: "rtl",

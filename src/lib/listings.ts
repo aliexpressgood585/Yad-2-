@@ -1,4 +1,5 @@
 import { Prisma, prisma } from "@/lib/db";
+import { priceMetersFor } from "@/lib/price-meter";
 import { expandSynonyms, normalizeHebrew, tokenizeQuery } from "@/lib/listing-text";
 
 /** מילים קצרות שאין טעם לחפש לבדן — הן מופיעות כמעט בכל מודעה. */
@@ -344,7 +345,7 @@ const CARD_SELECT = {
   displayLng: true,
   categoryId: true,
   userId: true,
-  category: { select: { id: true, slug: true, name: true, priceLabel: true } },
+  category: { select: { id: true, slug: true, name: true, priceLabel: true, icon: true } },
   user: {
     select: {
       id: true,
@@ -399,11 +400,15 @@ export async function fetchListingCards(
     .filter((r): r is ListingCard => r !== null);
 }
 
-/** חיפוש + הידרציה בקריאה אחת. */
+/** חיפוש + הידרציה בקריאה אחת, כולל מדי המחיר לכל הכרטיסים. */
 export async function searchListingCards(query: SearchQuery) {
   const result = await searchListings(query);
-  const items = await fetchListingCards(result.ids, result.distances);
-  return { ...result, items };
+  // שאילתה אחת למד המחיר של כל העמוד, לא אחת לכרטיס
+  const [items, meters] = await Promise.all([
+    fetchListingCards(result.ids, result.distances),
+    priceMetersFor(result.ids),
+  ]);
+  return { ...result, items, meters };
 }
 
 // פורמט ערכי השדות הדינמיים נמצא ב-@/lib/format.

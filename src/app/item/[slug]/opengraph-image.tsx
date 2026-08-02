@@ -1,13 +1,14 @@
 import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
+import { OG, OG_CONTENT_TYPE, OG_SIZE, OgWordmark } from "@/lib/og";
 import { SITE, absoluteUrl } from "@/lib/site";
 import { decodeSlugParam } from "@/lib/slug";
 import { formatPrice } from "@/lib/format";
 
 export const alt = "מודעה בלוח";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const size = OG_SIZE;
+export const contentType = OG_CONTENT_TYPE;
 
 /**
  * תמונת שיתוף דינמית למודעה.
@@ -42,8 +43,8 @@ export default async function OpengraphImage({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0f6d55",
-            color: "#ffffff",
+            background: OG.sign,
+            color: OG.white,
             fontSize: 72,
             fontWeight: 700,
           }}
@@ -64,7 +65,7 @@ export default async function OpengraphImage({
           width: "100%",
           height: "100%",
           display: "flex",
-          background: "#fcfbf9",
+          background: OG.paper,
           direction: "rtl",
         }}
       >
@@ -90,40 +91,15 @@ export default async function OpengraphImage({
           }}
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                marginBottom: 28,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 56,
-                  height: 56,
-                  borderRadius: 14,
-                  background: "#0f6d55",
-                  color: "#ffffff",
-                  fontSize: 36,
-                  fontWeight: 800,
-                }}
-              >
-                ל
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 800, color: "#1f1c19" }}>
-                {SITE.name}
-              </div>
+            <div style={{ display: "flex", marginBottom: 28 }}>
+              <OgWordmark />
             </div>
 
             <div
               style={{
                 fontSize: 52,
-                fontWeight: 800,
-                color: "#1f1c19",
+                fontWeight: 700,
+                color: OG.ink,
                 lineHeight: 1.15,
                 display: "flex",
               }}
@@ -133,10 +109,10 @@ export default async function OpengraphImage({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#0f6d55", display: "flex" }}>
+            <div style={{ fontSize: 64, fontWeight: 700, color: OG.sign, display: "flex" }}>
               {formatPrice(listing.price, { currency: listing.currency })}
             </div>
-            <div style={{ fontSize: 30, color: "#6b635b", display: "flex" }}>
+            <div style={{ fontSize: 30, color: OG.muted, display: "flex" }}>
               {listing.city}
               {listing.neighborhood ? `, ${listing.neighborhood}` : ""} ·{" "}
               {listing.category.name}

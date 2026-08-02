@@ -26,7 +26,7 @@ export function CompareBar() {
   return (
     <div className="fixed inset-x-0 bottom-14 z-30 md:bottom-4">
       <div className="container">
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 shadow-pop">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-2.5">
           <Scale className="size-5 shrink-0 text-primary" aria-hidden />
 
           <ul className="flex flex-1 gap-2 overflow-x-auto no-scrollbar">

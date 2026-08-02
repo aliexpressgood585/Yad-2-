@@ -95,7 +95,7 @@ export default async function BusinessPage({ params }: Props) {
 
       <div className="border-b border-border bg-gradient-to-b from-primary-soft/60 to-background">
         <div className="container flex flex-wrap items-center gap-4 py-8">
-          <Avatar className="size-20 border-2 border-background shadow-lifted">
+          <Avatar className="size-20 border-2 border-background">
             {business.businessLogo || business.avatar ? (
               <AvatarImage src={business.businessLogo ?? business.avatar!} alt="" />
             ) : null}
@@ -147,7 +147,7 @@ export default async function BusinessPage({ params }: Props) {
             המודעות שלנו
           </h2>
           {listings.items.length ? (
-            <ListingGrid listings={toListingCardDtos(listings.items)} priorityCount={4} />
+            <ListingGrid listings={toListingCardDtos(listings.items, listings.meters)} priorityCount={4} />
           ) : (
             <EmptyResults title="אין מודעות פעילות" body="לעסק הזה אין כרגע מודעות באוויר." />
           )}

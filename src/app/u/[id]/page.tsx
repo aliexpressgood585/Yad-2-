@@ -151,7 +151,7 @@ export default async function SellerPage({ params }: Props) {
           המודעות של {displayName}
         </h2>
         {listings.items.length ? (
-          <ListingGrid listings={toListingCardDtos(listings.items)} priorityCount={4} />
+          <ListingGrid listings={toListingCardDtos(listings.items, listings.meters)} priorityCount={4} />
         ) : (
           <EmptyResults
             title="אין מודעות פעילות"

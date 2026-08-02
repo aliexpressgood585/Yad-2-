@@ -50,7 +50,7 @@ export async function SimilarListings({ listingId, categoryId, city, price, titl
       <h2 id="similar-heading" className="mb-4 font-heading text-xl font-bold">
         מודעות דומות
       </h2>
-      <ListingGrid listings={toListingCardDtos(result.items)} priorityCount={0} />
+      <ListingGrid listings={toListingCardDtos(result.items, result.meters)} priorityCount={0} />
     </section>
   );
 }

@@ -140,7 +140,7 @@ export function ChatThread({
                     "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm sm:max-w-[70%]",
                     mine
                       ? "rounded-ss-sm bg-primary text-primary-foreground"
-                      : "rounded-se-sm bg-card text-card-foreground shadow-soft",
+                      : "rounded-se-sm bg-card text-card-foreground",
                   )}
                 >
                   <p className="whitespace-pre-line break-words">{m.body}</p>

@@ -45,7 +45,7 @@ export function PwaRegister() {
   if (!visible || !prompt) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-20 z-40 flex items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-pop md:inset-x-auto md:bottom-4 md:end-4 md:max-w-sm">
+    <div className="fixed inset-x-3 bottom-20 z-40 flex items-center gap-3 rounded-lg border border-border bg-card p-3 md:inset-x-auto md:bottom-4 md:end-4 md:max-w-sm">
       <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
         <Download className="size-5" aria-hidden />
       </span>

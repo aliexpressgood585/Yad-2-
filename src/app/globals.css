@@ -4,85 +4,123 @@
 
 /* ==========================================================================
    לוח — ערכת עיצוב
-   פלטה: ירוק אזמרגד עמוק + ניטרלים חמים + ענבר כצבע פעולה משני.
+   ==========================================================================
+   מקור: שילוט הדרכים הישראלי והבאוהאוס של תל אביב.
+   ירוק שילוט בין-עירוני הוא צבע הפעולה היחיד; כחול שילוט עירוני הוא
+   צבע המידע; חול ירושלמי הוא הנייר. הנימוק המלא ב-DESIGN.md.
+
+   ערכי HSL ולא HEX — כדי ש-Tailwind יוכל לגזור שקיפויות (`bg-sign/10`).
    ========================================================================== */
 
 @layer base {
   :root {
-    --background: 40 33% 99%;
-    --foreground: 25 15% 12%;
+    /* --- הפלטה הגולמית --------------------------------------------------
+       ink    #14171A   paper  #F7F5F0   sign   #005F3C
+       route  #0B4A8F   stone  #DDD8CE   signal #C2410C              */
+    --ink: 210 12% 9%;
+    --paper: 40 24% 96%;
+    --sign: 158 100% 19%;
+    --route: 211 86% 30%;
+    --stone: 39 20% 84%;
+    --signal: 20 91% 40%;
 
+    /* --- תפקידים --------------------------------------------------------- */
+    --background: var(--paper);
+    --foreground: var(--ink);
+
+    /* הכרטיס לבן על נייר החול — ההפרדה נעשית בגוון, לא בקו כבד */
     --card: 0 0% 100%;
-    --card-foreground: 25 15% 12%;
+    --card-foreground: var(--ink);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 25 15% 12%;
+    --popover-foreground: var(--ink);
 
-    --primary: 165 78% 26%;
-    --primary-foreground: 150 40% 98%;
-    --primary-soft: 165 52% 94%;
+    /* צבע הפעולה היחיד באפליקציה */
+    --primary: var(--sign);
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 158 34% 93%;
 
-    --secondary: 36 22% 94%;
-    --secondary-foreground: 25 15% 18%;
+    --secondary: 40 18% 92%;
+    --secondary-foreground: var(--ink);
 
-    --accent: 24 92% 52%;
+    /* מידע וקישורים — לא פעולה. אין לו כפתור מלא בשום מסך. */
+    --info: var(--route);
+    --info-foreground: 0 0% 100%;
+
+    /* אזהרות וירידות מחיר בלבד */
+    --accent: var(--signal);
     --accent-foreground: 0 0% 100%;
 
-    --muted: 36 20% 95%;
-    --muted-foreground: 28 8% 42%;
+    --muted: 40 18% 93%;
+    --muted-foreground: 213 8% 38%;
 
-    --destructive: 0 72% 47%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 58% 34%;
+    --success: var(--sign);
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 46%;
-    --warning-foreground: 30 40% 10%;
+    --warning: var(--signal);
+    --warning-foreground: 0 0% 100%;
 
-    --border: 33 16% 89%;
-    --input: 33 16% 86%;
-    --ring: 165 78% 32%;
+    --border: var(--stone);
+    --input: 39 18% 78%;
+    --ring: var(--sign);
 
-    --shadow-color: 25 30% 20%;
-    --radius: 0.75rem;
+    --shadow-color: 210 12% 9%;
+    --radius: 0.625rem; /* 10px בכרטיסים; כפתורים נגזרים ל-8px */
   }
 
+  /*
+   * מצב לילה נבנה מחדש ואינו היפוך של הבהיר.
+   * היפוך היה הופך את ירוק השילוט לכהה יותר ומאבד ניגודיות; כאן הוא
+   * מתבהר ל-#2FA875 כדי לשמור על AA מול הרקע.
+   */
   .dark {
-    --background: 30 8% 7%;
-    --foreground: 36 20% 95%;
+    --ink: 40 20% 94%;
+    --paper: 210 8% 10%;
+    --sign: 156 57% 42%;
+    --route: 211 70% 62%;
+    --stone: 210 7% 24%;
+    --signal: 20 85% 58%;
 
-    --card: 30 8% 10%;
-    --card-foreground: 36 20% 95%;
+    --background: var(--paper);
+    --foreground: var(--ink);
 
-    --popover: 30 8% 11%;
-    --popover-foreground: 36 20% 95%;
+    --card: 210 8% 13%;
+    --card-foreground: var(--ink);
 
-    --primary: 162 60% 45%;
-    --primary-foreground: 165 70% 6%;
-    --primary-soft: 165 30% 17%;
+    --popover: 210 8% 14%;
+    --popover-foreground: var(--ink);
 
-    --secondary: 30 7% 16%;
-    --secondary-foreground: 36 20% 95%;
+    --primary: var(--sign);
+    --primary-foreground: 158 60% 7%;
+    --primary-soft: 158 26% 18%;
 
-    --accent: 26 90% 56%;
-    --accent-foreground: 26 60% 8%;
+    --secondary: 210 7% 18%;
+    --secondary-foreground: var(--ink);
 
-    --muted: 30 7% 15%;
-    --muted-foreground: 33 8% 64%;
+    --info: var(--route);
+    --info-foreground: 211 60% 8%;
 
-    --destructive: 0 64% 52%;
+    --accent: var(--signal);
+    --accent-foreground: 20 60% 8%;
+
+    --muted: 210 7% 17%;
+    --muted-foreground: 210 8% 65%;
+
+    --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 50% 45%;
-    --success-foreground: 152 60% 7%;
+    --success: var(--sign);
+    --success-foreground: 158 60% 7%;
 
-    --warning: 38 88% 55%;
-    --warning-foreground: 30 40% 8%;
+    --warning: var(--signal);
+    --warning-foreground: 20 60% 8%;
 
-    --border: 30 6% 20%;
-    --input: 30 6% 22%;
-    --ring: 162 60% 50%;
+    --border: var(--stone);
+    --input: 210 7% 28%;
+    --ring: var(--sign);
 
     --shadow-color: 0 0% 0%;
   }
@@ -135,11 +173,20 @@
     @apply bg-primary/20;
   }
 
-  /* מספרים בעברית — ספרות ומחירים נשארים LTR בתוך טקסט RTL */
+  /*
+   * מספרים בעברית.
+   *
+   * `direction: ltr` + `unicode-bidi: isolate` — בלעדיהם "₪1,234" מוצג
+   * הפוך בתוך משפט עברי.
+   * `tabular-nums` — ספרות ברוחב קבוע, כדי שעמודת מחירים בגריד תתיישר.
+   */
   .num {
     unicode-bidi: isolate;
     direction: ltr;
     display: inline-block;
+    font-family: var(--font-data), var(--font-body), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 }
 
@@ -152,7 +199,7 @@
   }
 
   .surface {
-    @apply rounded-lg border border-border bg-card shadow-card;
+    @apply rounded-lg border border-border bg-card;
   }
 
   /* גלילה אופקית ללא סרגל גלילה נראה (רצועות קטגוריות) */
@@ -170,6 +217,20 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /*
+   * שכבת קריאוּת לתגיות שיושבות על תמונה.
+   * תמונות מגיעות ממשתמשים ואי אפשר לדעת אם הפינה בהירה או כהה —
+   * הגרדיאנט מבטיח ניגודיות בלי לצבוע את כל התמונה.
+   */
+  .img-scrim {
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.18) 0%,
+      rgb(0 0 0 / 0.06) 45%,
+      transparent 100%
+    );
   }
 }
 
@@ -201,7 +262,7 @@
   overflow: hidden;
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  box-shadow: 0 12px 40px hsl(var(--shadow-color) / 0.18);
+  box-shadow: 0 1px 2px hsl(var(--shadow-color) / 0.06);
 }
 .maplibregl-popup-tip {
   border-top-color: hsl(var(--card)) !important;

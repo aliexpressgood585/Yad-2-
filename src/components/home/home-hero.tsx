@@ -62,7 +62,7 @@ export function HomeHero({
           <form
             role="search"
             onSubmit={submit}
-            className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card p-2 shadow-lifted sm:flex-row"
+            className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card p-2 sm:flex-row"
           >
             <label htmlFor="hero-search" className="sr-only">
               מה מחפשים?

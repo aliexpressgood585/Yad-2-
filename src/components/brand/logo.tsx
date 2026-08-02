@@ -20,7 +20,7 @@ export function Logo({
         aria-hidden
         className={cn(
           "grid size-9 place-items-center rounded-[10px] bg-primary text-primary-foreground",
-          "font-heading text-xl font-extrabold leading-none shadow-soft",
+          "font-heading text-xl font-extrabold leading-none",
           "transition-transform duration-150 group-hover:-rotate-3",
         )}
       >
