@@ -16,6 +16,10 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# תמונות שהועלו מקומית בפיתוח
+# תמונות שהועלו מקומית בפיתוח (תמונות הדמו כן נשמרות במאגר)
 /public/uploads/*
 !/public/uploads/.gitkeep
+!/public/uploads/demo/
+
+# עמוד תצוגה מקדימה שנוצר מצילומי מסך (1.7MB, לא חלק מהאפליקציה)
+/preview.html

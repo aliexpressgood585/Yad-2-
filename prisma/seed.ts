@@ -4,6 +4,9 @@
  *
  * הרצה: npm run db:seed
  */
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { AttributeType, PrismaClient, Role, type Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -21,15 +24,31 @@ import { fuzzLocation, slugify } from "../src/lib/utils";
 
 const prisma = new PrismaClient();
 
-/** blurhash תקינים מראש — נמנע מהורדת התמונות בזמן הזריעה. */
-const BLURHASHES = [
-  "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
-  "L6PZfSi_.AyE_3t7t7R**0o#DgR4",
-  "LKO2?U%2Tw=w]~RBVZRi};RPxuwH",
-  "LGF5?xYk^6#M@-5c,1J5@[or[Q6.",
-  "L9AB*A%LPqys8_H=WBRj4nRjxuog",
-  "LlMF%n00%#MwS|WCWEM{R*bbWBbH",
-];
+type DemoImage = {
+  url: string;
+  thumbUrl: string;
+  blurhash: string;
+  width: number;
+  height: number;
+};
+
+/**
+ * תמונות הדמו המקומיות, כולל blurhash אמיתי לכל אחת.
+ * נוצרות ע"י `node scripts/generate-demo-images.mjs` — כך שהזריעה
+ * אינה תלויה בחיבור לאינטרנט.
+ */
+const DEMO_IMAGES: Record<string, DemoImage[]> = JSON.parse(
+  readFileSync(
+    path.join(process.cwd(), "public", "uploads", "demo", "manifest.json"),
+    "utf8",
+  ),
+);
+
+/** מחזיר תמונת דמו לנושא נתון, עם נפילה ל"יד שנייה" אם הנושא לא קיים. */
+function demoImage(topic: string, index: number): DemoImage {
+  const set = DEMO_IMAGES[topic] ?? DEMO_IMAGES.furniture!;
+  return set[index % set.length]!;
+}
 
 const TOTAL_LISTINGS = 300;
 const TOTAL_USERS = 30;
@@ -399,12 +418,8 @@ async function seedListings(
           }),
           images: {
             create: Array.from({ length: gen.imageCount }, (_, idx) => ({
-              url: `https://picsum.photos/seed/${gen.imageTopic}-${slug}-${idx}/1200/900`,
-              thumbUrl: `https://picsum.photos/seed/${gen.imageTopic}-${slug}-${idx}/400/300`,
+              ...demoImage(gen.imageTopic, created + idx),
               order: idx,
-              blurhash: BLURHASHES[(created + idx) % BLURHASHES.length]!,
-              width: 1200,
-              height: 900,
             })),
           },
         },
