@@ -1,12 +1,43 @@
+/**
+ * כתובת הבסיס של האתר.
+ *
+ * הסדר חשוב: משתנה מפורש גובר תמיד, אבל אם שכחו להגדיר אותו ב-Vercel
+ * עדיין מקבלים כתובת נכונה במקום `localhost` — שהיה שולח `og:url`
+ * ל-localhost בכל שיתוף בוואטסאפ ובפייסבוק.
+ *
+ * `VERCEL_PROJECT_PRODUCTION_URL` הוא הדומיין היציב של הפרויקט ולא של
+ * הפריסה הבודדת, ולכן קישורים ששותפו לא נשברים בפריסה הבאה.
+ */
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  const vercel = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+    ?? process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+
+  return "http://localhost:3000";
+}
+
 export const SITE = {
   name: "לוח",
   tagline: "הלוח שמכבד את הזמן שלך",
   description:
     "לוח מודעות ישראלי נקי ומהיר — רכב, נדל\"ן, יד שנייה, דרושים ועוד. בלי עומס פרסומות, עם חיפוש חכם והתראות מיידיות.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: resolveSiteUrl(),
   locale: "he_IL",
-  themeColor: "#0f6d55",
+  themeColor: "#005F3C",
 } as const;
+
+/**
+ * הופך נתיב יחסי לכתובת מוחלטת.
+ * `next/og` מרנדר מחוץ להקשר של הדף, ולכן `<img src="/uploads/…">` שם
+ * פשוט לא נטען — הוא חייב דומיין.
+ */
+export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) return path;
+  return `${SITE.url}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 /** מספר ימי תוקף למודעה לפני שהיא פגה. */
 export const LISTING_TTL_DAYS = 45;

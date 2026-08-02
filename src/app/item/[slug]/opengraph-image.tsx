@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
-import { SITE } from "@/lib/site";
+import { SITE, absoluteUrl } from "@/lib/site";
 import { decodeSlugParam } from "@/lib/slug";
 import { formatPrice } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ export default async function OpengraphImage({
     );
   }
 
-  const image = listing.images[0]?.url;
+  const image = listing.images[0]?.url ? absoluteUrl(listing.images[0].url) : undefined;
 
   return new ImageResponse(
     (
