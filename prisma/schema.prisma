@@ -1,0 +1,595 @@
+// לוח — סכמת בסיס הנתונים
+// Prisma + PostgreSQL
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  USER
+  BUSINESS
+  ADMIN
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  SOLD
+  EXPIRED
+  BANNED
+}
+
+enum AttributeType {
+  TEXT
+  NUMBER
+  SELECT
+  MULTISELECT
+  BOOLEAN
+}
+
+enum ReportReason {
+  SPAM
+  FRAUD
+  OFFENSIVE
+  DUPLICATE
+  WRONG_CATEGORY
+  SOLD_ALREADY
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum AlertFrequency {
+  OFF
+  INSTANT
+  DAILY
+  WEEKLY
+}
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  SAVED_SEARCH_MATCH
+  LISTING_EXPIRING
+  LISTING_APPROVED
+  LISTING_BANNED
+  PRICE_DROP
+  REVIEW_RECEIVED
+  SYSTEM
+}
+
+enum BoostKind {
+  BUMP
+  HIGHLIGHT
+  TOP_CATEGORY
+  HOMEPAGE
+}
+
+// ---------------------------------------------------------------------------
+// Users & auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String    @id @default(cuid())
+  phone          String?   @unique
+  email          String?   @unique
+  emailVerified  DateTime?
+  passwordHash   String?
+  name           String
+  avatar         String?
+  bio            String?
+  role           Role      @default(USER)
+  verifiedAt     DateTime?
+  ratingAvg      Float     @default(0)
+  ratingCount    Int       @default(0)
+  responseMins   Int?
+  dealsCount     Int       @default(0)
+  isBlocked      Boolean   @default(false)
+  lastSeenAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  // Business profile
+  businessName   String?
+  businessSlug   String?   @unique
+  businessAbout  String?
+  businessLogo   String?
+  businessCity   String?
+
+  accounts           Account[]
+  sessions           Session[]
+  listings           Listing[]
+  favorites          Favorite[]
+  savedSearches      SavedSearch[]
+  messages           Message[]
+  conversationsBuyer Conversation[]  @relation("BuyerConversations")
+  conversationsSeller Conversation[] @relation("SellerConversations")
+  reportsMade        Report[]        @relation("ReportAuthor")
+  reviewsWritten     Review[]        @relation("ReviewAuthor")
+  reviewsReceived    Review[]        @relation("ReviewTarget")
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
+  phoneReveals       PhoneReveal[]
+  boosts             Boost[]
+
+  @@index([role])
+  @@index([createdAt])
+  @@index([businessSlug])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/// קודי אימות חד־פעמיים ל-SMS. הקוד נשמר כ-hash בלבד.
+model PhoneOtp {
+  id        String    @id @default(cuid())
+  phone     String
+  codeHash  String
+  purpose   String    @default("login")
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Categories & dynamic attributes
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  namePlural  String?
+  icon        String   @default("Tag")
+  description String?
+  parentId    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  /// תווית שדה המחיר, לדוגמה "מחיר" / "שכר דירה"
+  priceLabel  String   @default("מחיר")
+  createdAt   DateTime @default(now())
+
+  parent     Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict, map: "Category_parentId_fkey")
+  children   Category[]  @relation("CategoryTree")
+  attributes Attribute[]
+  listings   Listing[]
+
+  @@index([parentId, order])
+}
+
+model Attribute {
+  id          String        @id @default(cuid())
+  categoryId  String
+  key         String
+  label       String
+  type        AttributeType
+  unit        String?
+  placeholder String?
+  helpText    String?
+  isRequired  Boolean       @default(false)
+  isFilter    Boolean       @default(true)
+  isHighlight Boolean       @default(false)
+  min         Float?
+  max         Float?
+  step        Float?
+  order       Int           @default(0)
+  /// מפתח מאפיין ההורה שממנו נגזרות האפשרויות (יצרן ← דגם)
+  dependsOn   String?
+
+  category         Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  values           AttributeValue[]
+  listingAttrs     ListingAttribute[]
+
+  @@unique([categoryId, key])
+  @@index([categoryId, order])
+}
+
+model AttributeValue {
+  id          String  @id @default(cuid())
+  attributeId String
+  value       String
+  label       String
+  order       Int     @default(0)
+  /// ערך ההורה (למשל יצרן) שאליו שייכת האפשרות הזו
+  parentValue String?
+
+  attribute    Attribute          @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  listingAttrs ListingAttribute[]
+
+  @@unique([attributeId, value])
+  @@index([attributeId, order])
+  @@index([attributeId, parentValue])
+}
+
+model ListingAttribute {
+  id          String  @id @default(cuid())
+  listingId   String
+  attributeId String
+  valueId     String?
+  valueText   String?
+  valueNumber Float?
+  valueBool   Boolean?
+
+  listing   Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  attribute Attribute       @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  value     AttributeValue? @relation(fields: [valueId], references: [id], onDelete: SetNull)
+
+  @@index([listingId])
+  @@index([attributeId, valueId])
+  @@index([attributeId, valueNumber])
+  @@index([attributeId, valueBool])
+}
+
+// ---------------------------------------------------------------------------
+// Listings
+// ---------------------------------------------------------------------------
+
+model Listing {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  userId             String
+  categoryId         String
+  title              String
+  description        String        @db.Text
+  price              Int?
+  currency           String        @default("ILS")
+  isNegotiable       Boolean       @default(false)
+  status             ListingStatus @default(DRAFT)
+  city               String
+  neighborhood       String?
+  address            String?
+  lat                Float?
+  lng                Float?
+  /// מיקום מוסט אקראית להצגה ציבורית (פרטיות)
+  displayLat         Float?
+  displayLng         Float?
+  contactPhone       String?
+  contactName        String?
+  allowChat          Boolean       @default(true)
+  viewCount          Int           @default(0)
+  contactRevealCount Int           @default(0)
+  favoriteCount      Int           @default(0)
+  isPromoted         Boolean       @default(false)
+  promotedUntil      DateTime?
+  bumpedAt           DateTime?
+  publishedAt        DateTime?
+  expiresAt          DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
+
+  /// טקסט מנורמל לחיפוש (FTS + trigram). מתוחזק בקוד האפליקציה.
+  searchText   String @default("")
+  /// טביעת אצבע לזיהוי מודעות כפולות
+  contentHash  String?
+  fraudScore   Int    @default(0)
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images       ListingImage[]
+  attributes   ListingAttribute[]
+  favorites    Favorite[]
+  conversations Conversation[]
+  reports      Report[]
+  reviews      Review[]
+  priceHistory PriceHistory[]
+  boosts       Boost[]
+  fraudFlags   FraudFlag[]
+  phoneReveals PhoneReveal[]
+  dailyStats   ListingDailyStat[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status, publishedAt])
+  @@index([userId, status])
+  @@index([city, status])
+  @@index([price])
+  @@index([isPromoted, promotedUntil])
+  @@index([contentHash])
+  @@index([expiresAt])
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  listingId String
+  url       String
+  thumbUrl  String?
+  order     Int     @default(0)
+  blurhash  String?
+  width     Int?
+  height    Int?
+  /// perceptual hash לזיהוי תמונות משוכפלות
+  phash     String?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, order])
+  @@index([phash])
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  listingId String
+  price     Int
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt])
+}
+
+model ListingDailyStat {
+  id        String   @id @default(cuid())
+  listingId String
+  day       DateTime @db.Date
+  views     Int      @default(0)
+  reveals   Int      @default(0)
+  favorites Int      @default(0)
+  messages  Int      @default(0)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, day])
+  @@index([day])
+}
+
+model PhoneReveal {
+  id        String   @id @default(cuid())
+  listingId String
+  userId    String?
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([listingId, createdAt])
+  @@index([ipHash, createdAt])
+}
+
+model Boost {
+  id        String    @id @default(cuid())
+  listingId String
+  userId    String
+  kind      BoostKind
+  days      Int
+  priceIls  Int
+  startsAt  DateTime  @default(now())
+  endsAt    DateTime
+  createdAt DateTime  @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([endsAt])
+}
+
+// ---------------------------------------------------------------------------
+// Engagement
+// ---------------------------------------------------------------------------
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId, createdAt])
+}
+
+model SavedSearch {
+  id           String         @id @default(cuid())
+  userId       String
+  name         String
+  /// כל הפילטרים כ-JSON (query, categoryId, price, attrs, ...)
+  filters      Json
+  frequency    AlertFrequency @default(INSTANT)
+  lastNotified DateTime?
+  lastSeenAt   DateTime?
+  createdAt    DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([frequency])
+}
+
+model Conversation {
+  id            String   @id @default(cuid())
+  listingId     String
+  buyerId       String
+  sellerId      String
+  lastMessageAt DateTime @default(now())
+  buyerReadAt   DateTime?
+  sellerReadAt  DateTime?
+  buyerArchived Boolean  @default(false)
+  sellerArchived Boolean @default(false)
+  createdAt     DateTime @default(now())
+
+  listing  Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller   User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([listingId, buyerId])
+  @@index([buyerId, lastMessageAt])
+  @@index([sellerId, lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  authorId   String
+  targetId   String
+  listingId  String?
+  rating     Int
+  body       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  author  User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  target  User     @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@unique([authorId, targetId, listingId])
+  @@index([targetId, createdAt])
+}
+
+model Report {
+  id        String       @id @default(cuid())
+  listingId String
+  authorId  String?
+  reason    ReportReason
+  details   String?      @db.Text
+  status    ReportStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  handledAt DateTime?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  author  User?   @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([listingId])
+}
+
+// ---------------------------------------------------------------------------
+// Trust, safety & ops
+// ---------------------------------------------------------------------------
+
+model FraudFlag {
+  id        String       @id @default(cuid())
+  listingId String
+  code      String
+  severity  FlagSeverity
+  message   String
+  score     Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, code])
+  @@index([severity, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
