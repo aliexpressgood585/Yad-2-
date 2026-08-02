@@ -1,0 +1,84 @@
+name: Seed demo data
+
+# זריעת נתוני הדמו לבסיס הנתונים בענן.
+#
+# הריצה ידנית בלבד (Actions → Seed demo data → Run workflow), ולעולם לא
+# אוטומטית — הזריעה מוחקת את כל התוכן הקיים לפני שהיא כותבת מחדש.
+#
+# נדרש secret אחד (Settings → Secrets and variables → Actions):
+#   NEON_DIRECT_URL — מחרוזת החיבור של Neon *בלי* -pooler
+#
+# למה דווקא הישירה: הזריעה מריצה אלפי כתיבות בטרנזקציות ארוכות, וה-pooler
+# של Neon עובד ב-transaction mode ומנתק אותן באמצע.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'הזריעה מוחקת את כל התוכן הקיים. הקלד WIPE כדי לאשר'
+        required: true
+        default: ''
+
+concurrency:
+  # שתי זריעות במקביל היו נלחמות על אותו TRUNCATE
+  group: seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+
+    steps:
+      - name: אימות הבקשה
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "WIPE" ]; then
+            echo "::error::נדרש לאשר בהקלדת WIPE. התקבל: '$CONFIRM'"
+            exit 1
+          fi
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::חסר secret בשם NEON_DIRECT_URL"
+            echo "הוסיפו אותו ב-Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          case "$DATABASE_URL" in
+            *-pooler.*)
+              echo "::error::הוזנה מחרוזת עם -pooler. הזריעה דורשת את החיבור הישיר."
+              exit 1
+              ;;
+          esac
+          echo "האישור התקבל"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: התקנת תלויות
+        run: npm ci
+
+      - name: החלת מיגרציות
+        # מריץ גם אם הפריסה כבר הריצה אותן — migrate deploy אידמפוטנטי
+        run: npx prisma migrate deploy
+
+      - name: זריעה
+        run: npm run db:seed
+
+      - name: סיכום
+        run: |
+          {
+            echo "### נתוני הדמו נזרעו"
+            echo ""
+            echo "התחברות כמנהל: \`admin@luach.co.il\` / \`Password123!\`"
+            echo ""
+            echo "אם האתר עדיין מציג 0 מודעות — בצעו Redeploy ב-Vercel"
+            echo "כדי לנקות את מטמון ה-ISR."
+          } >> "$GITHUB_STEP_SUMMARY"
