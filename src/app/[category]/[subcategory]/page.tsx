@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BrowseView } from "@/components/browse/browse-view";
-import { getCategoryBySlug, getCategoryTree } from "@/lib/categories";
+import { getCategoryBySlug } from "@/lib/categories";
+import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
 
 type Props = {
@@ -10,21 +11,12 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/** ראה הערה ב-`[category]/page.tsx` לגבי היעדר `generateStaticParams`. */
 export const revalidate = 600;
-
-export async function generateStaticParams() {
-  const tree = await getCategoryTree();
-  return tree.flatMap((root) =>
-    root.children.map((child) => ({
-      category: root.slug,
-      subcategory: child.slug,
-    })),
-  );
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: rootSlug, subcategory } = await params;
-  const category = await getCategoryBySlug(subcategory);
+  const category = await getCategoryBySlug(decodeSlugParam(subcategory));
   if (!category) return {};
 
   const title = `${category.namePlural ?? category.name} — מודעות מעודכנות`;
@@ -41,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SubcategoryPage({ params, searchParams }: Props) {
   const { category: rootSlug, subcategory } = await params;
   const [root, category] = await Promise.all([
-    getCategoryBySlug(rootSlug),
-    getCategoryBySlug(subcategory),
+    getCategoryBySlug(decodeSlugParam(rootSlug)),
+    getCategoryBySlug(decodeSlugParam(subcategory)),
   ]);
 
   // מוודאים שהתת-קטגוריה אכן שייכת לקטגוריית האב שבנתיב

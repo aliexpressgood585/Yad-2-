@@ -23,6 +23,7 @@ import { getCategoryPath } from "@/lib/categories";
 import { prisma } from "@/lib/db";
 import { blurDataUrl } from "@/lib/blur";
 import { computeTrust } from "@/lib/trust";
+import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
 import { formatPrice, timeAgo } from "@/lib/utils";
 
@@ -31,7 +32,8 @@ type Props = { params: Promise<{ slug: string }> };
 /** דפי מודעה נבנים לפי דרישה ונשמרים במטמון לדקה. */
 export const revalidate = 60;
 
-async function getListing(slug: string) {
+async function getListing(rawSlug: string) {
+  const slug = decodeSlugParam(rawSlug);
   return prisma.listing.findFirst({
     where: { slug, deletedAt: null },
     include: {

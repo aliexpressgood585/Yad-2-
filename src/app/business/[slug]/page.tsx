@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/db";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { searchListingCards } from "@/lib/listings";
+import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
 import { timeAgo } from "@/lib/utils";
 
@@ -15,9 +16,9 @@ type Props = { params: Promise<{ slug: string }> };
 
 export const revalidate = 600;
 
-async function getBusiness(slug: string) {
+async function getBusiness(rawSlug: string) {
   return prisma.user.findFirst({
-    where: { businessSlug: slug, deletedAt: null, isBlocked: false },
+    where: { businessSlug: decodeSlugParam(rawSlug), deletedAt: null, isBlocked: false },
     select: {
       id: true,
       name: true,

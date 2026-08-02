@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { CompareBar } from "@/components/compare/compare-bar";
 import { PwaRegister } from "@/components/pwa-register";
+import { SiteJsonLd } from "@/components/seo/json-ld";
 import { SITE } from "@/lib/site";
 
 import "./globals.css";
@@ -72,6 +73,7 @@ export default function RootLayout({
       className={`${heebo.variable} ${assistant.variable}`}
     >
       <body className="min-h-dvh font-sans">
+        <SiteJsonLd />
         <Providers>
           <a href="#main" className="skip-link">
             דילוג לתוכן הראשי
