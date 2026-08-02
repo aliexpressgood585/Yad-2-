@@ -1,0 +1,95 @@
+name: Deploy to Vercel
+
+# פריסה אוטומטית בכל דחיפה לענף הראשי, ואפשרות להריץ ידנית מלשונית Actions.
+#
+# נדרשים שלושה secrets במאגר (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN       — https://vercel.com/account/tokens
+#   VERCEL_ORG_ID      — מתוך .vercel/project.json אחרי `vercel link`
+#   VERCEL_PROJECT_ID  — מאותו קובץ
+#
+# משתני הסביבה של האפליקציה (DATABASE_URL וכו') נשמרים ב-Vercel עצמו,
+# לא כאן — כך שאין צורך לשכפל סודות בין שתי המערכות.
+
+on:
+  push:
+    branches:
+      - main
+      - claude/israeli-classifieds-platform-iyb4jf
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "לזרוע נתוני דמו אחרי הפריסה"
+        type: boolean
+        default: false
+
+concurrency:
+  # פריסה אחת בכל רגע; דחיפה חדשה מבטלת פריסה שעדיין רצה
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: בדיקה שהסודות הוגדרו
+        run: |
+          missing=""
+          [ -n "$VERCEL_TOKEN" ] || missing="$missing VERCEL_TOKEN"
+          [ -n "$VERCEL_ORG_ID" ] || missing="$missing VERCEL_ORG_ID"
+          [ -n "$VERCEL_PROJECT_ID" ] || missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::חסרים secrets:$missing"
+            echo "הוסיפו אותם ב-Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "כל הסודות קיימים"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: התקנת Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: משיכת הגדרות הפרויקט מ-Vercel
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: בנייה
+        # `vercel build` מריץ את הסקריפט vercel-build שבו רצות המיגרציות,
+        # עם משתני הסביבה שנמשכו בשלב הקודם.
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: פריסה
+        id: deploy
+        run: |
+          url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url"
+
+      - name: זריעת נתוני דמו
+        if: inputs.seed
+        run: |
+          npm ci
+          # DIRECT_URL נמשך מ-Vercel אל .vercel/.env.production.local
+          set -a && . .vercel/.env.production.local && set +a
+          DATABASE_URL="$DIRECT_URL" npm run db:seed
+
+      - name: סיכום
+        run: |
+          {
+            echo "### האתר נפרס"
+            echo ""
+            echo "**${{ steps.deploy.outputs.url }}**"
+            echo ""
+            echo "התחברות כמנהל: \`admin@luach.co.il\` / \`Password123!\`"
+          } >> "$GITHUB_STEP_SUMMARY"
