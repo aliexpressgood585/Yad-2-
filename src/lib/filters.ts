@@ -1,4 +1,5 @@
 import type { ResolvedAttribute } from "@/lib/categories";
+import { parseQuery } from "@/lib/search/parse-query";
 import type { AttributeFilter, SearchQuery, SortMode } from "@/lib/listings";
 
 /**
@@ -176,11 +177,61 @@ export function toSearchQuery(
     }
   }
 
+  /*
+   * הבנת שאילתה: חילוץ פילטרים מהטקסט החופשי.
+   *
+   * `"דירת 3 חד' בת״א עד 6000"` הופך לפילטרים אמיתיים במקום להיזרק
+   * כולו ל-FTS, שם "עד" ו"6000" רק מרעישים.
+   *
+   * **פילטר שהמשתמש בחר במפורש תמיד מנצח את החילוץ.** אחרת בחירה
+   * בממשק הייתה נדרסת ע"י ניחוש מהטקסט, וזה מרגיש כמו תקלה.
+   */
+  const parsed = state.q ? parseQuery(state.q) : null;
+  const inferred = parsed?.chips.length ? parsed : null;
+
+  if (inferred) {
+    const pushAttr = (key: string, kind: "values" | "range", value: unknown) => {
+      const ids = byKey.get(key);
+      if (!ids?.length) return;
+      // לא דורסים פילטר שכבר הוגדר בממשק
+      if (state.attrs[key]?.length || state.attrRanges[key]) return;
+      if (kind === "values") {
+        filters.push({ attributeIds: ids, kind: "values", values: [String(value)] });
+      } else {
+        const n = Number(value);
+        filters.push({ attributeIds: ids, kind: "range", min: n, max: n });
+      }
+    };
+
+    if (inferred.rooms !== undefined) pushAttr("rooms", "range", inferred.rooms);
+    if (inferred.sqm !== undefined) pushAttr("size", "range", inferred.sqm);
+    if (inferred.hand !== undefined) pushAttr("hand", "values", inferred.hand);
+    if (inferred.make !== undefined) pushAttr("manufacturer", "values", inferred.make);
+
+    if (inferred.yearMin !== undefined) {
+      const ids = byKey.get("year");
+      if (ids?.length && !state.attrRanges.year) {
+        filters.push({
+          attributeIds: ids,
+          kind: "range",
+          min: inferred.yearMin,
+          max: inferred.yearMax ?? inferred.yearMin,
+        });
+      }
+    }
+  }
+
   return {
-    q: state.q,
-    cities: state.cities.length ? state.cities : undefined,
-    priceMin: state.priceMin,
-    priceMax: state.priceMax,
+    // רק מה שלא חולץ נשאר לחיפוש החופשי
+    q: inferred ? inferred.text || undefined : state.q,
+    cities:
+      state.cities.length
+        ? state.cities
+        : inferred?.city
+          ? [inferred.city]
+          : undefined,
+    priceMin: state.priceMin ?? inferred?.priceMin,
+    priceMax: state.priceMax ?? inferred?.priceMax,
     lat: state.lat,
     lng: state.lng,
     radiusKm: state.radiusKm,

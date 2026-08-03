@@ -223,7 +223,17 @@ export function parseQuery(input: string): ParsedQuery {
     }
   }
 
-  out.text = text.trim();
+  /*
+   * תחיליות יתומות.
+   *
+   * "בתל אביב" → העיר נצרכה והשאירה "ב" בודדת. אות בודדת ב-FTS היא
+   * רעש שמצמצם תוצאות בלי להוסיף מידע, ולכן היא מוסרת.
+   */
+  out.text = text
+    .split(" ")
+    .filter((t) => t.length > 1)
+    .join(" ")
+    .trim();
   return out;
 }
 
