@@ -31,8 +31,9 @@ export function InfiniteListings({
   categorySlug,
 }: Props) {
   // הצפיפות נקראת כאן ולא מגיעה כ-prop: היא העדפה של המשתמש ולא של
-  // המסך, והרכיב הזה ממילא רץ בלקוח.
-  const { density } = useDensity();
+  // המסך, והרכיב הזה ממילא רץ בלקוח. ה-slug נמסר כדי שההעדפה שנלמדה
+  // לקטגוריה הזו תגבר על הגלובלית.
+  const { density } = useDensity(categorySlug);
   const searchParams = useSearchParams();
   const key = searchParams.toString();
 

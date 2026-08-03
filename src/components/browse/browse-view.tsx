@@ -190,7 +190,9 @@ async function BrowseResults({
                 valueFacets={serializeFacets(attrFacets)}
               />
               <SortSelect hasQuery={hasQuery} />
-              <DensityToggle className="hidden sm:flex" />
+              {/* גם בנייד: הצפיפות היא בדיוק ההעדפה שנלמדת, ובלי הכפתור
+                  אי אפשר ללמד אותה */}
+              <DensityToggle categorySlug={category?.slug} />
             </div>
           </div>
 
