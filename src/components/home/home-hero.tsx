@@ -59,7 +59,9 @@ export function HomeHero({
             מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — בלי באנרים מהבהבים ובלי לחכות לטעינה.
           </p>
 
+          {/* נקודת הייחוס שההדר מודד מולה — ראה HeaderSearchSlot */}
           <form
+            id="hero-search-anchor"
             role="search"
             onSubmit={submit}
             className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card p-2 sm:flex-row"

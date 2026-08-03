@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { BidiText } from "@/components/bidi-text";
+
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { ListingImage } from "@/components/listing/listing-image";
 import { PriceMeter } from "@/components/listing/price-meter";
@@ -79,7 +81,7 @@ export function ListingCard({ listing, density = "grid", priority = false, class
             href={`/item/${listing.slug}`}
             className="outline-none after:absolute after:inset-0"
           >
-            {listing.title}
+            <BidiText>{listing.title}</BidiText>
           </Link>
         </h3>
 

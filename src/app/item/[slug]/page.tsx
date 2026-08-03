@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AlertTriangle, Eye, Heart, MapPin } from "lucide-react";
 
+import { BidiText } from "@/components/bidi-text";
 import { Breadcrumbs } from "@/components/browse/breadcrumbs";
 import { Gallery } from "@/components/listing/gallery";
 import { ContactPanel } from "@/components/listing/contact-panel";
@@ -240,7 +241,7 @@ export default async function ListingPage({ params }: Props) {
           <div>
             <div className="flex flex-wrap items-start gap-3">
               <h1 className="flex-1 font-heading text-2xl font-extrabold sm:text-3xl">
-                {listing.title}
+                <BidiText>{listing.title}</BidiText>
               </h1>
               <div className="flex items-center gap-1.5">
                 <ShareButton title={listing.title} />

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
-import { HeaderSearch } from "@/components/layout/header-search";
+import { HeaderSearchSlot } from "@/components/layout/header-search-slot";
 import { HeaderUserMenu } from "@/components/layout/header-user-menu";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -14,13 +14,11 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container flex h-16 items-center gap-3">
+      <div className="container flex h-14 items-center gap-3">
         <MobileNav categories={roots} />
         <Logo />
 
-        <div className="hidden flex-1 md:block">
-          <HeaderSearch />
-        </div>
+        <HeaderSearchSlot className="hidden flex-1 md:block" />
 
         <div className="ms-auto flex items-center gap-1 md:ms-0">
           <ThemeToggle />
@@ -59,9 +57,7 @@ export async function SiteHeader() {
       </nav>
 
       {/* חיפוש במובייל */}
-      <div className="container pb-3 md:hidden">
-        <HeaderSearch />
-      </div>
+      <HeaderSearchSlot className="container pb-3 md:hidden" />
     </header>
   );
 }
