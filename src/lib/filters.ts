@@ -12,6 +12,11 @@ import type { AttributeFilter, SearchQuery, SortMode } from "@/lib/listings";
  */
 export type FilterState = {
   q?: string;
+  /**
+   * מפתחות שהמשתמש ביטל את החילוץ האוטומטי שלהם.
+   * המילים חוזרות לחיפוש החופשי במקום להפוך לפילטר.
+   */
+  keep?: string[];
   cities: string[];
   priceMin?: number;
   priceMax?: number;
@@ -98,6 +103,8 @@ export function parseFilters(params: RawParams): FilterState {
 
   return {
     q: first(params.q)?.trim() || undefined,
+    // מפתחות שהמשתמש ביטל את החילוץ שלהם — נשארים כטקסט חופשי
+    keep: (first(params.keep) ?? "").split(",").filter(Boolean),
     cities: list(params.city ?? params.cities),
     priceMin: num(params.priceMin),
     priceMax: num(params.priceMax),
@@ -187,6 +194,18 @@ export function toSearchQuery(
    * בממשק הייתה נדרסת ע"י ניחוש מהטקסט, וזה מרגיש כמו תקלה.
    */
   const parsed = state.q ? parseQuery(state.q) : null;
+
+  // צ'יפ שהמשתמש הסיר חוזר להיות טקסט חופשי ולא פילטר
+  const kept = new Set(state.keep ?? []);
+  if (parsed && kept.size) {
+    for (const chip of parsed.chips) {
+      if (!kept.has(chip.key)) continue;
+      delete parsed[chip.key];
+      parsed.text = `${parsed.text} ${chip.source}`.trim();
+    }
+    parsed.chips = parsed.chips.filter((c) => !kept.has(c.key));
+  }
+
   const inferred = parsed?.chips.length ? parsed : null;
 
   if (inferred) {

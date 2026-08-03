@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { ActiveFilterChips } from "@/components/filters/active-filter-chips";
+import { ParsedChips } from "@/components/browse/parsed-chips";
+import { parseQuery } from "@/lib/search/parse-query";
 import { DensityToggle } from "@/components/browse/density-toggle";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { MobileFilterSheet } from "@/components/filters/mobile-filter-sheet";
@@ -103,6 +105,12 @@ async function BrowseResults({
   ]);
 
   const items = toListingCardDtos(result.items, result.meters);
+
+  // אותו חילוץ שמזין את toSearchQuery, להצגה למשתמש
+  const kept = new Set(state.keep ?? []);
+  const parsedChips = state.q
+    ? parseQuery(state.q).chips.filter((c) => !kept.has(c.key))
+    : [];
   const hasQuery = Boolean(state.q);
 
   return (
@@ -168,7 +176,9 @@ async function BrowseResults({
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 space-y-2">
+            {/* מה שחולץ מהטקסט החופשי — גלוי והפיך */}
+            <ParsedChips chips={parsedChips} />
             <ActiveFilterChips attributes={attributes} />
           </div>
 
