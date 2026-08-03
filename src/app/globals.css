@@ -248,6 +248,36 @@
    * תמונות מגיעות ממשתמשים ואי אפשר לדעת אם הפינה בהירה או כהה —
    * הגרדיאנט מבטיח ניגודיות בלי לצבוע את כל התמונה.
    */
+  /*
+   * צבע ההדגשה של המודעה — נגזר מ-blurhash של התמונה הראשונה
+   * (`src/lib/listing-accent.ts`) ומוזרק כמשתנה על עוטף הדף.
+   *
+   * שני שימושים בלבד, ושניהם עדינים במכוון: הילה מאחורי הגלריה וקו
+   * מתחת למחיר. כשאין ממה לגזור צבע, המשתנה לא נכתב וה-fallback הוא
+   * טוקן הפלטה — כלומר הדף פשוט נראה כמו קודם.
+   */
+  .accent-halo::before {
+    content: "";
+    position: absolute;
+    inset: -8% -4% 40%;
+    z-index: -1;
+    border-radius: 999px;
+    background: hsl(var(--listing-accent, var(--stone)) / 0.28);
+    filter: blur(56px);
+    pointer-events: none;
+  }
+
+  .dark .accent-halo::before {
+    background: hsl(var(--listing-accent, var(--stone)) / 0.22);
+  }
+
+  .accent-rule {
+    height: 3px;
+    width: 3.5rem;
+    border-radius: 999px;
+    background: hsl(var(--listing-accent, var(--primary)));
+  }
+
   .img-scrim {
     background: linear-gradient(
       to top,

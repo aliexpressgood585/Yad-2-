@@ -24,6 +24,7 @@ import { auth } from "@/lib/auth";
 import { getCategoryPath } from "@/lib/categories";
 import { prisma } from "@/lib/db";
 import { blurDataUrl } from "@/lib/blur";
+import { accentFromBlurhash } from "@/lib/listing-accent";
 import { computeTrust } from "@/lib/trust";
 import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
@@ -156,6 +157,9 @@ export default async function ListingPage({ params }: Props) {
     height: img.height ?? 900,
   }));
 
+  // צבע ההדגשה נגזר מהתמונה הראשונה — היא זו שמייצגת את המודעה
+  const accent = accentFromBlurhash(listing.images[0]?.blurhash);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -197,7 +201,10 @@ export default async function ListingPage({ params }: Props) {
   const publishedAt = listing.publishedAt ?? listing.createdAt;
 
   return (
-    <div className="container py-5">
+    <div
+      className="container py-5"
+      style={accent ? ({ "--listing-accent": accent } as React.CSSProperties) : undefined}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -238,11 +245,13 @@ export default async function ListingPage({ params }: Props) {
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* --- עמודה ראשית --- */}
         <div className="min-w-0 space-y-6">
-          <Gallery
-            images={images}
-            title={listing.title}
-            transitionName={listingImageTransition(listing.id)}
-          />
+          <div className={accent ? "relative isolate accent-halo" : undefined}>
+            <Gallery
+              images={images}
+              title={listing.title}
+              transitionName={listingImageTransition(listing.id)}
+            />
+          </div>
 
           <div>
             <div className="flex flex-wrap items-start gap-3">
@@ -265,6 +274,8 @@ export default async function ListingPage({ params }: Props) {
                 </span>
               ) : null}
             </p>
+
+            {accent ? <div className="accent-rule mt-2" aria-hidden /> : null}
 
             <PriceHistoryNote
               history={listing.priceHistory.map((h) => ({
