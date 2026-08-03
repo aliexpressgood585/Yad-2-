@@ -316,6 +316,79 @@
     background: hsl(var(--listing-accent, var(--primary)));
   }
 
+  /* ------------------------------------------------------------------
+     כרטיס המודעה מגיב למכל שלו ולא לחלון
+
+     אותו רכיב מופיע בגריד רחב, בסיידבר צר, ברצועת "נצפו לאחרונה"
+     ובחלונית של המפה. נקודות שבירה לפי `viewport` שיקרו בכל אחד
+     מהמקומות האלה חוץ מהראשון: סיידבר בן 260px במסך של 1440px קיבל
+     את הפריסה של מסך רחב, כי החלון באמת רחב.
+
+     `container-type: inline-size` הופך את הכרטיס עצמו לנקודת הייחוס,
+     ומכאן הרכיב לא צריך אף prop כדי לדעת איפה הוא יושב.
+
+     כתוב ידנית ולא דרך תוסף Tailwind — זה תוסף שלם בשביל שלוש שאילתות.
+     ------------------------------------------------------------------ */
+  .listing-card {
+    container-type: inline-size;
+    container-name: card;
+  }
+
+  /* תמונה קטנה בשורת רשימה, וגדלה כשיש מקום במכל */
+  @container card (min-width: 26rem) {
+    .listing-card[data-density="list"] .listing-card-media {
+      width: 11rem;
+    }
+  }
+
+  /*
+   * שורת המפרט מקצרת את עצמה לפי המכל.
+   *
+   * זה הפתרון היחיד שאינו מסכן את הנתון: פריט שלא נכנס נעלם כולו,
+   * במקום שספרות יאבדו בקצה השורה ויציגו מספר שגוי. הסף גבוה מרוחב
+   * הכרטיס בשורת רשימה בנייד (343px), שבו עמודת הטקסט צרה במיוחד.
+   */
+  /* בשורת רשימה התמונה גוזלת 8rem, ולכן הסף גבוה מרוחב הכרטיס */
+  @container card (max-width: 24rem) {
+    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  @container card (max-width: 17rem) {
+    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 2) {
+      display: none;
+    }
+  }
+
+  /* בגריד כל רוחב הכרטיס עומד לרשות הטקסט, פחות הריפוד */
+  @container card (max-width: 12rem) {
+    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  @container card (max-width: 9rem) {
+    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 2) {
+      display: none;
+    }
+  }
+
+  /*
+   * מכל צר מאוד — המחיר יורד גודל אחד בסקאלה כדי לא להיחתך.
+   * הסף נמוך בכוונה מכרטיס בגריד של נייד (166px): שם המחיר נשאר
+   * הדבר הבולט בכרטיס, וזו ההיררכיה שנקבעה ב-DESIGN.md.
+   *
+   * שום שדה אינו מוסתר בשום רוחב. הכרטיס מציג מחיר, כותרת, שלושה
+   * שדות מפרט ושורת מיקום וזמן — זו ההגדרה שלו, לא הצעה שתלויה במקום.
+   */
+  @container card (max-width: 10rem) {
+    .listing-card-price {
+      font-size: theme(fontSize.base[0]);
+      line-height: theme(fontSize.base[1].lineHeight);
+    }
+  }
+
   .img-scrim {
     background: linear-gradient(
       to top,
