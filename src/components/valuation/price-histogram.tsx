@@ -16,6 +16,7 @@ export function PriceHistogram({
   median,
   price,
   currency = "ILS",
+  scrollReveal = false,
   className,
 }: {
   buckets: HistogramBucket[];
@@ -23,6 +24,11 @@ export function PriceHistogram({
   /** מחיר להדגשה בתוך ההתפלגות — המחיר של המודעה הנוכחית */
   price?: number | null;
   currency?: string;
+  /**
+   * פרישת העמודות בגלילה. מופעל בדף המודעה בלבד — ראה ההסבר
+   * ב-`globals.css` וב-DESIGN.md.
+   */
+  scrollReveal?: boolean;
   className?: string;
 }) {
   const peak = Math.max(1, ...buckets.map((b) => b.count));
@@ -37,7 +43,10 @@ export function PriceHistogram({
 
   return (
     <figure className={cn("space-y-2", className)}>
-      <div className="flex h-24 items-end gap-1" aria-hidden>
+      <div
+        className={cn("flex h-24 items-end gap-1", scrollReveal && "histogram-scroll")}
+        aria-hidden
+      >
         {buckets.map((b, i) => {
           const isMedian = inBucket(median, i);
           const isPrice = price != null && inBucket(price, i);
@@ -47,7 +56,7 @@ export function PriceHistogram({
             <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
               <div
                 className={cn(
-                  "w-full rounded-sm",
+                  "histogram-bar w-full rounded-sm",
                   isPrice
                     ? "bg-info"
                     : isMedian

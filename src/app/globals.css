@@ -256,6 +256,44 @@
    * מתחת למחיר. כשאין ממה לגזור צבע, המשתנה לא נכתב וה-fallback הוא
    * טוקן הפלטה — כלומר הדף פשוט נראה כמו קודם.
    */
+  /* ------------------------------------------------------------------
+     ההיסטוגרמה נפרסת בגלילה — scroll-timeline נייטיבי
+
+     חריג מפורש לכלל "אפס scroll-reveal" ב-DESIGN.md, והוא מוגבל
+     לאלמנט אחד: ההתפלגות בדף המודעה. ההבדל מקישוט הוא שהתנועה כאן
+     *היא* הנתון — כל עמודה עולה לגובה שמייצג את מספר המודעות בתא,
+     ולכן הפרישה קוראת כמו מדידה שמתמלאת ולא כמו אפקט כניסה.
+
+     הכול ב-CSS: `animation-timeline: view()` מקדם את האנימציה לפי
+     מיקום האלמנט בגלילה, בלי IntersectionObserver ובלי אף שורת
+     JavaScript. דפדפן בלי תמיכה מקבל את העמודות בגובהן המלא מיד —
+     ה-`@supports` הוא ה-fallback, לא תוספת.
+
+     `prefers-reduced-motion` מבטל את התנועה לגמרי.
+     ------------------------------------------------------------------ */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .histogram-scroll .histogram-bar {
+        transform-origin: bottom;
+        animation: histogram-rise linear both;
+        animation-timeline: view();
+        /* מתחיל כשהגרף נכנס לתחתית המסך ומסתיים כשהוא בשליש העליון */
+        animation-range: entry 15% cover 40%;
+      }
+    }
+  }
+
+  @keyframes histogram-rise {
+    from {
+      transform: scaleY(0.04);
+      opacity: 0.55;
+    }
+    to {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+  }
+
   .accent-halo::before {
     content: "";
     position: absolute;
