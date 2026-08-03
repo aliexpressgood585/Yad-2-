@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { hebrewRewrites } from "./src/lib/hebrew-routes";
+
 /** מקורות תמונה מותרים (תמונות דמו + ספקי אחסון). */
 const remoteHosts = [
   "picsum.photos",
@@ -84,6 +86,14 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+
+  /**
+   * הכתובות בעברית ממופות לנתיבים הלטיניים שבעץ הקבצים.
+   * ראה `src/lib/hebrew-routes.ts` להסבר למה זה נדרש.
+   */
+  async rewrites() {
+    return hebrewRewrites();
   },
 
   async redirects() {

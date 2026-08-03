@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
 import { getRootCategories } from "@/lib/categories";
+import { pricePaths } from "@/lib/hebrew-routes";
 import { SITE } from "@/lib/site";
 
 const COLUMNS = [
@@ -9,6 +10,9 @@ const COLUMNS = [
     title: "הלוח",
     links: [
       { href: "/about", label: "אודות" },
+      { href: pricePaths.valuation, label: "מדד המחירים" },
+      { href: pricePaths.guideIndex, label: "מחירון רכב" },
+      { href: pricePaths.cityIndex, label: "מחירי דירות" },
       { href: "/help", label: "עזרה ותמיכה" },
       { href: "/safety", label: "מדריך בטיחות" },
       { href: "/business", label: "פתרונות לעסקים" },
