@@ -768,6 +768,94 @@ export async function vehicleMakeOptions(): Promise<MakeOption[]> {
     .sort((a, b) => b.count - a.count || a.manufacturer.localeCompare(b.manufacturer, "he"));
 }
 
+/**
+ * פילוח מדגם לפי ערך מספרי — שנת ייצור ברכב, מספר חדרים בדירה.
+ *
+ * קבוצה שלא עברה את גודל המדגם המזערי נעלמת מהטבלה במקום להופיע עם
+ * מספר חלש. שורה בטבלה נראית סמכותית בדיוק כמו כותרת, ולכן היא כפופה
+ * לאותו כלל.
+ */
+export function breakdownBy<T extends { price: number }>(
+  rows: T[],
+  keyOf: (row: T) => number | null,
+): { key: number; summary: PriceSummary }[] {
+  const groups = new Map<number, number[]>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    if (key === null || !Number.isFinite(key)) continue;
+    const bucket = groups.get(key) ?? [];
+    bucket.push(row.price);
+    groups.set(key, bucket);
+  }
+
+  return [...groups.entries()]
+    .map(([key, prices]) => ({ key, summary: summarizePrices(prices) }))
+    .filter((g): g is { key: number; summary: PriceSummary } => g.summary !== null)
+    .sort((a, b) => a.key - b.key);
+}
+
+/**
+ * עוטף `generateStaticParams` כך שתקלת בסיס נתונים בזמן בנייה לא תפיל
+ * את הפריסה כולה: בלי רשימה מוקדמת הדפים פשוט ייבנו לפי דרישה, וזה
+ * בדיוק מה ש-ISR עושה ממילא בכתובת שלא הוכנה מראש.
+ */
+export async function safeParams<T>(load: () => Promise<T[]>): Promise<T[]> {
+  try {
+    return await load();
+  } catch (error) {
+    console.error("[valuation] generateStaticParams נכשל, הדפים ייבנו לפי דרישה", error);
+    return [];
+  }
+}
+
+export type GuideTarget = { manufacturer: string; model: string; count: number };
+
+/**
+ * צירופי יצרן-דגם שיש עליהם מספיק מודעות לדף מחירון.
+ *
+ * דף נחיתה נבנה רק כשיש לו מה להראות. עמוד "מחירון X" שכל תוכנו הוא
+ * "אין מספיק נתונים" הוא עמוד דל תוכן — הוא לא עוזר למשתמש ולא לאתר.
+ */
+export async function guideTargets(): Promise<GuideTarget[]> {
+  const rows = await prisma.$queryRaw<
+    { manufacturer: string; model: string; count: bigint }[]
+  >`
+    SELECT t.manufacturer, t.model, count(*) AS count
+      FROM (
+        SELECT l.id,
+               max(CASE WHEN a.key = 'manufacturer' THEN v.label END) AS manufacturer,
+               max(CASE WHEN a.key = 'model' THEN v.label END) AS model
+          FROM "Listing" l
+          JOIN "Category" c ON c.id = l."categoryId"
+          LEFT JOIN "Category" root ON root.id = c."parentId"
+          JOIN "ListingAttribute" la ON la."listingId" = l.id
+          JOIN "Attribute" a
+            ON a.id = la."attributeId" AND a.key IN ('manufacturer', 'model')
+          JOIN "AttributeValue" v ON v.id = la."valueId"
+         WHERE COALESCE(root.slug, c.slug) = 'vehicles'
+           AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+           AND l.price IS NOT NULL AND l.price > 0
+         GROUP BY l.id
+      ) t
+     WHERE t.manufacturer IS NOT NULL AND t.model IS NOT NULL
+     GROUP BY t.manufacturer, t.model
+    HAVING count(*) >= ${MIN_SAMPLE}
+     ORDER BY count(*) DESC
+  `;
+
+  return rows.map((r) => ({
+    manufacturer: r.manufacturer,
+    model: r.model,
+    count: Number(r.count),
+  }));
+}
+
+/** ערים שיש בהן מספיק מודעות לדף מחירי עיר, לפחות בסוג עסקה אחד. */
+export async function cityTargets(): Promise<CityOption[]> {
+  const all = await realEstateCityOptions();
+  return all.filter((c) => c.sale >= MIN_SAMPLE || c.rent >= MIN_SAMPLE);
+}
+
 export type CityOption = { city: string; sale: number; rent: number };
 
 /** ערים שיש בהן מודעות נדל"ן פעילות, עם ספירה לכל סוג עסקה. */

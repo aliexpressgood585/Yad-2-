@@ -8,6 +8,7 @@ import { BidiText } from "@/components/bidi-text";
 import { Breadcrumbs } from "@/components/browse/breadcrumbs";
 import { Gallery } from "@/components/listing/gallery";
 import { ContactPanel } from "@/components/listing/contact-panel";
+import { PriceDistribution } from "@/components/listing/price-distribution";
 import { PriceHistoryNote } from "@/components/listing/price-history-note";
 import { ReportDialog } from "@/components/listing/report-dialog";
 import { ShareButton } from "@/components/listing/share-button";
@@ -311,6 +312,15 @@ export default async function ListingPage({ params }: Props) {
               </dl>
             </section>
           ) : null}
+
+          {/* --- התפלגות המחיר --- */}
+          <Suspense fallback={null}>
+            <PriceDistribution
+              listingId={listing.id}
+              price={listing.price}
+              currency={listing.currency}
+            />
+          </Suspense>
 
           {/* --- תיאור --- */}
           <section aria-labelledby="description-heading">

@@ -42,7 +42,9 @@ export function PriceHistogram({
           const isMedian = inBucket(median, i);
           const isPrice = price != null && inBucket(price, i);
           return (
-            <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
+            // h-full הכרחי: גובה באחוזים נמדד מול הורה בעל גובה מפורש,
+            // ובעמודה בגובה תוכן הוא מתאפס והעמודות נעלמות
+            <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
               <div
                 className={cn(
                   "w-full rounded-sm",

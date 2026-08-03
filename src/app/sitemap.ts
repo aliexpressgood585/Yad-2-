@@ -2,7 +2,10 @@ import type { MetadataRoute } from "next";
 
 import { getFlatCategories } from "@/lib/categories";
 import { prisma } from "@/lib/db";
+import { pricePaths } from "@/lib/hebrew-routes";
 import { SITE } from "@/lib/site";
+import { slugify } from "@/lib/utils";
+import { cityTargets, guideTargets } from "@/lib/valuation";
 
 /** מספר המודעות המרבי במפת האתר — Google מגביל ל-50,000 כתובות לקובץ. */
 const MAX_LISTINGS = 20_000;
@@ -20,6 +23,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/help`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/safety`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/business`, changeFrequency: "monthly", priority: 0.5 },
+    {
+      url: `${base}${pricePaths.valuation}`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${base}${pricePaths.guideIndex}`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${base}${pricePaths.cityIndex}`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
     { url: `${base}/terms`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${base}/cookies`, changeFrequency: "yearly", priority: 0.2 },
@@ -39,6 +60,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: parent ? 0.7 : 0.9,
     };
   });
+
+  /**
+   * דפי המחירון נכללים רק כשיש עליהם מספיק מודעות — `guideTargets`
+   * ו-`cityTargets` כבר מסננים לפי אותו סף שבו הדף עצמו מסרב להציג
+   * מספר. כתובת שתגיע מהסיטמאפ אל דף שאומר "אין נתונים" היא בדיוק סוג
+   * הדף הדל שגורם לאתר להיראות ממולא אוטומטית.
+   */
+  const [guides, cities] = await Promise.all([guideTargets(), cityTargets()]);
+
+  const guidePages: MetadataRoute.Sitemap = [
+    ...new Set(guides.map((g) => g.manufacturer)),
+  ]
+    .map((make) => ({
+      url: `${base}${pricePaths.guide(slugify(make))}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }))
+    .concat(
+      guides.map((g) => ({
+        url: `${base}${pricePaths.guide(slugify(g.manufacturer), slugify(g.model))}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+    );
+
+  const cityPricePages: MetadataRoute.Sitemap = cities.map((c) => ({
+    url: `${base}${pricePaths.city(slugify(c.city))}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
 
   const [listings, businesses] = await Promise.all([
     prisma.listing.findMany({
@@ -68,5 +122,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticPages, ...categoryPages, ...businessPages, ...listingPages];
+  return [
+    ...staticPages,
+    ...categoryPages,
+    ...guidePages,
+    ...cityPricePages,
+    ...businessPages,
+    ...listingPages,
+  ];
 }
