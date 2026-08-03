@@ -68,29 +68,79 @@ const CAR_MODELS: Record<string, string[]> = {
   "צ'רי": ["טיגו 4", "טיגו 8", "אריזו 5"],
 };
 
-const carModelOptions: AttrOption[] = Object.entries(CAR_MODELS).flatMap(
-  ([make, models]) =>
-    models.map((m) => ({ value: `${make}-${m}`, label: m, parent: make })),
-);
+/**
+ * דגמי רכב מסחרי.
+ *
+ * רשימה נפרדת ולא ירושה מ-CAR_MODELS: כשהיצרן והדגם ישבו על קטגוריית
+ * האב, כל תת-קטגוריה ירשה את רשימת הרכבים הפרטיים — ונוצרו מודעות כמו
+ * "MG 4 עם משקל מטען 1,500 ק\"ג וסוג מרכב מקרר", כלומר האצ'בק חשמלי
+ * שהוגדר כמשאית קירור.
+ */
+const COMMERCIAL_MODELS: Record<string, string[]> = {
+  "פורד": ["טרנזיט", "טרנזיט קונקט", "ריינג'ר"],
+  "מרצדס-בנץ": ["ספרינטר", "ויטו", "סיטאן"],
+  "פולקסווגן": ["קראפטר", "טרנספורטר", "קאדי"],
+  "פיג'ו": ["פרטנר", "בוקסר", "אקספרט"],
+  "סיטרואן": ["ברלינגו", "ג'אמפר", "ג'אמפי"],
+  "רנו": ["קנגו", "מאסטר", "טראפיק"],
+  "טויוטה": ["היאס", "היילקס"],
+  "יונדאי": ["H1", "פורטר"],
+  "איווקו": ["דיילי"],
+  "איסוזו": ["D-Max", "NPR"],
+};
 
+/**
+ * דו-גלגלי.
+ *
+ * לא מחובר כרגע לעץ הקטגוריות: הגנרטור של אופנועים וקטנועים בונה כותרת
+ * מהיצרן ומנפח המנוע ("סוזוקי 750cc 2014") ואינו כותב שדה `manufacturer`.
+ * חיבור הרשימה כשדה חובה היה יוצר מודעות בלי ערך בשדה חובה. נשמר כאן
+ * כדי שהחיבור יהיה שינוי אחד כשהגנרטור יעודכן.
+ */
+const MOTORCYCLE_MODELS: Record<string, string[]> = {
+  "ימאהה": ["MT-07", "MT-09", "טנרה 700", "R1", "טרייסר"],
+  "הונדה": ["CB500", "CBR650", "אפריקה טווין", "פאן אירופה"],
+  "קוואסאקי": ["Z650", "נינג'ה 400", "ורסיס 650"],
+  "סוזוקי": ["GSX-R750", "V-Strom 650", "בורגמן"],
+  "BMW": ["R1250GS", "F850GS", "S1000RR"],
+  "KTM": ["דיוק 390", "אדוונצ'ר 790", "SMC 690"],
+  "הרלי דיווידסון": ["ספורטסטר", "פאט בוב", "רוד קינג"],
+  "פיאג'ו": ["ליברטי", "בוורלי", "MP3"],
+  "SYM": ["ג'ט 14", "סימפלי", "קרוקס"],
+  "קימקו": ["אג'יליטי", "פיפל", "דאונטאון"],
+};
+
+function modelOptionsFor(models: Record<string, string[]>): AttrOption[] {
+  return Object.entries(models).flatMap(([make, list]) =>
+    list.map((m) => ({ value: `${make}-${m}`, label: m, parent: make })),
+  );
+}
+
+/** יצרן + דגם עבור רשימת דגמים נתונה. מוגדר בכל עלה בנפרד. */
+function makeAndModelAttrs(models: Record<string, string[]>): AttrDef[] {
+  return [
+    {
+      key: "manufacturer",
+      label: "יצרן",
+      type: "SELECT",
+      required: true,
+      highlight: true,
+      options: Object.keys(models),
+    },
+    {
+      key: "model",
+      label: "דגם",
+      type: "SELECT",
+      required: true,
+      highlight: true,
+      dependsOn: "manufacturer",
+      options: modelOptionsFor(models),
+    },
+  ];
+}
+
+// יצרן ודגם אינם ב-VEHICLE_ATTRS המשותף — ראה COMMERCIAL_MODELS.
 const VEHICLE_ATTRS: AttrDef[] = [
-  {
-    key: "manufacturer",
-    label: "יצרן",
-    type: "SELECT",
-    required: true,
-    highlight: true,
-    options: Object.keys(CAR_MODELS),
-  },
-  {
-    key: "model",
-    label: "דגם",
-    type: "SELECT",
-    required: true,
-    highlight: true,
-    dependsOn: "manufacturer",
-    options: carModelOptions,
-  },
   {
     key: "year",
     label: "שנת ייצור",
@@ -209,6 +259,7 @@ const VEHICLES: CatDef = {
       name: "רכב פרטי",
       namePlural: "רכבים פרטיים",
       icon: "Car",
+      attributes: makeAndModelAttrs(CAR_MODELS),
       description: "רכבים פרטיים יד שנייה וחדשים",
     },
     {
@@ -217,6 +268,7 @@ const VEHICLES: CatDef = {
       namePlural: "רכבים מסחריים",
       icon: "Truck",
       attributes: [
+        ...makeAndModelAttrs(COMMERCIAL_MODELS),
         {
           key: "payload",
           label: "משקל מטען מותר",
@@ -239,6 +291,7 @@ const VEHICLES: CatDef = {
       name: "ג'יפים וקרוסאוברים",
       icon: "Car",
       attributes: [
+        ...makeAndModelAttrs(CAR_MODELS),
         {
           key: "drive",
           label: "הנעה",
@@ -286,6 +339,7 @@ const VEHICLES: CatDef = {
       name: "רכבי שטח",
       icon: "Truck",
       attributes: [
+        ...makeAndModelAttrs(CAR_MODELS),
         {
           key: "offroadType",
           label: "סוג כלי",
@@ -300,6 +354,7 @@ const VEHICLES: CatDef = {
       icon: "Car",
       description: "רכבים המוצעים להחלפה מול רכב אחר",
       attributes: [
+        ...makeAndModelAttrs(CAR_MODELS),
         {
           key: "wantedInReturn",
           label: "מעוניין לקבל בתמורה",
@@ -794,6 +849,8 @@ export const CATEGORY_TREE: CatDef[] = [
 
 export {
   CAR_MODELS,
+  COMMERCIAL_MODELS,
+  MOTORCYCLE_MODELS,
   RESIDENTIAL_SALE_TYPES,
   RESIDENTIAL_RENT_TYPES,
   ROOMMATE_TYPES,

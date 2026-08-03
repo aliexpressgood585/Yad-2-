@@ -5,6 +5,8 @@
  */
 import {
   CAR_MODELS,
+  COMMERCIAL_MODELS,
+  MOTORCYCLE_MODELS,
   RESIDENTIAL_SALE_TYPES,
   RESIDENTIAL_RENT_TYPES,
   ROOMMATE_TYPES,
@@ -94,9 +96,17 @@ const CAR_EXTRAS_TEXT = [
 ];
 
 function generateCar(rng: Rng, sub: string): GeneratedListing {
-  const makes = Object.keys(CAR_MODELS);
-  const make = rng.pick(makes);
-  const model = rng.pick(CAR_MODELS[make]!);
+  // רשימת הדגמים חייבת להתאים לתת-הקטגוריה, אחרת נוצר "MG 4" עם
+  // משקל מטען וסוג מרכב מקרר.
+  const models =
+    sub === "commercial-vehicles"
+      ? COMMERCIAL_MODELS
+      : sub === "motorcycles" || sub === "scooters"
+        ? MOTORCYCLE_MODELS
+        : CAR_MODELS;
+
+  const make = rng.pick(Object.keys(models));
+  const model = rng.pick(models[make]!);
   const year = rng.int(2006, CURRENT_YEAR);
   const age = CURRENT_YEAR - year;
   const km = Math.max(0, age * rng.int(9000, 22_000) + rng.int(0, 15_000));
