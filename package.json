@@ -19,7 +19,9 @@
     "postinstall": "prisma generate",
     "e2e": "node scripts/e2e-check.mjs",
     "check:format": "tsx scripts/checks/format-check.ts",
-    "check:seed": "tsx scripts/checks/seed-check.ts"
+    "check:seed": "tsx scripts/checks/seed-check.ts",
+    "check:search": "tsx scripts/checks/search-check.ts",
+    "check:all": "npm run check:format && npm run check:search"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
