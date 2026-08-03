@@ -14,8 +14,7 @@ import { CATEGORY_TREE, type AttrDef, type CatDef } from "./seed/categories";
 import {
   generateListing,
   makeRng,
-  HEBREW_FIRST_NAMES,
-  HEBREW_LAST_NAMES,
+  pickFullName,
   type AttrValues,
 } from "./seed/content";
 import { UNIQUE_CITIES, neighborhoodsOf } from "../src/lib/cities";
@@ -305,8 +304,8 @@ async function seedUsers(): Promise<SeedUser[]> {
   ];
 
   for (let i = 0; i < TOTAL_USERS - 2; i++) {
-    const first = rng.pick(HEBREW_FIRST_NAMES);
-    const last = rng.pick(HEBREW_LAST_NAMES);
+    // שם פרטי ושם משפחה מאותו מאגר — ראה pickFullName
+    const { first, last } = pickFullName(rng);
     const isBusiness = rng.bool(0.2);
     const name = `${first} ${last}`;
 

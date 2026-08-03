@@ -81,19 +81,24 @@ export function Gallery({ images, title }: { images: GalleryImage[]; title: stri
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="absolute inset-0 z-10 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           <span className="sr-only">הגדלת התמונה למסך מלא</span>
         </button>
 
-        <span className="pointer-events-none absolute bottom-3 start-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white num">
+        {/*
+          * המונה למעלה וכפתור ההגדלה למטה — פינות שונות בציר האנכי ולא
+          * רק בציר האופקי. שתי פינות תחתונות נפגשו בפועל כשכיוון הטקסט
+          * לא נפתר כמצופה, והמונה הוסתר מאחורי הכפתור.
+          */}
+        <span className="num pointer-events-none absolute start-3 top-3 z-20 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white">
           {index + 1} / {count}
         </span>
 
         <Button
           variant="secondary"
           size="icon-sm"
-          className="absolute bottom-3 end-3 shadow-lifted"
+          className="absolute bottom-3 end-3 z-20 shadow-lifted"
           onClick={() => setOpen(true)}
           aria-label="מסך מלא"
         >

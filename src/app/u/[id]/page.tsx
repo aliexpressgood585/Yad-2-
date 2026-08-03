@@ -95,7 +95,7 @@ export default async function SellerPage({ params }: Props) {
             {seller.verifiedAt ? (
               <BadgeCheck className="size-5 text-primary" aria-label="מוכר מאומת" />
             ) : null}
-            <Badge variant="soft">{trust.levelLabel}</Badge>
+            {trust.levelLabel ? <Badge variant="soft">{trust.levelLabel}</Badge> : null}
           </h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
@@ -125,9 +125,11 @@ export default async function SellerPage({ params }: Props) {
                 key={s.label}
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-xs",
-                  s.positive
+                  s.tone === "strong"
                     ? "border-success/40 bg-success/10 text-success"
-                    : "border-border text-muted-foreground",
+                    : s.tone === "warning"
+                      ? "border-warning/40 bg-warning/10 text-warning"
+                      : "border-border text-muted-foreground",
                 )}
               >
                 {s.label}: <span className="num font-medium">{s.value}</span>

@@ -11,10 +11,23 @@ export type TrustInput = {
   activeListings: number;
 };
 
+/**
+ * טון של אות אמון.
+ *
+ *   strong  — הישג. מסומן בירוק.
+ *   neutral — נתון קיים שאינו יוצא דופן. מוצג באפור, בלי סימון.
+ *   warning — סימן אזהרה אמיתי בלבד.
+ *
+ * אין "שלילי". דירוג 3.6 מתוך 60 דירוגים הוא לא כישלון, וסימון X עליו
+ * קורא כאזהרה ומטעה. הגרסה הקודמת השתמשה ב-boolean, ולכן כל מה שלא
+ * היה מצוין הוצג כפגם.
+ */
+export type SignalTone = "strong" | "neutral" | "warning";
+
 export type TrustSignal = {
   label: string;
   value: string;
-  positive: boolean;
+  tone: SignalTone;
 };
 
 export type TrustScore = {
@@ -25,12 +38,20 @@ export type TrustScore = {
   signals: TrustSignal[];
 };
 
+/**
+ * ספי התג. התג נגזר מהציון בלבד, ולכן הוא תמיד עקבי עם מילוי הפס.
+ * מתחת ל-MIN_BADGE אין תג כלל — עדיף בלי אמירה מאשר אמירה שלילית.
+ */
 const LEVEL_LABELS: Record<TrustScore["level"], string> = {
-  new: "מוכר חדש",
-  fair: "מוכר מתחיל",
+  new: "מוכר חדש בלוח",
+  fair: "",
   good: "מוכר אמין",
   excellent: "מוכר מצטיין",
 };
+
+const EXCELLENT_AT = 85;
+const GOOD_AT = 70;
+const MIN_BADGE = 40;
 
 /**
  * ציון אמינות מוכר, מחושב מאותות גלויים בלבד:
@@ -56,7 +77,7 @@ export function computeTrust(input: TrustInput): TrustScore {
         : ageDays < 365
           ? `${Math.floor(ageDays / 30)} חודשים`
           : `${Math.floor(ageDays / 365)} שנים`,
-    positive: ageDays >= 90,
+    tone: ageDays >= 365 ? "strong" : "neutral",
   });
 
   // אימות טלפון — 20 נקודות
@@ -64,7 +85,7 @@ export function computeTrust(input: TrustInput): TrustScore {
   signals.push({
     label: "אימות טלפון",
     value: input.verifiedAt ? "מאומת" : "לא מאומת",
-    positive: Boolean(input.verifiedAt),
+    tone: input.verifiedAt ? "strong" : "neutral",
   });
 
   // דירוגים — עד 30 נקודות, משוקללים לפי כמות הדירוגים
@@ -74,10 +95,10 @@ export function computeTrust(input: TrustInput): TrustScore {
     signals.push({
       label: "דירוג ממוצע",
       value: `${input.ratingAvg.toFixed(1)} מתוך 5 (${input.ratingCount} דירוגים)`,
-      positive: input.ratingAvg >= 4,
+      tone: input.ratingAvg >= 4.3 ? "strong" : "neutral",
     });
   } else {
-    signals.push({ label: "דירוגים", value: "אין עדיין", positive: false });
+    signals.push({ label: "דירוגים", value: "אין עדיין", tone: "neutral" });
   }
 
   // עסקאות שהושלמו — עד 15 נקודות
@@ -86,7 +107,7 @@ export function computeTrust(input: TrustInput): TrustScore {
     signals.push({
       label: "עסקאות שהושלמו",
       value: String(input.dealsCount),
-      positive: input.dealsCount >= 3,
+      tone: input.dealsCount >= 10 ? "strong" : "neutral",
     });
   }
 
@@ -100,12 +121,12 @@ export function computeTrust(input: TrustInput): TrustScore {
         input.responseMins < 60
           ? `${input.responseMins} דקות`
           : `${Math.round(input.responseMins / 60)} שעות`,
-      positive: fast,
+      tone: fast ? "strong" : "neutral",
     });
   }
 
   if (input.role === "BUSINESS") {
-    signals.push({ label: "סוג חשבון", value: "עסקי מאומת", positive: true });
+    signals.push({ label: "סוג חשבון", value: "עסקי מאומת", tone: "strong" });
   }
 
   // חשבון חדש עם הרבה מודעות — סימן אזהרה שמוריד ציון
@@ -114,15 +135,22 @@ export function computeTrust(input: TrustInput): TrustScore {
     signals.push({
       label: "פעילות חריגה",
       value: `${input.activeListings} מודעות בשבוע הראשון`,
-      positive: false,
+      tone: "warning",
     });
   }
 
   score = Math.max(0, Math.min(100, score));
 
   const level: TrustScore["level"] =
-    score >= 75 ? "excellent" : score >= 50 ? "good" : score >= 25 ? "fair" : "new";
+    score >= EXCELLENT_AT
+      ? "excellent"
+      : score >= GOOD_AT
+        ? "good"
+        : score >= MIN_BADGE
+          ? "fair"
+          : "new";
 
+  // `fair` מקבל מחרוזת ריקה בכוונה: בטווח הזה אין מה להכריז.
   return { score, level, levelLabel: LEVEL_LABELS[level], signals };
 }
 
