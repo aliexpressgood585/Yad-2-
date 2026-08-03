@@ -144,6 +144,7 @@ export async function runFraudChecks(listingId: string): Promise<number> {
       categoryId: true,
       userId: true,
       contentHash: true,
+      contactPhone: true,
       images: { select: { phash: true } },
     },
   });
@@ -157,6 +158,7 @@ export async function runFraudChecks(listingId: string): Promise<number> {
     categoryId: listing.categoryId,
     userId: listing.userId,
     contentHash: listing.contentHash,
+    contactPhone: listing.contactPhone,
     imagePhashes: listing.images
       .map((i) => i.phash)
       .filter((p): p is string => Boolean(p)),

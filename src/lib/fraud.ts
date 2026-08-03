@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { normalizeHebrew } from "@/lib/listing-text";
+import { computeRiskScore, RISK_WEIGHTS, type RiskCode } from "@/lib/risk";
 
 export type FraudFlagResult = {
   code: string;
@@ -34,6 +35,8 @@ export type FraudInput = {
   userId: string;
   contentHash: string | null;
   imagePhashes: string[];
+  /** טלפון ליצירת קשר — נבדק מול דיווחים קודמים */
+  contactPhone?: string | null;
 };
 
 /**
@@ -62,8 +65,11 @@ export async function detectFraud(input: FraudInput): Promise<FraudFlagResult[]>
 
   // 2. מחיר חריג ביחס לחציון הקטגוריה
   if (input.price && input.price > 0) {
-    const rows = await prisma.$queryRaw<{ median: number | null; n: bigint }[]>`
+    const rows = await prisma.$queryRaw<
+      { median: number | null; sd: number | null; n: bigint }[]
+    >`
       SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY "price")::int AS median,
+             STDDEV_POP("price") AS sd,
              COUNT(*)::bigint AS n
       FROM "Listing"
       WHERE "categoryId" = ${input.categoryId}
@@ -72,17 +78,29 @@ export async function detectFraud(input: FraudInput): Promise<FraudFlagResult[]>
         AND "id" <> ${input.listingId}
     `;
     const median = rows[0]?.median ?? null;
+    const sd = rows[0]?.sd === null || rows[0]?.sd === undefined ? null : Number(rows[0].sd);
     const sample = Number(rows[0]?.n ?? 0);
 
-    // נדרשות מספיק מודעות להשוואה כדי שהחציון יהיה משמעותי
-    if (median && sample >= 8 && input.price < median * 0.25) {
+    /*
+     * חריגה של יותר משלוש סטיות תקן מתחת לחציון.
+     *
+     * הכלל הקודם היה "פחות מ-25% מהחציון" — סף שרירותי שלא מתחשב
+     * בפיזור: בקטגוריה הומוגנית כמו מקררים 25% הוא חריג קיצוני, ובקטגוריה
+     * מפוזרת כמו רכב הוא טווח לגיטימי לחלוטין. סטיות תקן מכיילות את
+     * עצמן לפיזור בפועל של כל קטגוריה.
+     *
+     * חורגים כלפי מעלה אינם מסומנים: מחיר מופרז הוא טעות של המוכר,
+     * לא סיכון לקונה.
+     */
+    if (median && sd && sd > 0 && sample >= 8 && input.price < median - 3 * sd) {
+      const deviations = ((median - input.price) / sd).toFixed(1);
       flags.push({
-        code: "PRICE_TOO_LOW",
+        code: "PRICE_OUTLIER",
         severity: "HIGH",
-        message: `המחיר (${input.price}) נמוך מ-25% מהחציון בקטגוריה (${median})`,
+        message: `המחיר (${input.price}) נמוך ב-${deviations} סטיות תקן מהחציון (${median}), מדגם ${sample}`,
         publicWarning:
           "המחיר נמוך משמעותית ממחיר השוק בקטגוריה. מחיר טוב מדי מכדי להיות אמיתי הוא סימן אזהרה מוכר.",
-        score: 35,
+        score: RISK_WEIGHTS.PRICE_OUTLIER,
       });
     }
   }
@@ -135,12 +153,12 @@ export async function detectFraud(input: FraudInput): Promise<FraudFlagResult[]>
   });
   if (user) {
     const ageDays = (Date.now() - user.createdAt.getTime()) / 86_400_000;
-    if (ageDays < 3 && user._count.listings > 8) {
+    if (ageDays < 2 && user._count.listings >= 5) {
       flags.push({
         code: "NEW_ACCOUNT_BURST",
         severity: "HIGH",
-        message: `חשבון בן פחות מ-3 ימים עם ${user._count.listings} מודעות`,
-        score: 30,
+        message: `חשבון בן פחות מ-48 שעות עם ${user._count.listings} מודעות`,
+        score: RISK_WEIGHTS.NEW_ACCOUNT_BURST,
       });
     }
     if (!user.verifiedAt) {
@@ -148,9 +166,42 @@ export async function detectFraud(input: FraudInput): Promise<FraudFlagResult[]>
         code: "UNVERIFIED_SELLER",
         severity: "LOW",
         message: "המוכר לא אימת מספר טלפון",
-        score: 8,
+        score: RISK_WEIGHTS.UNVERIFIED_SELLER,
       });
     }
+  }
+
+  /*
+   * 5ב. המוכר או הטלפון הופיעו בדיווחים קודמים.
+   *
+   * זה האות החזק ביותר במערכת, כי מקורו בבני אדם ולא ביוריסטיקה:
+   * מישהו כבר נתקל בפריט הזה ודיווח. נספרים רק דיווחים שנבדקו ואושרו
+   * ע"י מנהל — דיווח פתוח הוא טענה, לא ממצא, ולהעניש עליו היה הופך
+   * את כפתור הדיווח לנשק נגד מתחרים.
+   */
+  const priorReports = await prisma.report.count({
+    where: {
+      // RESOLVED = מנהל בדק ומצא שהדיווח מוצדק. DISMISSED נדחה, ו-OPEN
+      // הוא עדיין טענה בלבד — שניהם לא נספרים.
+      status: "RESOLVED",
+      listing: {
+        OR: [
+          { userId: input.userId },
+          ...(input.contactPhone ? [{ contactPhone: input.contactPhone }] : []),
+        ],
+        id: { not: input.listingId },
+      },
+    },
+  });
+  if (priorReports > 0) {
+    flags.push({
+      code: "PRIOR_REPORTS",
+      severity: "HIGH",
+      message: `${priorReports} דיווחים שאושרו על מודעות קודמות של אותו מוכר או טלפון`,
+      publicWarning:
+        "התקבלו בעבר דיווחים על מודעות של מוכר זה. מומלץ להיפגש פנים אל פנים ולבדוק את הפריט לפני תשלום.",
+      score: RISK_WEIGHTS.PRIOR_REPORTS,
+    });
   }
 
   // 6. פרטי קשר חיצוניים בגוף המודעה — עוקף את מנגנוני ההגנה של האתר
@@ -171,7 +222,9 @@ export async function persistFraudFlags(
   listingId: string,
   flags: FraudFlagResult[],
 ): Promise<number> {
-  const score = Math.min(100, flags.reduce((sum, f) => sum + f.score, 0));
+  // הציון מגיע מהנוסחה המתועדת ב-@/lib/risk ולא מסכום פשוט:
+  // אות אחרי הראשון נכנס בתשומה פוחתת.
+  const score = computeRiskScore(flags.map((f) => f.code as RiskCode));
 
   await prisma.$transaction([
     prisma.fraudFlag.deleteMany({ where: { listingId } }),

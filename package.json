@@ -21,7 +21,8 @@
     "check:format": "tsx scripts/checks/format-check.ts",
     "check:seed": "tsx scripts/checks/seed-check.ts",
     "check:search": "tsx scripts/checks/search-check.ts",
-    "check:all": "npm run check:format && npm run check:search"
+    "check:all": "npm run check:format && npm run check:search && npm run check:risk",
+    "check:risk": "tsx scripts/checks/risk-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
