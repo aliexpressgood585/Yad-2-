@@ -173,6 +173,30 @@
     @apply bg-primary/20;
   }
 
+  /* ------------------------------------------------------------------
+     מעבר בין כרטיס לדף מודעה (View Transitions API)
+
+     תמונת המודעה נושאת את אותו `view-transition-name` בשני הדפים,
+     והדפדפן מזיז אותה בין המצבים. אין כאן ספרייה ואין JavaScript משלנו:
+     דפדפן בלי תמיכה פשוט מנווט, וזה ה-fallback.
+
+     התקציב מ-DESIGN.md חל גם כאן — 180ms ואותו easing. ברירת המחדל של
+     הדפדפן היא 250ms, כלומר חריגה שקטה מהתקציב.
+     ------------------------------------------------------------------ */
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* נשארת רק ההצלבה באטימות; התנועה במרחב מבוטלת */
+    ::view-transition-group(*) {
+      animation: none !important;
+    }
+  }
+
   /*
    * מספרים בעברית.
    *
@@ -224,6 +248,147 @@
    * תמונות מגיעות ממשתמשים ואי אפשר לדעת אם הפינה בהירה או כהה —
    * הגרדיאנט מבטיח ניגודיות בלי לצבוע את כל התמונה.
    */
+  /*
+   * צבע ההדגשה של המודעה — נגזר מ-blurhash של התמונה הראשונה
+   * (`src/lib/listing-accent.ts`) ומוזרק כמשתנה על עוטף הדף.
+   *
+   * שני שימושים בלבד, ושניהם עדינים במכוון: הילה מאחורי הגלריה וקו
+   * מתחת למחיר. כשאין ממה לגזור צבע, המשתנה לא נכתב וה-fallback הוא
+   * טוקן הפלטה — כלומר הדף פשוט נראה כמו קודם.
+   */
+  /* ------------------------------------------------------------------
+     ההיסטוגרמה נפרסת בגלילה — scroll-timeline נייטיבי
+
+     חריג מפורש לכלל "אפס scroll-reveal" ב-DESIGN.md, והוא מוגבל
+     לאלמנט אחד: ההתפלגות בדף המודעה. ההבדל מקישוט הוא שהתנועה כאן
+     *היא* הנתון — כל עמודה עולה לגובה שמייצג את מספר המודעות בתא,
+     ולכן הפרישה קוראת כמו מדידה שמתמלאת ולא כמו אפקט כניסה.
+
+     הכול ב-CSS: `animation-timeline: view()` מקדם את האנימציה לפי
+     מיקום האלמנט בגלילה, בלי IntersectionObserver ובלי אף שורת
+     JavaScript. דפדפן בלי תמיכה מקבל את העמודות בגובהן המלא מיד —
+     ה-`@supports` הוא ה-fallback, לא תוספת.
+
+     `prefers-reduced-motion` מבטל את התנועה לגמרי.
+     ------------------------------------------------------------------ */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .histogram-scroll .histogram-bar {
+        transform-origin: bottom;
+        animation: histogram-rise linear both;
+        animation-timeline: view();
+        /* מתחיל כשהגרף נכנס לתחתית המסך ומסתיים כשהוא בשליש העליון */
+        animation-range: entry 15% cover 40%;
+      }
+    }
+  }
+
+  @keyframes histogram-rise {
+    from {
+      transform: scaleY(0.04);
+      opacity: 0.55;
+    }
+    to {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+  }
+
+  .accent-halo::before {
+    content: "";
+    position: absolute;
+    inset: -8% -4% 40%;
+    z-index: -1;
+    border-radius: 999px;
+    background: hsl(var(--listing-accent, var(--stone)) / 0.28);
+    filter: blur(56px);
+    pointer-events: none;
+  }
+
+  .dark .accent-halo::before {
+    background: hsl(var(--listing-accent, var(--stone)) / 0.22);
+  }
+
+  .accent-rule {
+    height: 3px;
+    width: 3.5rem;
+    border-radius: 999px;
+    background: hsl(var(--listing-accent, var(--primary)));
+  }
+
+  /* ------------------------------------------------------------------
+     כרטיס המודעה מגיב למכל שלו ולא לחלון
+
+     אותו רכיב מופיע בגריד רחב, בסיידבר צר, ברצועת "נצפו לאחרונה"
+     ובחלונית של המפה. נקודות שבירה לפי `viewport` שיקרו בכל אחד
+     מהמקומות האלה חוץ מהראשון: סיידבר בן 260px במסך של 1440px קיבל
+     את הפריסה של מסך רחב, כי החלון באמת רחב.
+
+     `container-type: inline-size` הופך את הכרטיס עצמו לנקודת הייחוס,
+     ומכאן הרכיב לא צריך אף prop כדי לדעת איפה הוא יושב.
+
+     כתוב ידנית ולא דרך תוסף Tailwind — זה תוסף שלם בשביל שלוש שאילתות.
+     ------------------------------------------------------------------ */
+  .listing-card {
+    container-type: inline-size;
+    container-name: card;
+  }
+
+  /* תמונה קטנה בשורת רשימה, וגדלה כשיש מקום במכל */
+  @container card (min-width: 26rem) {
+    .listing-card[data-density="list"] .listing-card-media {
+      width: 11rem;
+    }
+  }
+
+  /*
+   * שורת המפרט מקצרת את עצמה לפי המכל.
+   *
+   * זה הפתרון היחיד שאינו מסכן את הנתון: פריט שלא נכנס נעלם כולו,
+   * במקום שספרות יאבדו בקצה השורה ויציגו מספר שגוי. הסף גבוה מרוחב
+   * הכרטיס בשורת רשימה בנייד (343px), שבו עמודת הטקסט צרה במיוחד.
+   */
+  /* בשורת רשימה התמונה גוזלת 8rem, ולכן הסף גבוה מרוחב הכרטיס */
+  @container card (max-width: 24rem) {
+    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  @container card (max-width: 17rem) {
+    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 2) {
+      display: none;
+    }
+  }
+
+  /* בגריד כל רוחב הכרטיס עומד לרשות הטקסט, פחות הריפוד */
+  @container card (max-width: 12rem) {
+    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  @container card (max-width: 9rem) {
+    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 2) {
+      display: none;
+    }
+  }
+
+  /*
+   * מכל צר מאוד — המחיר יורד גודל אחד בסקאלה כדי לא להיחתך.
+   * הסף נמוך בכוונה מכרטיס בגריד של נייד (166px): שם המחיר נשאר
+   * הדבר הבולט בכרטיס, וזו ההיררכיה שנקבעה ב-DESIGN.md.
+   *
+   * שום שדה אינו מוסתר בשום רוחב. הכרטיס מציג מחיר, כותרת, שלושה
+   * שדות מפרט ושורת מיקום וזמן — זו ההגדרה שלו, לא הצעה שתלויה במקום.
+   */
+  @container card (max-width: 10rem) {
+    .listing-card-price {
+      font-size: theme(fontSize.base[0]);
+      line-height: theme(fontSize.base[1].lineHeight);
+    }
+  }
+
   .img-scrim {
     background: linear-gradient(
       to top,

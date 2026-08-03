@@ -15,7 +15,13 @@ import { cn } from "@/lib/utils";
  * הזיהוי נעשה דרך `#hero-search-anchor`, שקיים רק בדף הבית: בכל דף אחר
  * ה-observer לא מוצא אותו והשדה מוצג מיד.
  */
-export function HeaderSearchSlot({ className }: { className?: string }) {
+export function HeaderSearchSlot({
+  className,
+  inputId,
+}: {
+  className?: string;
+  inputId?: string;
+}) {
   const [visible, setVisible] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,7 +51,7 @@ export function HeaderSearchSlot({ className }: { className?: string }) {
       )}
       aria-hidden={!visible}
     >
-      <HeaderSearch />
+      <HeaderSearch inputId={inputId} />
     </div>
   );
 }

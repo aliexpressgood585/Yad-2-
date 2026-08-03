@@ -20,7 +20,16 @@ export type GalleryImage = {
  * גלריית תמונות עם lightbox, זום וניווט מקלדת מלא
  * (חצים למעבר, +/- לזום, Escape לסגירה).
  */
-export function Gallery({ images, title }: { images: GalleryImage[]; title: string }) {
+export function Gallery({
+  images,
+  title,
+  transitionName,
+}: {
+  images: GalleryImage[];
+  title: string;
+  /** שם המעבר מהכרטיס — ראה `src/lib/view-transitions.ts` */
+  transitionName?: string;
+}) {
   const [index, setIndex] = React.useState(0);
   const [open, setOpen] = React.useState(false);
   const thumbsRef = React.useRef<HTMLDivElement>(null);
@@ -66,7 +75,11 @@ export function Gallery({ images, title }: { images: GalleryImage[]; title: stri
 
   return (
     <div className="space-y-2">
-      <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted sm:aspect-[16/10]">
+      <div
+        className="group relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted sm:aspect-[16/10]"
+        // המעבר חל על התמונה הראשית בלבד; החלפת תמונה בגלריה אינה ניווט
+        style={transitionName ? { viewTransitionName: transitionName } : undefined}
+      >
         <Image
           src={current.url}
           alt={`${title} — תמונה ${index + 1} מתוך ${count}`}

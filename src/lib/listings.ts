@@ -287,6 +287,79 @@ export async function countByCategory(
   return new Map(rows.map((r) => [r.categoryId, Number(r.count)]));
 }
 
+/**
+ * ספירת תוצאות לכל ערך של שדה דינמי — "מעלית (31)" לפני שלוחצים.
+ *
+ * שתי החלטות שקובעות אם המספר אומר את האמת:
+ *
+ * 1. **פילטר לא סופר את עצמו.** אם המשתמש כבר בחר "טויוטה", ספירה
+ *    שמכבדת את הבחירה הייתה מציגה 0 לכל יצרן אחר — כלומר בדיוק המידע
+ *    שמונע ממנו להחליף בחירה. לכן לכל שדה שיש בו בחירה רצה שאילתה
+ *    נפרדת בלי הפילטר שלו עצמו. שדות בלי בחירה חולקים שאילתה אחת.
+ * 2. **ספירה על התוצאות הנוכחיות ולא על הקטגוריה.** המספר עונה על
+ *    "כמה יתווספו אם אלחץ", וזה תלוי בכל שאר הפילטרים.
+ *
+ * המפתח במפה הוא `attributeId`, והערך הוא מפה מערך לספירה. שדות
+ * בוליאניים נספרים תחת המפתח `"true"`.
+ */
+export type AttributeFacets = Map<string, Map<string, number>>;
+
+export async function countByAttributeValues(
+  query: SearchQuery,
+  attributeIds: string[],
+): Promise<AttributeFacets> {
+  const facets: AttributeFacets = new Map();
+  if (!attributeIds.length) return facets;
+
+  const filters = query.attributes ?? [];
+  const selected = new Set(
+    filters
+      .filter((f) => (f.kind === "values" ? f.values.length > 0 : true))
+      .flatMap((f) => f.attributeIds),
+  );
+
+  /** מריצה ספירה אחת עבור קבוצת שדות, תחת where נתון. */
+  const run = async (ids: string[], where: Prisma.Sql) => {
+    if (!ids.length) return;
+    const rows = await prisma.$queryRaw<
+      { attributeId: string; value: string | null; bool: boolean | null; count: bigint }[]
+    >(Prisma.sql`
+      SELECT la."attributeId" AS "attributeId",
+             la."valueText" AS value,
+             la."valueBool" AS bool,
+             COUNT(DISTINCT l.id)::bigint AS count
+        FROM "Listing" l
+        JOIN "ListingAttribute" la ON la."listingId" = l.id
+       WHERE ${where}
+         AND la."attributeId" IN (${Prisma.join(ids)})
+         AND (la."valueText" IS NOT NULL OR la."valueBool" = true)
+       GROUP BY 1, 2, 3
+    `);
+
+    for (const row of rows) {
+      const key = row.value ?? (row.bool ? "true" : null);
+      if (!key) continue;
+      const byValue = facets.get(row.attributeId) ?? new Map<string, number>();
+      byValue.set(key, Number(row.count));
+      facets.set(row.attributeId, byValue);
+    }
+  };
+
+  const unselected = attributeIds.filter((id) => !selected.has(id));
+  await run(unselected, buildWhere(query));
+
+  // שדה שנבחר בו ערך — ספירה בלי הפילטר של אותו שדה
+  for (const id of attributeIds.filter((a) => selected.has(a))) {
+    const without = {
+      ...query,
+      attributes: filters.filter((f) => !f.attributeIds.includes(id)),
+    };
+    await run([id], buildWhere(without));
+  }
+
+  return facets;
+}
+
 /** ספירת תוצאות לכל עיר — למיון רשימת הערים בפילטר לפי כמות. */
 export async function countByCity(
   query: SearchQuery,

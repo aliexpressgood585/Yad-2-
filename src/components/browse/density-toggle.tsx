@@ -15,15 +15,28 @@ const OPTIONS: { value: Density; label: string; Icon: typeof LayoutGrid }[] = [
  *
  * מוצג בכל מסך תוצאות: זו העדפת עבודה קבועה של המשתמש ולא מצב של
  * מסך בודד, ולכן היא לא יושבת ב-URL.
+ *
+ * כשנמסר `categorySlug`, הבחירה נספרת גם לקטגוריה: שלוש בחירות רצופות
+ * באותה תצוגה הופכות אותה לברירת המחדל שם. הכותרת מספרת שזה קרה —
+ * ממשק שלומד בלי לומר זאת מרגיש כמו תקלה ולא כמו עזרה.
  */
-export function DensityToggle({ className }: { className?: string }) {
-  const { density, setDensity } = useDensity();
+export function DensityToggle({
+  className,
+  categorySlug,
+}: {
+  className?: string;
+  categorySlug?: string;
+}) {
+  const { density, setDensity, isLearned } = useDensity(categorySlug);
 
   return (
     <div
       className={cn("flex items-center rounded-md border border-border p-0.5", className)}
       role="group"
-      aria-label="צפיפות התצוגה"
+      aria-label={
+        isLearned ? "צפיפות התצוגה — נלמדה מהבחירות שלך בקטגוריה הזו" : "צפיפות התצוגה"
+      }
+      title={isLearned ? "ברירת המחדל בקטגוריה הזו נקבעה מהבחירות שלך" : undefined}
     >
       {OPTIONS.map(({ value, label, Icon }) => (
         <button

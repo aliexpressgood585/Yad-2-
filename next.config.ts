@@ -56,6 +56,12 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "recharts"],
+    /*
+     * `viewTransition` אינו מופעל כאן במכוון: הוא מפעיל את רכיב
+     * `<ViewTransition>` של React, שאינו קיים ב-React 19.0 היציבה, ולכן
+     * הוא לא היה עושה כלום. מעברי התצוגה ממומשים ישירות מול ה-API
+     * הנייטיבי — ראה `src/components/view-transition-link.tsx`.
+     */
   },
 
   serverExternalPackages: ["sharp", "web-push"],

@@ -60,6 +60,7 @@ export async function PriceDistribution({
         median={dist.median}
         price={price}
         currency={currency}
+        scrollReveal
         className="mt-4"
       />
 

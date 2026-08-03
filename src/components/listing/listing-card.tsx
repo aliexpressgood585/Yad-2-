@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-
 import { BidiText } from "@/components/bidi-text";
+import { ViewTransitionLink } from "@/components/view-transition-link";
 
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { ListingImage } from "@/components/listing/listing-image";
 import { PriceMeter } from "@/components/listing/price-meter";
+import { listingImageTransition } from "@/lib/view-transitions";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { formatPrice } from "@/lib/format";
 import type { Density } from "@/stores/density";
@@ -26,26 +26,39 @@ type Props = {
  * מיקום וזמן. מה שהוסר במכוון — דירוג המוכר, ספירת צפיות ומספר התמונות.
  * שלושתם רעש ברשימה: הם לא עוזרים לבחור בין מודעות, והם מה שהופך לוח
  * מודעות לצפוף. מקומם בדף המודעה, אחרי שכבר נכנסו.
+ *
+ * **הכרטיס מגיב למכל שלו ולא לחלון.** אותו רכיב עובד בגריד, בסיידבר,
+ * ברצועת "נצפו לאחרונה" ובחלונית של המפה בלי prop שמסביר לו איפה הוא
+ * נמצא — נקודות השבירה יושבות ב-`@container` (ראה `globals.css`).
+ * `density` נשאר prop כי הוא כוונה של המשתמש ולא מידה של המכל.
  */
 export function ListingCard({ listing, density = "grid", priority = false, className }: Props) {
   const isList = density === "list";
 
   return (
     <article
+      data-density={density}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-border bg-card",
+        "listing-card group relative overflow-hidden rounded-lg border border-border bg-card",
         "transition-shadow duration-ui ease-ui focus-within:ring-2 focus-within:ring-ring hover:shadow-lifted",
         isList && "flex",
         className,
       )}
     >
-      <div className={cn("relative shrink-0", isList ? "w-32 sm:w-44" : "w-full")}>
+      <div
+        className={cn(
+          "listing-card-media relative shrink-0",
+          // הרוחב בשורת רשימה גדל דרך שאילתת מכל, לא לפי רוחב החלון
+          isList ? "w-32" : "w-full",
+        )}
+      >
         <ListingImage
           src={listing.imageUrl}
           blurDataURL={listing.blurDataURL}
           categoryIcon={listing.categoryIcon}
           sizes={isList ? "176px" : "(max-width: 640px) 50vw, 300px"}
           priority={priority}
+          viewTransitionName={listingImageTransition(listing.id)}
         />
 
         {/*
@@ -68,8 +81,13 @@ export function ListingCard({ listing, density = "grid", priority = false, class
         </div>
       </div>
 
-      <div className={cn("flex flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
-        <p className="num text-lg font-medium leading-none text-foreground">
+      {/*
+       * min-w-0 חיוני: בלעדיו פריט flex לא יורד מתחת לרוחב התוכן שלו,
+       * ושורת מפרט ארוכה ("יד חמישית ומעלה · 417,851 ק\"מ") דחפה את
+       * גוף הכרטיס אל מחוץ לגבולותיו במקום להיחתך.
+       */}
+      <div className={cn("flex min-w-0 flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
+        <p className="listing-card-price num text-lg font-medium leading-none text-foreground">
           {formatPrice(listing.price, { currency: listing.currency })}
         </p>
 
@@ -77,18 +95,34 @@ export function ListingCard({ listing, density = "grid", priority = false, class
 
         <h3 className="truncate text-base font-semibold leading-snug">
           {/* הקישור פרוס על כל הכרטיס כדי להגדיל את שטח הלחיצה */}
-          <Link
+          <ViewTransitionLink
             href={`/item/${listing.slug}`}
             className="outline-none after:absolute after:inset-0"
           >
             <BidiText>{listing.title}</BidiText>
-          </Link>
+          </ViewTransitionLink>
         </h3>
 
+        {/*
+         * שדה שלא נכנס יורד כולו, ולא נחתך.
+         *
+         * חיתוך של פריט באמצע הוא לא רק מכוער כאן: `.num` מבודד את
+         * המספר ל-LTR, וחיתוך בקצה השורה ב-RTL אוכל דווקא את הספרות
+         * המובילות — "417,851 ק\"מ" הופך ל-"7,851 ק\"מ", מספר שגוי
+         * שנראה תקין לחלוטין. כמה שדות מוצגים נקבע ברוחב המכל
+         * (`globals.css`), והפריטים עצמם לעולם לא מתכווצים.
+         */}
         {listing.highlights.length ? (
-          <ul className="flex items-center gap-x-1.5 truncate text-xs text-muted-foreground">
+          <ul className="listing-card-specs flex items-center gap-x-1.5 overflow-hidden text-xs text-muted-foreground">
             {listing.highlights.map((h, i) => (
-              <li key={h.key} className="flex shrink-0 items-center gap-1.5">
+              <li
+                key={h.key}
+                className={cn(
+                  "flex items-center gap-1.5",
+                  // ערך עם ספרות לעולם אינו מתכווץ; טקסט מתקצר במקומו
+                  /\d/.test(h.value) ? "shrink-0" : "min-w-0 truncate",
+                )}
+              >
                 {i > 0 ? <span aria-hidden>·</span> : null}
                 <span className="num">{h.value}</span>
               </li>
@@ -96,7 +130,7 @@ export function ListingCard({ listing, density = "grid", priority = false, class
           </ul>
         ) : null}
 
-        <p className="mt-auto truncate pt-0.5 text-xs text-muted-foreground/70">
+        <p className="listing-card-meta mt-auto truncate pt-0.5 text-xs text-muted-foreground/70">
           {listing.city}
           {listing.neighborhood ? `, ${listing.neighborhood}` : ""}
           {" · "}
@@ -115,16 +149,20 @@ export function ListingCardSkeleton({ density = "grid" }: { density?: Density })
   const isList = density === "list";
   return (
     <div
-      className={cn("overflow-hidden rounded-lg border border-border bg-card", isList && "flex")}
+      data-density={density}
+      className={cn(
+        "listing-card overflow-hidden rounded-lg border border-border bg-card",
+        isList && "flex",
+      )}
       aria-hidden
     >
       <div
         className={cn(
-          "aspect-[4/3] shrink-0 animate-pulse bg-muted",
-          isList ? "w-32 sm:w-44" : "w-full",
+          "listing-card-media aspect-[4/3] shrink-0 animate-pulse bg-muted",
+          isList ? "w-32" : "w-full",
         )}
       />
-      <div className={cn("flex flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
+      <div className={cn("flex min-w-0 flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
         <div className="h-5 w-24 animate-pulse rounded-sm bg-muted" />
         <div className="mt-1 h-4 w-full animate-pulse rounded-sm bg-muted" />
         <div className="mt-1 h-3 w-2/3 animate-pulse rounded-sm bg-muted" />

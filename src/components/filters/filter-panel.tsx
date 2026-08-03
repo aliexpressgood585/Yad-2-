@@ -18,19 +18,36 @@ import { formatPrice } from "@/lib/format";
 
 export type CityFacet = { city: string; count: number };
 
+/** `attributeId` → ערך → מספר המודעות התואמות בתוצאות הנוכחיות. */
+export type ValueFacets = Record<string, Record<string, number>>;
+
 type Props = {
   attributes: ResolvedAttribute[];
   cityFacets: CityFacet[];
   priceRange: { min: number; max: number; median: number } | null;
   priceLabel?: string;
+  valueFacets?: ValueFacets;
   className?: string;
 };
+
+/** ספירת תוצאות ליד תווית פילטר. חסרה ספירה — לא מוצג כלום. */
+function FacetCount({ count }: { count?: number }) {
+  if (count === undefined) return null;
+  return (
+    <span
+      className={cn("num ms-1.5 text-xs", count === 0 ? "text-muted-foreground/50" : "text-muted-foreground")}
+    >
+      ({count})
+    </span>
+  );
+}
 
 export function FilterPanel({
   attributes,
   cityFacets,
   priceRange,
   priceLabel = "מחיר",
+  valueFacets = {},
   className,
 }: Props) {
   const { state, setParam, setAttrValues, setAttrRange, setAttrBool, clearAll, push } =
@@ -148,6 +165,7 @@ export function FilterPanel({
             <AccordionContent>
               <AttributeControl
                 attr={attr}
+                counts={valueFacets[attr.id]}
                 selected={selectedByKey[attr.key] ?? []}
                 range={state.attrRanges[attr.key] ?? {}}
                 parentValues={attr.dependsOn ? (selectedByKey[attr.dependsOn] ?? []) : null}
@@ -168,6 +186,7 @@ export function FilterPanel({
                   <li key={attr.id} className="flex items-center justify-between gap-3">
                     <Label htmlFor={`bool-${attr.key}`} className="cursor-pointer font-normal">
                       {attr.label}
+                      <FacetCount count={valueFacets[attr.id]?.true} />
                     </Label>
                     <Switch
                       id={`bool-${attr.key}`}
@@ -207,6 +226,7 @@ export function FilterPanel({
 /** בקרה מתאימה לסוג השדה: רשימת סימון, טווח מספרי או טקסט. */
 function AttributeControl({
   attr,
+  counts,
   selected,
   range,
   parentValues,
@@ -214,6 +234,7 @@ function AttributeControl({
   onRange,
 }: {
   attr: ResolvedAttribute;
+  counts?: Record<string, number>;
   selected: string[];
   range: { min?: number; max?: number };
   parentValues: string[] | null;
@@ -307,7 +328,20 @@ function AttributeControl({
     );
   }
 
-  const visible = showAll ? options : options.slice(0, 8);
+  /*
+   * כשיש ספירות, אפשרות בלי תוצאות יורדת לסוף הרשימה במקום להיעלם:
+   * היעלמות הייתה משנה את הרשימה מתחת לאצבע בזמן סינון, והמשתמש היה
+   * מאבד את המקום. אפשרות מסומנת נשארת למעלה גם אם ספירתה 0.
+   */
+  const ordered = counts
+    ? [...options].sort((a, b) => {
+        const ca = selected.includes(a.value) ? Infinity : (counts[a.value] ?? 0);
+        const cb = selected.includes(b.value) ? Infinity : (counts[b.value] ?? 0);
+        return cb - ca;
+      })
+    : options;
+
+  const visible = showAll ? ordered : ordered.slice(0, 8);
 
   return (
     <div className="space-y-2">
@@ -330,6 +364,8 @@ function AttributeControl({
               />
               <Label htmlFor={id} className="cursor-pointer font-normal">
                 {opt.label}
+                {/* יש ספירות לשדה → ערך בלי תוצאות מוצג כ-0 ולא כחסר מידע */}
+                <FacetCount count={counts ? (counts[opt.value] ?? 0) : undefined} />
               </Label>
             </li>
           );
