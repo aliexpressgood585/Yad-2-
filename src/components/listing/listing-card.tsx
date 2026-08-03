@@ -84,12 +84,10 @@ export function ListingCard({ listing, density = "grid", priority = false, class
         </h3>
 
         {listing.highlights.length ? (
-          <ul className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+          <ul className="flex items-center gap-x-1.5 truncate text-xs text-muted-foreground">
             {listing.highlights.map((h, i) => (
-              <li key={h.key} className="flex items-center gap-1.5">
+              <li key={h.key} className="flex shrink-0 items-center gap-1.5">
                 {i > 0 ? <span aria-hidden>·</span> : null}
-                {/* כלל גלובלי: ערך שלא מסביר את עצמו לא מוצג בלי תווית */}
-                {h.selfEvident ? null : <span>{h.label}</span>}
                 <span className="num">{h.value}</span>
               </li>
             ))}

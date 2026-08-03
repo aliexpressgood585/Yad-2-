@@ -67,7 +67,9 @@ export function formatPrice(
   if (price === null || price === undefined) return empty;
   if (price === 0) return free;
   const symbol = currency === "ILS" ? "₪" : currency === "USD" ? "$" : "€";
-  return `${symbol}${formatNumber(price)}`;
+  // רווח דק בלתי-שביר בין הסימן למספר. בלעדיו נדבק "₪147,500";
+  // רווח רגיל היה מאפשר שבירת שורה בין הסימן לסכום.
+  return `${symbol}\u202F${formatNumber(price)}`;
 }
 
 /** ספירות בממשק: תוצאות, צפיות, מודעות. */

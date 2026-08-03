@@ -63,9 +63,14 @@ function pickHighlights(listing: ListingCard): AttributeEntry[] {
     .filter((e): e is AttributeEntry => e !== null);
 
   const title = listing.title;
-  const fresh = all.filter((e) => !title.includes(e.value));
 
-  return (fresh.length >= 2 ? fresh : all).slice(0, 3);
+  // בכרטיס מוצגים ערכים בלבד, בלי תוויות — שורה אחת שנסרקת במבט.
+  // לכן שדה שערכו חסר משמעות בלי התווית ("₪120,000") יורד מהכרטיס
+  // כולו במקום להופיע כמספר עירום; מקומו בטבלת המפרט בדף המודעה.
+  const usable = all.filter((e) => e.selfEvident);
+  const fresh = usable.filter((e) => !title.includes(e.value));
+
+  return (fresh.length >= 2 ? fresh : usable).slice(0, 3);
 }
 
 export function toListingCardDto(
