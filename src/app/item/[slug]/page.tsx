@@ -27,6 +27,7 @@ import { blurDataUrl } from "@/lib/blur";
 import { computeTrust } from "@/lib/trust";
 import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
+import { listingImageTransition } from "@/lib/view-transitions";
 import { timeAgo } from "@/lib/utils";
 import { formatPrice, formatCount, formatAttributeValue } from "@/lib/format";
 
@@ -237,7 +238,11 @@ export default async function ListingPage({ params }: Props) {
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* --- עמודה ראשית --- */}
         <div className="min-w-0 space-y-6">
-          <Gallery images={images} title={listing.title} />
+          <Gallery
+            images={images}
+            title={listing.title}
+            transitionName={listingImageTransition(listing.id)}
+          />
 
           <div>
             <div className="flex flex-wrap items-start gap-3">

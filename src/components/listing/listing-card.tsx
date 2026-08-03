@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-
 import { BidiText } from "@/components/bidi-text";
+import { ViewTransitionLink } from "@/components/view-transition-link";
 
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { ListingImage } from "@/components/listing/listing-image";
 import { PriceMeter } from "@/components/listing/price-meter";
+import { listingImageTransition } from "@/lib/view-transitions";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { formatPrice } from "@/lib/format";
 import type { Density } from "@/stores/density";
@@ -46,6 +46,7 @@ export function ListingCard({ listing, density = "grid", priority = false, class
           categoryIcon={listing.categoryIcon}
           sizes={isList ? "176px" : "(max-width: 640px) 50vw, 300px"}
           priority={priority}
+          viewTransitionName={listingImageTransition(listing.id)}
         />
 
         {/*
@@ -77,12 +78,12 @@ export function ListingCard({ listing, density = "grid", priority = false, class
 
         <h3 className="truncate text-base font-semibold leading-snug">
           {/* הקישור פרוס על כל הכרטיס כדי להגדיל את שטח הלחיצה */}
-          <Link
+          <ViewTransitionLink
             href={`/item/${listing.slug}`}
             className="outline-none after:absolute after:inset-0"
           >
             <BidiText>{listing.title}</BidiText>
-          </Link>
+          </ViewTransitionLink>
         </h3>
 
         {listing.highlights.length ? (

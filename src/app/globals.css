@@ -173,6 +173,30 @@
     @apply bg-primary/20;
   }
 
+  /* ------------------------------------------------------------------
+     מעבר בין כרטיס לדף מודעה (View Transitions API)
+
+     תמונת המודעה נושאת את אותו `view-transition-name` בשני הדפים,
+     והדפדפן מזיז אותה בין המצבים. אין כאן ספרייה ואין JavaScript משלנו:
+     דפדפן בלי תמיכה פשוט מנווט, וזה ה-fallback.
+
+     התקציב מ-DESIGN.md חל גם כאן — 180ms ואותו easing. ברירת המחדל של
+     הדפדפן היא 250ms, כלומר חריגה שקטה מהתקציב.
+     ------------------------------------------------------------------ */
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* נשארת רק ההצלבה באטימות; התנועה במרחב מבוטלת */
+    ::view-transition-group(*) {
+      animation: none !important;
+    }
+  }
+
   /*
    * מספרים בעברית.
    *

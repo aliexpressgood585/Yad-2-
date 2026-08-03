@@ -11,6 +11,12 @@ type Props = {
   categoryIcon?: string;
   sizes: string;
   priority?: boolean;
+  /**
+   * שם המעבר בין דפים. אותו שם בכרטיס ובדף המודעה גורם לדפדפן להזיז
+   * את התמונה בין שני המצבים במקום להחליף מסך. השם חייב להיות ייחודי
+   * בדף, ולכן הוא נגזר ממזהה המודעה.
+   */
+  viewTransitionName?: string;
   className?: string;
 };
 
@@ -35,10 +41,14 @@ export function ListingImage({
   categoryIcon,
   sizes,
   priority = false,
+  viewTransitionName,
   className,
 }: Props) {
   return (
-    <div className={cn("relative aspect-[4/3] overflow-hidden bg-muted", className)}>
+    <div
+      className={cn("relative aspect-[4/3] overflow-hidden bg-muted", className)}
+      style={viewTransitionName ? { viewTransitionName } : undefined}
+    >
       {src ? (
         <Image
           src={src}
