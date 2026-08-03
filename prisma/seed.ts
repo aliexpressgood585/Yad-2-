@@ -1,6 +1,6 @@
 /**
  * זריעת בסיס הנתונים: עץ קטגוריות מלא עם שדות דינמיים,
- * 30 משתמשים ו-300 מודעות דמו מציאותיות בעברית.
+ * 30 משתמשים ומודעות דמו מציאותיות בעברית לפי DISTRIBUTION.
  *
  * הרצה: npm run db:seed
  */
@@ -50,7 +50,6 @@ function demoImage(topic: string, index: number): DemoImage {
   return set[index % set.length]!;
 }
 
-const TOTAL_LISTINGS = 300;
 const TOTAL_USERS = 30;
 
 /**
@@ -101,18 +100,25 @@ const BUSINESS_TRADES = [
   },
 ] as const;
 
-/** כמה מודעות לייצר בכל תת-קטגוריה. */
+/**
+ * כמה מודעות לייצר בכל תת-קטגוריה.
+ *
+ * ארבע הקטגוריות הראשונות עמוקות בהרבה מהשאר, ובכוונה: מדד המחירים
+ * מציג מספר רק כשיש לפחות `MIN_SAMPLE` מודעות להשוואה, ובפיזור אחיד על
+ * 49 קטגוריות אף צירוף של דגם ושנה או של עיר ומספר חדרים לא היה מגיע
+ * לסף. לוח אמיתי גם הוא אינו אחיד — רכב ונדל"ן הם רוב התנועה.
+ */
 const DISTRIBUTION: Record<string, number> = {
-  "private-cars": 35,
-  "commercial-vehicles": 8,
-  suvs: 10,
-  motorcycles: 8,
-  scooters: 5,
+  "private-cars": 150,
+  "commercial-vehicles": 12,
+  suvs: 45,
+  motorcycles: 10,
+  scooters: 6,
   "off-road": 2,
-  "trade-in": 2,
+  "trade-in": 4,
 
-  "apartments-sale": 25,
-  "apartments-rent": 25,
+  "apartments-sale": 220,
+  "apartments-rent": 200,
   roommates: 8,
   commercial: 6,
   lots: 3,
@@ -153,6 +159,8 @@ const DISTRIBUTION: Record<string, number> = {
   tutoring: 1,
   beauty: 1,
 };
+
+const TOTAL_LISTINGS = Object.values(DISTRIBUTION).reduce((sum, n) => sum + n, 0);
 
 type SeededAttribute = {
   id: string;
@@ -420,11 +428,32 @@ async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
   let created = 0;
   const listingIds: string[] = [];
 
+  /**
+   * ערים משוקללות לפי אוכלוסייה — זה מה שעמודת `pop` נועדה לה.
+   *
+   * בחירה אחידה מ-60 יישובים נתנה למיתר (8,000 תושבים) בדיוק כמה מודעות
+   * כמו לירושלים, ובפועל אף עיר לא הגיעה למספר מודעות שמאפשר לגזור
+   * ממנו חציון. השורש הריבועי ממתן את ההטיה, אחרת שלוש הערים הגדולות
+   * בולעות את הלוח ובערים הבינוניות לא נשאר כלום.
+   */
+  const cityWeights = UNIQUE_CITIES.map((c) => [c, Math.round(Math.sqrt(c.pop) / 10)] as const);
+
+  /**
+   * נדל"ן מרוכז יותר: רק יישובים עם שוק דירות של ממש, ובמשקל מלא של
+   * האוכלוסייה ולא בשורש. דף "מחירי הדירות ב<עיר>" מודד עיר אחת, ולכן
+   * הוא זקוק לעומק בעיר ולא לפריסה על פני מפת הארץ.
+   */
+  const realEstateCityWeights = UNIQUE_CITIES.filter((c) => c.pop >= 50_000).map(
+    (c) => [c, Math.round(c.pop / 1000)] as const,
+  );
+
   for (const leaf of leaves) {
     const count = DISTRIBUTION[leaf.slug] ?? 0;
 
     for (let i = 0; i < count; i++) {
-      const city = rng.pick(UNIQUE_CITIES);
+      const city = rng.weighted(
+        leaf.rootSlug === "realestate" ? realEstateCityWeights : cityWeights,
+      );
       const hoods = neighborhoodsOf(city.name);
       const neighborhood = hoods.length && rng.bool(0.6) ? rng.pick(hoods) : null;
       const owner = pickOwner(leaf.rootSlug);

@@ -12,12 +12,15 @@ import {
   ROOMMATE_TYPES,
   VACATION_TYPES,
 } from "./categories";
+import { getCity } from "../../src/lib/cities";
 
 export type Rng = {
   int: (min: number, max: number) => number;
   float: (min: number, max: number) => number;
   pick: <T>(arr: readonly T[]) => T;
   picks: <T>(arr: readonly T[], n: number) => T[];
+  /** בחירה משוקללת — ערך עם משקל 10 ייבחר פי עשרה מערך עם משקל 1. */
+  weighted: <T>(entries: readonly (readonly [T, number])[]) => T;
   bool: (p?: number) => boolean;
   maybe: <T>(value: T, p?: number) => T | undefined;
 };
@@ -56,6 +59,14 @@ export function makeRng(seed: number): Rng {
         out.push(copy.splice(int(0, copy.length - 1), 1)[0] as T);
       }
       return out;
+    },
+    weighted: <T,>(entries: readonly (readonly [T, number])[]) => {
+      const total = entries.reduce((sum, e) => sum + e[1], 0);
+      let roll = int(1, Math.max(1, Math.round(total)));
+      for (const [value, weight] of entries) {
+        if ((roll -= weight) <= 0) return value;
+      }
+      return entries[entries.length - 1]![0];
     },
     bool: (p = 0.5) => next() < p,
     maybe: <T,>(value: T, p = 0.5) => (next() < p ? value : undefined),
@@ -141,6 +152,39 @@ const CAR_EXTRAS_TEXT = [
   "גג נפתח חשמלי.",
 ];
 
+/**
+ * נתח היצרנים בלוח.
+ *
+ * בחירה אחידה מתוך 26 יצרנים פיזרה את המודעות דק מדי: כל צירוף
+ * יצרן־דגם קיבל מודעה אחת או שתיים, וזה מספר שאי אפשר לגזור ממנו מחיר.
+ * המשקלים מקרבים את הפיזור למה שנראה בשוק הישראלי, שבו חמישה יצרנים
+ * מחזיקים נתח גדול — וכך יש דגמים עם מספיק מודעות כדי שמדד המחירים
+ * יוכל בכלל לענות.
+ */
+const MAKE_WEIGHT: Record<string, number> = {
+  "טויוטה": 14,
+  "יונדאי": 12,
+  "קיה": 12,
+  "מאזדה": 9,
+  "סקודה": 8,
+  "פולקסווגן": 7,
+  "ניסאן": 5,
+  "מיצובישי": 5,
+  "שברולט": 4,
+  "הונדה": 4,
+  "רנו": 4,
+  "פיג'ו": 4,
+  "סוזוקי": 3,
+  "פורד": 3,
+  "MG": 3,
+  "BYD": 3,
+  "BMW": 3,
+  "מרצדס-בנץ": 3,
+  "אאודי": 2,
+  "סיאט": 2,
+  "אופל": 2,
+};
+
 function generateCar(rng: Rng, sub: string): GeneratedListing {
   // רשימת הדגמים חייבת להתאים לתת-הקטגוריה, אחרת נוצר "MG 4" עם
   // משקל מטען וסוג מרכב מקרר.
@@ -151,8 +195,16 @@ function generateCar(rng: Rng, sub: string): GeneratedListing {
         ? MOTORCYCLE_MODELS
         : CAR_MODELS;
 
-  const make = rng.pick(Object.keys(models));
-  const model = rng.pick(models[make]!);
+  const make = rng.weighted(
+    Object.keys(models).map((m) => [m, MAKE_WEIGHT[m] ?? 1] as const),
+  );
+  // הדגמים הראשונים ברשימה הם הנפוצים ביצרן, ולכן הם מקבלים משקל גבוה.
+  // בלי זה כל דגם מקבל מודעה־שתיים, ואף דגם לא מגיע לגודל מדגם שמאפשר
+  // להציג עליו מחיר — ולוח אמיתי אינו מפוזר כך.
+  const modelList = models[make]!;
+  const model = rng.weighted(
+    modelList.map((m, i) => [m, i < 2 ? 5 : 1] as const),
+  );
   const year = rng.int(2006, CURRENT_YEAR);
   const age = CURRENT_YEAR - year;
 
@@ -277,8 +329,77 @@ const RE_HIGHLIGHTS = [
   "מיקום מרכזי ממש — הכול במרחק הליכה.",
 ];
 
+/**
+ * רמת המחירים היחסית של כל עיר, ביחס לבסיס ארצי של 1.
+ *
+ * בלי זה דירה בעפולה ודירה בתל אביב נדגמו מאותו טווח מחירים, ודף
+ * "מחירי הדירות ב<עיר>" היה מציג נתון אמיתי לחלוטין — שנגזר מנתוני דמו
+ * חסרי משמעות. מכיוון שהמדד מציג את החציון בעיר, פיזור המחירים בין
+ * ערים הוא בדיוק מה שהוא מודד, והוא חייב להיות סביר.
+ */
+const CITY_PRICE_LEVEL: Record<string, number> = {
+  "תל אביב-יפו": 2.4,
+  "רמת גן": 1.75,
+  "גבעתיים": 1.85,
+  "הרצליה": 1.95,
+  "רמת השרון": 1.95,
+  "רעננה": 1.6,
+  "כפר סבא": 1.4,
+  "הוד השרון": 1.4,
+  "ירושלים": 1.7,
+  "מודיעין-מכבים-רעות": 1.25,
+  "ראשון לציון": 1.2,
+  "פתח תקווה": 1.15,
+  "חולון": 1.2,
+  "בת ים": 1.15,
+  "רחובות": 1.1,
+  "נס ציונה": 1.2,
+  "בני ברק": 1.15,
+  "נתניה": 1.05,
+  "כפר יונה": 0.95,
+  "אשדוד": 0.9,
+  "חיפה": 0.9,
+  "בית שמש": 0.85,
+  "חדרה": 0.8,
+  "אשקלון": 0.75,
+  "לוד": 0.7,
+  "רמלה": 0.7,
+  "באר שבע": 0.62,
+  "קריית גת": 0.6,
+  "נהריה": 0.6,
+  "עפולה": 0.55,
+  "נצרת": 0.55,
+  "רהט": 0.45,
+};
+
+/** ברירת מחדל לפי אזור, לערים שאינן בטבלה. */
+const REGION_PRICE_LEVEL: Record<string, number> = {
+  "תל אביב": 1.6,
+  "מרכז": 1.1,
+  "שרון": 1.2,
+  "ירושלים": 1.1,
+  "שפלה": 0.8,
+  "חיפה": 0.8,
+  "צפון": 0.6,
+  "דרום": 0.6,
+};
+
+function priceLevelOf(city: string): number {
+  if (CITY_PRICE_LEVEL[city]) return CITY_PRICE_LEVEL[city]!;
+  const region = getCity(city)?.region;
+  return (region && REGION_PRICE_LEVEL[region]) ?? 0.85;
+}
+
 function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListing {
-  const rooms = rng.pick([2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]);
+  const level = priceLevelOf(city);
+  // פערי השכירות בין ערים צרים מפערי המכירה — אותה עיר יקרה פי שניים
+  // למכירה אינה יקרה פי שניים להשכרה.
+  const rentLevel = 1 + (level - 1) * 0.6;
+  // שלושה עד ארבעה חדרים הם רוב שוק הדירות בפועל; פיזור אחיד על תשעה
+  // ערכים היה מותיר כל גודל דירה עם קומץ מודעות בעיר.
+  const rooms = rng.weighted([
+    [2, 5], [2.5, 6], [3, 20], [3.5, 16], [4, 20], [4.5, 10], [5, 8], [5.5, 3], [6, 2],
+  ]);
   const size = Math.round(rooms * rng.int(20, 30));
   const floor = rng.int(0, 12);
   const totalFloors = Math.max(floor, rng.int(floor, floor + 8));
@@ -306,12 +427,12 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
     : "מגרש";
 
   let price: number;
-  if (isRent) price = Math.round((3200 + size * rng.int(28, 55)) / 50) * 50;
-  else if (isRoommate) price = Math.round(rng.int(1600, 4200) / 50) * 50;
+  if (isRent) price = Math.round(((2000 + size * rng.int(20, 38)) * rentLevel) / 50) * 50;
+  else if (isRoommate) price = Math.round((rng.int(1400, 3200) * rentLevel) / 50) * 50;
   else if (isVacation) price = Math.round(rng.int(450, 2400) / 50) * 50;
-  else if (isLot) price = Math.round(rng.int(400_000, 3_500_000) / 10_000) * 10_000;
-  else if (isCommercial) price = Math.round(rng.int(4000, 45_000) / 100) * 100;
-  else price = Math.round((size * rng.int(18_000, 42_000)) / 10_000) * 10_000;
+  else if (isLot) price = Math.round((rng.int(400_000, 3_500_000) * level) / 10_000) * 10_000;
+  else if (isCommercial) price = Math.round((rng.int(4000, 45_000) * rentLevel) / 100) * 100;
+  else price = Math.round((size * rng.int(14_000, 30_000) * level) / 10_000) * 10_000;
 
   const attrs = clean({
     // commercial ו-lots מתארים את סוג הנכס דרך commercialType / zoning
