@@ -18,7 +18,7 @@ export async function SiteHeader() {
         <MobileNav categories={roots} />
         <Logo />
 
-        <HeaderSearchSlot className="hidden flex-1 md:block" />
+        <HeaderSearchSlot className="hidden flex-1 md:block" inputId="site-search" />
 
         <div className="ms-auto flex items-center gap-1 md:ms-0">
           <ThemeToggle />
@@ -57,7 +57,7 @@ export async function SiteHeader() {
       </nav>
 
       {/* חיפוש במובייל */}
-      <HeaderSearchSlot className="container pb-3 md:hidden" />
+      <HeaderSearchSlot className="container pb-3 md:hidden" inputId="site-search-mobile" />
     </header>
   );
 }

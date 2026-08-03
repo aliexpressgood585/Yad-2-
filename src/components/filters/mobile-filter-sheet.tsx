@@ -4,7 +4,11 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 
-import { FilterPanel, type CityFacet } from "@/components/filters/filter-panel";
+import {
+  FilterPanel,
+  type CityFacet,
+  type ValueFacets,
+} from "@/components/filters/filter-panel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +28,7 @@ type Props = {
   priceRange: { min: number; max: number; median: number } | null;
   priceLabel?: string;
   categorySlug?: string;
+  valueFacets?: ValueFacets;
   /** מספר התוצאות ההתחלתי, מהשרת */
   initialTotal: number;
 };
@@ -35,6 +40,7 @@ export function MobileFilterSheet({
   priceRange,
   priceLabel,
   categorySlug,
+  valueFacets,
   initialTotal,
 }: Props) {
   const [open, setOpen] = React.useState(false);
@@ -101,6 +107,7 @@ export function MobileFilterSheet({
             cityFacets={cityFacets}
             priceRange={priceRange}
             priceLabel={priceLabel}
+            valueFacets={valueFacets}
           />
         </div>
 

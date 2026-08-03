@@ -21,7 +21,14 @@ import {
 } from "@/lib/categories";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { toListingCardDtos } from "@/lib/listing-dto";
-import { countByCategory, countByCity, priceBounds, searchListingCards } from "@/lib/listings";
+import {
+  countByAttributeValues,
+  countByCategory,
+  countByCity,
+  priceBounds,
+  searchListingCards,
+} from "@/lib/listings";
+import type { AttributeFacets } from "@/lib/listings";
 import { PAGE_SIZE } from "@/lib/site";
 import { Breadcrumbs } from "@/components/browse/breadcrumbs";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
@@ -95,13 +102,18 @@ async function BrowseResults({
 
   const query = toSearchQuery(state, attributes, { categoryIds, perPage: PAGE_SIZE });
 
-  const [result, cityFacets, prices, catCounts] = await Promise.all([
+  const [result, cityFacets, prices, catCounts, attrFacets] = await Promise.all([
     searchListingCards(query),
     countByCity(query),
     priceBounds(query),
     category?.children.length
       ? countByCategory({ ...query, categoryIds: undefined })
       : Promise.resolve(new Map<string, number>()),
+    // ספירה לכל ערך בפילטר — "מעלית (31)" לפני הלחיצה
+    countByAttributeValues(
+      query,
+      attributes.filter((a) => a.isFilter && a.type !== "NUMBER" && a.type !== "TEXT").map((a) => a.id),
+    ),
   ]);
 
   const items = toListingCardDtos(result.items, result.meters);
@@ -139,7 +151,11 @@ async function BrowseResults({
         </nav>
       ) : null}
 
-      <div className="flex flex-col gap-6 lg:flex-row">
+      {/*
+       * הסימון הזה הוא מה שהופך את תיבת החיפוש בהדר לחיה: היא מעדכנת
+       * תוך כדי הקלדה רק כשיש על המסך רשימת תוצאות לעדכן.
+       */}
+      <div data-live-search className="flex flex-col gap-6 lg:flex-row">
         {/* פילטרים — דסקטופ */}
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-32 max-h-[calc(100dvh-9rem)] overflow-y-auto pe-1">
@@ -148,6 +164,7 @@ async function BrowseResults({
               cityFacets={cityFacets}
               priceRange={prices}
               priceLabel={category?.priceLabel}
+              valueFacets={serializeFacets(attrFacets)}
             />
           </div>
         </aside>
@@ -170,6 +187,7 @@ async function BrowseResults({
                 priceLabel={category?.priceLabel}
                 categorySlug={category?.slug}
                 initialTotal={result.total}
+                valueFacets={serializeFacets(attrFacets)}
               />
               <SortSelect hasQuery={hasQuery} />
               <DensityToggle className="hidden sm:flex" />
@@ -208,6 +226,18 @@ async function BrowseResults({
       </div>
     </>
   );
+}
+
+/**
+ * מפות אינן ניתנות לסריאליזציה אל רכיב לקוח, ולכן הן נשלחות כאובייקט
+ * שטוח: `attributeId` → ערך → ספירה.
+ */
+function serializeFacets(facets: AttributeFacets): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {};
+  for (const [attributeId, byValue] of facets) {
+    out[attributeId] = Object.fromEntries(byValue);
+  }
+  return out;
 }
 
 /** שלד התוצאות — מוצג בזמן שהשאילתות רצות בשרת. */
