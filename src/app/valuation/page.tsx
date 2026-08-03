@@ -45,8 +45,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * ערך יחיד מתוך פרמטר. `any` הוא הערך ש-Radix שולח עבור "לא משנה"
+ * (רכיב Select אינו מרשה פריט עם ערך ריק), והוא נקרא כאן כ"לא נבחר".
+ */
 function one(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+  const raw = (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+  return raw === "any" ? "" : raw;
 }
 
 function num(value: string): number | null {

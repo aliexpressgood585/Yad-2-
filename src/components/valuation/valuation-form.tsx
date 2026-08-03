@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
@@ -43,9 +42,15 @@ const ANY = "any";
 /**
  * טופס מדד המחירים.
  *
- * הבחירה נכתבת ל-URL ולא ל-state בלבד: תוצאת שווי היא בדיוק סוג הדבר
- * שמשתמש שולח לעצמו או לצד השני במשא ומתן, ולכן היא חייבת כתובת.
- * החישוב עצמו רץ בשרת על אותם פרמטרים.
+ * שליחה בטופס GET רגיל ולא ב-`router.push`, משתי סיבות.
+ *
+ * הראשונה היא באג אמיתי: ניווט צד-לקוח אל כתובת שעוברת rewrite מאבד את
+ * ה-query string משורת הכתובת. התוצאה הוצגה נכון, אבל הכתובת שנשארה
+ * בדפדפן הייתה `/שווי` בלי הפרמטרים — כלומר רענון או שיתוף היו מחזירים
+ * טופס ריק. תוצאת שווי היא בדיוק מה שאדם שולח לעצמו או לצד השני במשא
+ * ומתן, ולכן היא חייבת כתובת שעובדת.
+ *
+ * השנייה: טופס GET עובד גם בלי JavaScript.
  */
 export function ValuationForm({
   makes,
@@ -58,7 +63,6 @@ export function ValuationForm({
   neighborhoods: Record<DealKind, Record<string, string[]>>;
   initial: ValuationFormValues;
 }) {
-  const router = useRouter();
   const [values, setValues] = useState<ValuationFormValues>(initial);
   const [tab, setTab] = useState<ValuationFormValues["type"]>(initial.type);
 
@@ -77,27 +81,22 @@ export function ValuationForm({
 
   const hoodOptions = neighborhoods[values.deal]?.[values.city] ?? [];
 
-  function submit(type: ValuationFormValues["type"]) {
+  /**
+   * שיפור בלבד מעל שליחת ה-GET: מנקה מהכתובת שדות ריקים ואת ערכי
+   * "לא משנה", כדי שהקישור ששותפו יכיל רק את מה שנבחר בפועל.
+   * בלי JavaScript הטופס נשלח כרגיל וההתנהגות זהה — רק הכתובת ארוכה.
+   */
+  function tidySubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget;
     const params = new URLSearchParams();
-    params.set("type", type);
-
-    if (type === "vehicle") {
-      if (!values.manufacturer) return;
-      params.set("make", values.manufacturer);
-      if (values.model) params.set("model", values.model);
-      if (values.year) params.set("year", values.year);
-      if (values.hand) params.set("hand", values.hand);
-      if (values.km) params.set("km", values.km);
-    } else {
-      if (!values.city) return;
-      params.set("deal", values.deal);
-      params.set("city", values.city);
-      if (values.neighborhood) params.set("hood", values.neighborhood);
-      if (values.rooms) params.set("rooms", values.rooms);
-      if (values.size) params.set("size", values.size);
+    for (const [key, value] of new FormData(form).entries()) {
+      const v = String(value).trim();
+      if (v && v !== ANY) params.set(key, v);
     }
-
-    router.push(`${pricePaths.valuation}?${params.toString()}`);
+    e.preventDefault();
+    // ניווט מלא ולא `router.push`: ניווט צד-לקוח דרך rewrite מאבד את
+    // ה-query string משורת הכתובת
+    window.location.href = `${pricePaths.valuation}?${params.toString()}`;
   }
 
   return (
@@ -117,17 +116,13 @@ export function ValuationForm({
 
       {/* --- רכב --- */}
       <TabsContent value="vehicle" className="mt-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit("vehicle");
-          }}
-          className="space-y-4"
-        >
+        <form method="get" action={pricePaths.valuation} onSubmit={tidySubmit} className="space-y-4">
+          <input type="hidden" name="type" value="vehicle" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="make">יצרן</Label>
               <Select
+                name="make"
                 value={values.manufacturer}
                 onValueChange={(v) => set({ manufacturer: v, model: "" })}
               >
@@ -150,6 +145,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="model">דגם</Label>
               <Select
+                name="model"
                 value={values.model || ANY}
                 onValueChange={(v) => set({ model: v === ANY ? "" : v })}
                 disabled={!models.length}
@@ -172,6 +168,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="year">שנת ייצור</Label>
               <Select
+                name="year"
                 value={values.year || ANY}
                 onValueChange={(v) => set({ year: v === ANY ? "" : v })}
               >
@@ -192,6 +189,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="hand">יד</Label>
               <Select
+                name="hand"
                 value={values.hand || ANY}
                 onValueChange={(v) => set({ hand: v === ANY ? "" : v })}
               >
@@ -213,6 +211,7 @@ export function ValuationForm({
               <Label htmlFor="km">קילומטראז&apos;</Label>
               <Input
                 id="km"
+                name="km"
                 type="number"
                 inputMode="numeric"
                 min={0}
@@ -235,17 +234,13 @@ export function ValuationForm({
 
       {/* --- נדל"ן --- */}
       <TabsContent value="realestate" className="mt-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit("realestate");
-          }}
-          className="space-y-4"
-        >
+        <form method="get" action={pricePaths.valuation} onSubmit={tidySubmit} className="space-y-4">
+          <input type="hidden" name="type" value="realestate" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="deal">סוג עסקה</Label>
               <Select
+                name="deal"
                 value={values.deal}
                 onValueChange={(v) => set({ deal: v as DealKind, neighborhood: "" })}
               >
@@ -262,6 +257,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="city">עיר</Label>
               <Select
+                name="city"
                 value={values.city}
                 onValueChange={(v) => set({ city: v, neighborhood: "" })}
               >
@@ -284,6 +280,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="hood">שכונה</Label>
               <Select
+                name="hood"
                 value={values.neighborhood || ANY}
                 onValueChange={(v) => set({ neighborhood: v === ANY ? "" : v })}
                 disabled={!hoodOptions.length}
@@ -305,6 +302,7 @@ export function ValuationForm({
             <div className="space-y-1.5">
               <Label htmlFor="rooms">חדרים</Label>
               <Select
+                name="rooms"
                 value={values.rooms || ANY}
                 onValueChange={(v) => set({ rooms: v === ANY ? "" : v })}
               >
@@ -326,6 +324,7 @@ export function ValuationForm({
               <Label htmlFor="size">שטח במ&quot;ר</Label>
               <Input
                 id="size"
+                name="size"
                 type="number"
                 inputMode="numeric"
                 min={10}
