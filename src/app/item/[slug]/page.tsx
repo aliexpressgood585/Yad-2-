@@ -26,6 +26,7 @@ import { prisma } from "@/lib/db";
 import { blurDataUrl } from "@/lib/blur";
 import { accentFromBlurhash } from "@/lib/listing-accent";
 import { computeTrust } from "@/lib/trust";
+import { AvailabilityChip } from "@/components/listing/availability-chip";
 import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
 import { listingImageTransition } from "@/lib/view-transitions";
@@ -307,6 +308,21 @@ export default async function ListingPage({ params }: Props) {
                 <Badge variant="muted">{listing.category.name}</Badge>
               </li>
             </ul>
+
+            {/*
+             * טריות המודעה, ליד המטא ולא בתוך הפאנל של יצירת הקשר.
+             *
+             * "עדיין רלוונטי?" היא שאלה שנשאלת *לפני* ההחלטה ליצור קשר,
+             * ולכן היא צריכה לשבת שם שקוראים את המודעה — לא במקום שאליו
+             * מגיעים רק אחרי שכבר החליטו.
+             */}
+            <AvailabilityChip
+              listingId={listing.id}
+              availabilityAt={listing.availabilityAt?.toISOString() ?? null}
+              publishedAt={publishedAt.toISOString()}
+              isOwner={isOwner}
+              className="mt-3"
+            />
           </div>
 
           {/* --- מפרט --- */}

@@ -289,44 +289,54 @@ model ListingAttribute {
 // ---------------------------------------------------------------------------
 
 model Listing {
-  id                 String        @id @default(cuid())
-  slug               String        @unique
-  userId             String
-  categoryId         String
-  title              String
-  description        String        @db.Text
-  price              Int?
-  currency           String        @default("ILS")
-  isNegotiable       Boolean       @default(false)
-  status             ListingStatus @default(DRAFT)
-  city               String
-  neighborhood       String?
-  address            String?
-  lat                Float?
-  lng                Float?
+  id                  String        @id @default(cuid())
+  slug                String        @unique
+  userId              String
+  categoryId          String
+  title               String
+  description         String        @db.Text
+  price               Int?
+  currency            String        @default("ILS")
+  isNegotiable        Boolean       @default(false)
+  status              ListingStatus @default(DRAFT)
+  city                String
+  neighborhood        String?
+  address             String?
+  lat                 Float?
+  lng                 Float?
   /// מיקום מוסט אקראית להצגה ציבורית (פרטיות)
-  displayLat         Float?
-  displayLng         Float?
-  contactPhone       String?
-  contactName        String?
-  allowChat          Boolean       @default(true)
-  viewCount          Int           @default(0)
-  contactRevealCount Int           @default(0)
-  favoriteCount      Int           @default(0)
-  isPromoted         Boolean       @default(false)
-  promotedUntil      DateTime?
-  bumpedAt           DateTime?
-  publishedAt        DateTime?
+  displayLat          Float?
+  displayLng          Float?
+  contactPhone        String?
+  contactName         String?
+  allowChat           Boolean       @default(true)
+  viewCount           Int           @default(0)
+  contactRevealCount  Int           @default(0)
+  favoriteCount       Int           @default(0)
+  isPromoted          Boolean       @default(false)
+  promotedUntil       DateTime?
+  bumpedAt            DateTime?
+  publishedAt         DateTime?
+  /// מתי המוכר אישר לאחרונה שהמודעה עדיין רלוונטית.
+  ///
+  /// ריק פירושו שלא אושרה מעולם, ואז הטריות נגזרת מתאריך הפרסום.
+  /// זה לא אותו דבר כמו "עודכנה": עריכת מחיר אינה אישור זמינות.
+  availabilityAt      DateTime?
+  /// מתי מישהו ביקש לאחרונה אישור זמינות. משמש לצינון הבקשות.
+  ///
+  /// לכל המודעה ולא לכל משתמש: הצינון מגן על המוכר מהצפה, ומודעה
+  /// פופולרית שעשרה אנשים שואלים עליה באותו יום היא בדיוק המקרה.
+  availabilityAskedAt DateTime?
   /// מתי המודעה סומנה כנמכרה. ריק בכל סטטוס אחר.
   ///
   /// בלי החותמת הזו אפשר לדעת *ש*מודעה נמכרה אבל לא *מתי*, וזה בדיוק
   /// ההפרש שממנו נגזר זמן המכירה — הנתון היחיד שעונה למוכר על
   /// "כמה זמן זה ייקח במחיר הזה".
-  soldAt             DateTime?
-  expiresAt          DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  deletedAt          DateTime?
+  soldAt              DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
 
   /// טקסט מנורמל לחיפוש (FTS + trigram). מתוחזק בקוד האפליקציה.
   searchText  String  @default("")

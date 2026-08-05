@@ -1,5 +1,6 @@
 import { handleError, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { STALE_DAYS } from "@/lib/availability";
 import { enqueue, runQueue } from "@/lib/notify-queue";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { getAttributesForCategory, getCategoryBySlug, getCategoryIdsWithDescendants } from "@/lib/categories";
@@ -36,6 +37,9 @@ export async function GET(req: Request) {
     }
     if (job === "all" || job === "saved-searches") {
       results.savedSearches = await runSavedSearchAlerts();
+    }
+    if (job === "all" || job === "stale") {
+      results.stale = await nudgeStaleListings();
     }
     /*
      * התור רץ אחרון ובכוונה: כל המשימות שמעליו רק מכניסות עבודות,
@@ -95,6 +99,51 @@ async function notifyExpiringSoon() {
   }
 
   return { notified: listings.length };
+}
+
+/**
+ * מבקש מהמוכר לאשר מודעות שלא אושרו מעל הסף.
+ *
+ * שונה מ"מודעה שעומדת לפוג": שם יש תאריך שמתקרב, וכאן המודעה תקפה עוד
+ * שבועות — הבעיה היא שאיש לא יודע אם היא עדיין אמיתית. מודעה ישנה שלא
+ * אושרה היא מה שגורם לקונים להפסיק להאמין ללוח כולו, ולא רק לה.
+ */
+async function nudgeStaleListings() {
+  const cutoff = new Date(Date.now() - STALE_DAYS * 86_400_000);
+
+  const listings = await prisma.listing.findMany({
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      publishedAt: { lt: cutoff },
+      OR: [{ availabilityAt: null }, { availabilityAt: { lt: cutoff } }],
+    },
+    select: { id: true, title: true, userId: true },
+    take: 500,
+  });
+
+  let queued = 0;
+  for (const listing of listings) {
+    /*
+     * חלון של שבוע במפתח. מודעה שנשארת ישנה לא מייצרת תזכורת יומית —
+     * זו הדרך המהירה ביותר לגרום למוכר לכבות התראות לגמרי.
+     */
+    const week = Math.floor(Date.now() / (7 * 86_400_000));
+    const created = await enqueue({
+      userId: listing.userId,
+      kind: "SYSTEM",
+      dedupeKey: `stale:${listing.id}:${week}`,
+      payload: {
+        title: "המודעה שלך עדיין רלוונטית?",
+        body: `"${listing.title}" פורסמה לפני יותר מחודש ולא אושרה מאז. אישור בלחיצה אחת מראה לקונים שהיא מעודכנת.`,
+        url: "/my",
+        itemLabel: listing.title,
+      },
+    });
+    if (created) queued += 1;
+  }
+
+  return { candidates: listings.length, queued };
 }
 
 /** מסיר סימון קידום ממודעות שהקידום שלהן הסתיים. */

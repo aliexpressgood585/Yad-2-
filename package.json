@@ -21,7 +21,7 @@
     "check:format": "tsx scripts/checks/format-check.ts",
     "check:seed": "tsx scripts/checks/seed-check.ts",
     "check:search": "tsx scripts/checks/search-check.ts",
-    "check:all": "npm run check:format && npm run check:search && npm run check:risk && npm run check:valuation && npm run check:accent && npm run check:metrics && npm run check:notify && npm run check:import && npm run check:speed",
+    "check:all": "npm run check:format && npm run check:search && npm run check:risk && npm run check:valuation && npm run check:accent && npm run check:metrics && npm run check:notify && npm run check:import && npm run check:speed && npm run check:availability",
     "check:risk": "tsx scripts/checks/risk-check.ts",
     "check:valuation": "tsx scripts/checks/valuation-check.ts",
     "check:accent": "tsx scripts/checks/accent-check.ts",
@@ -30,7 +30,8 @@
     "check:import": "tsx scripts/checks/import-check.ts",
     "test:ui": "playwright test",
     "lighthouse": "node scripts/lighthouse.mjs",
-    "check:speed": "tsx scripts/checks/speed-check.ts"
+    "check:speed": "tsx scripts/checks/speed-check.ts",
+    "check:availability": "tsx scripts/checks/availability-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
