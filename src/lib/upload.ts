@@ -142,7 +142,7 @@ async function uploadToCloudinary(buffer: Buffer, name: string): Promise<string>
   const apiSecret = process.env.CLOUDINARY_API_SECRET!;
 
   const timestamp = Math.floor(Date.now() / 1000);
-  const publicId = `luach/${name.replace(/\.[^.]+$/, "")}`;
+  const publicId = `shnatot/${name.replace(/\.[^.]+$/, "")}`;
   const signature = createHash("sha1")
     .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
     .digest("hex");

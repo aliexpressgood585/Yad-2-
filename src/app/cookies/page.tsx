@@ -28,19 +28,19 @@ const COOKIES = [
     type: "העדפה",
   },
   {
-    name: "luach-compare",
+    name: "shnatot-compare",
     purpose: "רשימת המודעות שבחרתם להשוואה (אחסון מקומי, לא נשלח לשרת).",
     duration: "עד לניקוי ידני",
     type: "העדפה",
   },
   {
-    name: "luach-recent",
+    name: "shnatot-recent",
     purpose: 'מזהי המודעות שנצפו לאחרונה, לרצועת "נצפו לאחרונה" (אחסון מקומי).',
     duration: "עד לניקוי ידני",
     type: "העדפה",
   },
   {
-    name: "luach-publish-draft",
+    name: "shnatot-publish-draft",
     purpose: "טיוטת המודעה שאתם כותבים, כדי שלא תאבד ברענון (אחסון מקומי).",
     duration: "עד לפרסום או לניקוי",
     type: "פונקציונלית",

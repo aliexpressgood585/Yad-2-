@@ -280,7 +280,7 @@ async function main() {
   // 7 — אדמין
   console.log("\n7. פאנל ניהול");
   const adminLogin = await signIn("admin", "password", {
-    email: "admin@luach.co.il",
+    email: "admin@shnatot.co.il",
     password: "Password123!",
   });
   check("מנהל מחובר", adminLogin.session?.user?.role === "ADMIN");

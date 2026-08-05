@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
   title: "הרשמה",
-  description: "פתיחת חשבון חינם בלוח — פרסום מודעות, מועדפים והתראות.",
+  description: "פתיחת חשבון חינם בשנתות — פרסום מודעות, מועדפים והתראות.",
   robots: { index: false, follow: false },
 };
 

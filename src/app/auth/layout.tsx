@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <Logo showWordmark={false} />
           <p className="text-sm text-muted-foreground">
-            הלוח שמכבד את הזמן שלך
+            יודעים איפה המחיר עומד
           </p>
         </div>
         {children}

@@ -77,7 +77,7 @@ jobs:
           {
             echo "### נתוני הדמו נזרעו"
             echo ""
-            echo "התחברות כמנהל: \`admin@luach.co.il\` / \`Password123!\`"
+            echo "התחברות כמנהל: \`admin@shnatot.co.il\` / \`Password123!\`"
             echo ""
             echo "אם האתר עדיין מציג 0 מודעות — בצעו Redeploy ב-Vercel"
             echo "כדי לנקות את מטמון ה-ISR."

@@ -30,7 +30,7 @@ export async function issueOtp(
     },
   });
 
-  const body = `קוד האימות שלך ללוח: ${code}`;
+  const body = `קוד האימות שלך לשנתות: ${code}`;
   const provider = process.env.SMS_PROVIDER;
 
   if (!provider || !process.env.SMS_API_KEY) {

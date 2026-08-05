@@ -107,7 +107,7 @@ export default async function HomePage() {
         <section aria-labelledby="latest-heading">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 id="latest-heading" className="font-heading text-xl font-bold">
-              נוספו עכשיו ללוח
+              נוספו עכשיו לשנתות
             </h2>
             <Button asChild variant="ghost" size="sm">
               <Link href="/search">

@@ -280,7 +280,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const admin = await prisma.user.create({
     data: {
-      email: "admin@luach.co.il",
+      email: "admin@shnatot.co.il",
       phone: "0500000000",
       name: "מנהל המערכת",
       passwordHash,
@@ -292,7 +292,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const demo = await prisma.user.create({
     data: {
-      email: "demo@luach.co.il",
+      email: "demo@shnatot.co.il",
       phone: "0501111111",
       name: "יעל דמו",
       passwordHash,
@@ -772,7 +772,7 @@ async function seedEngagement(
   await prisma.report.createMany({ data: reportRows });
 
   // התראות למשתמש הדמו
-  const demo = await prisma.user.findUnique({ where: { email: "demo@luach.co.il" } });
+  const demo = await prisma.user.findUnique({ where: { email: "demo@shnatot.co.il" } });
   if (demo) {
     await prisma.notification.createMany({
       data: [
@@ -896,8 +896,8 @@ async function main() {
   await syncAggregates();
 
   console.log(`\n✅ הזריעה הסתיימה תוך ${((Date.now() - started) / 1000).toFixed(1)} שניות`);
-  console.log("   מנהל:  admin@luach.co.il / Password123!");
-  console.log("   דמו:   demo@luach.co.il  / Password123!");
+  console.log("   מנהל:  admin@shnatot.co.il / Password123!");
+  console.log("   דמו:   demo@shnatot.co.il  / Password123!");
 }
 
 main()

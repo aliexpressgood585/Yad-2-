@@ -49,7 +49,7 @@ export async function getClientIp(): Promise<string> {
 /** גיבוב IP — נשמר בלוגים במקום הכתובת עצמה (פרטיות). */
 export function hashIp(ip: string): string {
   return createHash("sha256")
-    .update(`${ip}:${process.env.AUTH_SECRET ?? "luach"}`)
+    .update(`${ip}:${process.env.AUTH_SECRET ?? "shnatot"}`)
     .digest("hex")
     .slice(0, 32);
 }

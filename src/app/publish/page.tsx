@@ -7,7 +7,7 @@ import { getCategoryTree } from "@/lib/categories";
 
 export const metadata: Metadata = {
   title: "פרסום מודעה",
-  description: "פרסום מודעה חינם בלוח — ארבעה שלבים קצרים והמודעה באוויר.",
+  description: "פרסום מודעה חינם בשנתות — ארבעה שלבים קצרים והמודעה באוויר.",
   robots: { index: false, follow: true },
 };
 

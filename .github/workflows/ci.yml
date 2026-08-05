@@ -38,7 +38,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: luach
+          POSTGRES_DB: shnatot
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
@@ -47,8 +47,8 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/luach?schema=public
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/luach?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shnatot?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/shnatot?schema=public
       AUTH_SECRET: ci-secret-not-used-in-production-0000000000
       AUTH_URL: http://localhost:3000
       AUTH_TRUST_HOST: "true"

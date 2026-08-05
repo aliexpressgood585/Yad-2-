@@ -22,6 +22,6 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
       },
       clear: () => set({ ids: [] }),
     }),
-    { name: "luach-recent", version: 1 },
+    { name: "shnatot-recent", version: 1 },
   ),
 );
