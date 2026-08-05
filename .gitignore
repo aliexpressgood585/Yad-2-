@@ -24,3 +24,8 @@ next-env.d.ts
 # עמודים שנוצרו לצורך סקירה, לא חלק מהאפליקציה
 /preview.html
 /deploy-guide.html
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/

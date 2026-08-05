@@ -50,6 +50,14 @@ export function HeaderSearchSlot({
         className,
       )}
       aria-hidden={!visible}
+      /*
+       * `inert` יחד עם `aria-hidden`.
+       *
+       * `aria-hidden` לבדו מסתיר את השדה מקורא מסך אבל משאיר אותו
+       * בסדר הטאבים — משתמש מקלדת מגיע לשדה חיפוש שקוף לגמרי ולא
+       * מבין לאן הפוקוס נעלם. `inert` מוציא את כל תת-העץ גם מהפוקוס.
+       */
+      inert={!visible}
     >
       <HeaderSearch inputId={inputId} />
     </div>

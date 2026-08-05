@@ -144,7 +144,12 @@ export function ListingCard({ listing, density = "grid", priority = false, class
           </ul>
         ) : null}
 
-        <p className="listing-card-meta mt-auto truncate pt-0.5 text-xs text-muted-foreground/70">
+        {/*
+         * בלי `/70`. שקיפות על טקסט שכבר משני מורידה את הניגודיות מתחת
+         * ל-AA — Lighthouse סימן בדיוק את השורה הזו. ההיררכיה בין שורת
+         * המפרט לשורת המיקום נשמרת בצבע הטוקן עצמו, בלי לרדת מהסף.
+         */}
+        <p className="listing-card-meta mt-auto truncate pt-0.5 text-xs text-muted-foreground">
           {listing.city}
           {listing.neighborhood ? `, ${listing.neighborhood}` : ""}
           {" · "}

@@ -93,7 +93,9 @@ npm start            # הרצת גרסת פרודקשן
 npm run typecheck    # בדיקת טיפוסים בלבד
 npm run lint         # ESLint
 
-npm run e2e          # בדיקת קבלה מקצה לקצה מול שרת חי
+npm run e2e          # בדיקת קבלה מול ה-API, מול שרת חי
+npm run test:ui      # Playwright — דסקטופ ונייד
+npm run lighthouse   # ביצועים, נגישות, SEO (נכשל מתחת לסף)
 npm run check:all    # פורמט, חיפוש, סיכון, מדד מחירים, צבע נגזר, מדידה, התראות, ייבוא
 
 npm run db:migrate   # יצירת מיגרציה חדשה בפיתוח

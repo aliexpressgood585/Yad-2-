@@ -37,7 +37,15 @@ export function HeaderUserMenu() {
       <Button asChild variant="ghost" size="sm">
         <Link href="/auth/login">
           <UserIcon aria-hidden />
-          <span className="hidden sm:inline">התחברות</span>
+          {/*
+           * `sr-only` ולא `hidden`.
+           *
+           * בנייד התווית מוסתרת ונשאר רק אייקון עם `aria-hidden`, כלומר
+           * קישור בלי שם נגיש בכלל — קורא מסך מקריא "קישור" ותו לא.
+           * `hidden` מוציא מעץ הנגישות; `sr-only` מסתיר חזותית ומשאיר
+           * את השם.
+           */}
+          <span className="sr-only sm:not-sr-only sm:inline">התחברות</span>
         </Link>
       </Button>
     );
