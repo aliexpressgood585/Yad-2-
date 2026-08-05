@@ -92,49 +92,49 @@ enum BoostKind {
 // ---------------------------------------------------------------------------
 
 model User {
-  id             String    @id @default(cuid())
-  phone          String?   @unique
-  email          String?   @unique
-  emailVerified  DateTime?
-  passwordHash   String?
-  name           String
-  avatar         String?
-  bio            String?
-  role           Role      @default(USER)
-  verifiedAt     DateTime?
-  ratingAvg      Float     @default(0)
-  ratingCount    Int       @default(0)
-  responseMins   Int?
-  dealsCount     Int       @default(0)
-  isBlocked      Boolean   @default(false)
-  lastSeenAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
+  id            String    @id @default(cuid())
+  phone         String?   @unique
+  email         String?   @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  name          String
+  avatar        String?
+  bio           String?
+  role          Role      @default(USER)
+  verifiedAt    DateTime?
+  ratingAvg     Float     @default(0)
+  ratingCount   Int       @default(0)
+  responseMins  Int?
+  dealsCount    Int       @default(0)
+  isBlocked     Boolean   @default(false)
+  lastSeenAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
   // Business profile
-  businessName   String?
-  businessSlug   String?   @unique
-  businessAbout  String?
-  businessLogo   String?
-  businessCity   String?
+  businessName  String?
+  businessSlug  String? @unique
+  businessAbout String?
+  businessLogo  String?
+  businessCity  String?
 
-  accounts           Account[]
-  sessions           Session[]
-  listings           Listing[]
-  favorites          Favorite[]
-  savedSearches      SavedSearch[]
-  messages           Message[]
-  conversationsBuyer Conversation[]  @relation("BuyerConversations")
-  conversationsSeller Conversation[] @relation("SellerConversations")
-  reportsMade        Report[]        @relation("ReportAuthor")
-  reviewsWritten     Review[]        @relation("ReviewAuthor")
-  reviewsReceived    Review[]        @relation("ReviewTarget")
-  auditLogs          AuditLog[]
-  notifications      Notification[]
-  pushSubscriptions  PushSubscription[]
-  phoneReveals       PhoneReveal[]
-  boosts             Boost[]
+  accounts            Account[]
+  sessions            Session[]
+  listings            Listing[]
+  favorites           Favorite[]
+  savedSearches       SavedSearch[]
+  messages            Message[]
+  conversationsBuyer  Conversation[]     @relation("BuyerConversations")
+  conversationsSeller Conversation[]     @relation("SellerConversations")
+  reportsMade         Report[]           @relation("ReportAuthor")
+  reviewsWritten      Review[]           @relation("ReviewAuthor")
+  reviewsReceived     Review[]           @relation("ReviewTarget")
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  pushSubscriptions   PushSubscription[]
+  phoneReveals        PhoneReveal[]
+  boosts              Boost[]
 
   @@index([role])
   @@index([createdAt])
@@ -239,9 +239,9 @@ model Attribute {
   /// מפתח מאפיין ההורה שממנו נגזרות האפשרויות (יצרן ← דגם)
   dependsOn   String?
 
-  category         Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  values           AttributeValue[]
-  listingAttrs     ListingAttribute[]
+  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  values       AttributeValue[]
+  listingAttrs ListingAttribute[]
 
   @@unique([categoryId, key])
   @@index([categoryId, order])
@@ -265,7 +265,7 @@ model AttributeValue {
 }
 
 model ListingAttribute {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   listingId   String
   attributeId String
   valueId     String?
@@ -322,29 +322,29 @@ model Listing {
   deletedAt          DateTime?
 
   /// טקסט מנורמל לחיפוש (FTS + trigram). מתוחזק בקוד האפליקציה.
-  searchText   String @default("")
+  searchText  String  @default("")
   /// טביעת אצבע לזיהוי מודעות כפולות
-  contentHash  String?
-  fraudScore   Int    @default(0)
+  contentHash String?
+  fraudScore  Int     @default(0)
 
   /// ערך ההשוואה של המודעה (שנת ייצור ברכב, מספר חדרים בנדל"ן).
   /// מנורמל מהשדות הדינמיים כדי ש"מד המחיר" יוכל לאתר מודעות דומות
   /// באינדקס אחד במקום ב-join אל טבלת השדות בכל שאילתה.
   comparableBand Float?
 
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  images       ListingImage[]
-  attributes   ListingAttribute[]
-  favorites    Favorite[]
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images        ListingImage[]
+  attributes    ListingAttribute[]
+  favorites     Favorite[]
   conversations Conversation[]
-  reports      Report[]
-  reviews      Review[]
-  priceHistory PriceHistory[]
-  boosts       Boost[]
-  fraudFlags   FraudFlag[]
-  phoneReveals PhoneReveal[]
-  dailyStats   ListingDailyStat[]
+  reports       Report[]
+  reviews       Review[]
+  priceHistory  PriceHistory[]
+  boosts        Boost[]
+  fraudFlags    FraudFlag[]
+  phoneReveals  PhoneReveal[]
+  dailyStats    ListingDailyStat[]
 
   @@index([status, publishedAt])
   @@index([categoryId, status, publishedAt])
@@ -469,16 +469,16 @@ model SavedSearch {
 }
 
 model Conversation {
-  id            String   @id @default(cuid())
-  listingId     String
-  buyerId       String
-  sellerId      String
-  lastMessageAt DateTime @default(now())
-  buyerReadAt   DateTime?
-  sellerReadAt  DateTime?
-  buyerArchived Boolean  @default(false)
-  sellerArchived Boolean @default(false)
-  createdAt     DateTime @default(now())
+  id             String    @id @default(cuid())
+  listingId      String
+  buyerId        String
+  sellerId       String
+  lastMessageAt  DateTime  @default(now())
+  buyerReadAt    DateTime?
+  sellerReadAt   DateTime?
+  buyerArchived  Boolean   @default(false)
+  sellerArchived Boolean   @default(false)
+  createdAt      DateTime  @default(now())
 
   listing  Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
   buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
@@ -504,13 +504,13 @@ model Message {
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  authorId   String
-  targetId   String
-  listingId  String?
-  rating     Int
-  body       String?  @db.Text
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  authorId  String
+  targetId  String
+  listingId String?
+  rating    Int
+  body      String?  @db.Text
+  createdAt DateTime @default(now())
 
   author  User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   target  User     @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
@@ -599,4 +599,35 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// שלבי המשפך. ראה `src/lib/metrics.ts` ו-GROWTH.md.
+enum FunnelStep {
+  SEARCH
+  VIEW
+  REVEAL
+  MESSAGE
+  REPLY
+}
+
+/// אירוע מדידה יחיד.
+///
+/// **אין כאן מפתחות זרים למודעה, לקטגוריה או למשתמש בכוונה.** מדידה
+/// חייבת לשרוד את מחיקת האובייקט שנמדד: מודעה שהוסרה במודרציה היא
+/// בדיוק המקרה שרוצים לראות בנתונים, ו-`onDelete: Cascade` היה מוחק
+/// את ההיסטוריה יחד איתה ומייפה את המספרים למפרע.
+model FunnelEvent {
+  id         String     @id @default(cuid())
+  step       FunnelStep
+  /// יום קלנדרי מקומי, לצורך צבירה. נגזר בכתיבה ולא בשאילתה.
+  day        DateTime   @db.Date
+  /// מזהה סשן אנונימי מהעוגייה. אקראי, לא נגזר מ-IP ולא מזהה אדם.
+  sessionId  String
+  userId     String?
+  listingId  String?
+  categoryId String?
+  createdAt  DateTime   @default(now())
+
+  @@index([day, step])
+  @@index([step, sessionId, listingId])
 }

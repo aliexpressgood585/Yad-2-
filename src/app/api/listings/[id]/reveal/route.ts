@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { enforceRateLimit, getClientIp, handleError, hashIp, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { recordEvent } from "@/lib/metrics";
+import { sessionId } from "@/lib/metrics-session";
 
 /**
  * חשיפת מספר הטלפון של המוכר.
@@ -22,6 +24,7 @@ export async function POST(
       where: { id, deletedAt: null, status: { not: "BANNED" } },
       select: {
         id: true,
+        categoryId: true,
         contactPhone: true,
         user: { select: { phone: true } },
       },
@@ -30,6 +33,14 @@ export async function POST(
 
     const phone = listing.contactPhone ?? listing.user.phone;
     if (!phone) return ok({ phone: null });
+
+    recordEvent({
+      step: "REVEAL",
+      sessionId: (await sessionId()) ?? "",
+      userId: session?.user?.id ?? null,
+      listingId: id,
+      categoryId: listing.categoryId,
+    });
 
     const ipHash = hashIp(ip);
     const today = new Date();

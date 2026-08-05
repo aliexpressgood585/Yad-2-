@@ -295,6 +295,25 @@ async function main() {
   const html = await adminListings.text();
   check("המודעה מופיעה בניהול", html.includes(String(stamp)), `HTTP ${adminListings.status}`);
 
+  /*
+   * דף המדידה.
+   *
+   * נבדק כאן ולא ב-`check:metrics` כי הבדיקה ההיא מכסה את החישוב בלבד.
+   * מה שיכול להישבר בדף הוא הרינדור עצמו — שאילתה שנופלת בזמן ריצה
+   * או טווח ריק שמחלק באפס — וזה נראה רק בבקשה אמיתית.
+   */
+  const metricsPage = await call("admin", "/admin/metrics?days=30");
+  const metricsHtml = await metricsPage.text();
+  check("דף המדידה נטען", metricsPage.status === 200, `HTTP ${metricsPage.status}`);
+  check(
+    "מדד הצפון והמשפך מוצגים",
+    metricsHtml.includes("מדד הצפון") && metricsHtml.includes("חשיפת טלפון"),
+  );
+
+  // המגעים של הבדיקה עצמה נרשמו — חשיפת הטלפון וההודעה שנשלחו למעלה
+  const metricsFresh = await call("admin", "/admin/metrics?days=7");
+  check("המשפך רשם את המגעים של הריצה", (await metricsFresh.text()).includes("שיעור מענה"));
+
   // דיווח + מודרציה
   const report = await json(
     await call("buyer", "/api/reports", {

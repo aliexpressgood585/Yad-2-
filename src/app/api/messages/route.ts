@@ -7,6 +7,8 @@ import {
   requireSession,
 } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { recordEvent } from "@/lib/metrics";
+import { sessionId } from "@/lib/metrics-session";
 import { notifyNewMessage } from "@/lib/notifications";
 import { messageSchema, replySchema } from "@/lib/validators";
 import { sanitizeText } from "@/lib/utils";
@@ -23,7 +25,14 @@ export async function POST(req: Request) {
 
     const listing = await prisma.listing.findFirst({
       where: { id: listingId, deletedAt: null },
-      select: { id: true, userId: true, title: true, slug: true, allowChat: true },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        title: true,
+        slug: true,
+        allowChat: true,
+      },
     });
     if (!listing) throw new ApiError(404, "המודעה לא נמצאה");
     if (!listing.allowChat) {
@@ -48,6 +57,14 @@ export async function POST(req: Request) {
 
     await prisma.message.create({
       data: { conversationId: conversation.id, senderId: session.user.id, body: clean },
+    });
+
+    recordEvent({
+      step: "MESSAGE",
+      sessionId: (await sessionId()) ?? "",
+      userId: session.user.id,
+      listingId,
+      categoryId: listing.categoryId,
     });
 
     await notifyNewMessage({
@@ -80,7 +97,8 @@ export async function PUT(req: Request) {
         id: true,
         buyerId: true,
         sellerId: true,
-        listing: { select: { title: true } },
+        listingId: true,
+        listing: { select: { title: true, categoryId: true } },
       },
     });
     if (!conversation) throw new ApiError(404, "השיחה לא נמצאה");
@@ -92,6 +110,22 @@ export async function PUT(req: Request) {
 
     const isBuyer = conversation.buyerId === userId;
     const recipientId = isBuyer ? conversation.sellerId : conversation.buyerId;
+
+    /*
+     * `REPLY` נרשם רק כשהמוכר עונה, ו-`userId` הוא **הקונה** ולא השולח.
+     * שיעור המענה נמדד לכל זוג (קונה, מודעה): מוכר שענה לפונה אחד מתוך
+     * שלושה לא ענה לשלושתם, ומפתח שמתעלם מזהות הפונה היה מציג בדיוק
+     * את זה.
+     */
+    if (!isBuyer) {
+      recordEvent({
+        step: "REPLY",
+        sessionId: (await sessionId()) ?? "",
+        userId: conversation.buyerId,
+        listingId: conversation.listingId,
+        categoryId: conversation.listing.categoryId,
+      });
+    }
 
     const [message] = await prisma.$transaction([
       prisma.message.create({

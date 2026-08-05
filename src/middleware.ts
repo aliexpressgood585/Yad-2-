@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authConfig } from "@/lib/auth.config";
+import { SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session-cookie";
 
 const { auth } = NextAuth(authConfig);
 
@@ -20,7 +21,7 @@ export default auth((req) => {
     if (user.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
-    return NextResponse.next();
+    return withSession(req, NextResponse.next());
   }
 
   if (PROTECTED.some((r) => r.test(pathname)) && !user) {
@@ -32,8 +33,32 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/my", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  return withSession(req, NextResponse.next());
 });
+
+/**
+ * מזהה סשן אנונימי למדידה.
+ *
+ * מזהה **אקראי**, ולא גיבוב של כתובת IP או של דפדפן. גיבוב IP נראה
+ * פרטי אבל הוא מזהה יציב של אדם שאפשר להצליב מולו, ובבית עם כמה
+ * דיירים הוא גם מאחד אותם לאדם אחד ומעוות את הספירה. מזהה אקראי
+ * בעוגייה עונה על "אותו דפדפן" — וזו בדיוק השאלה שהמשפך שואל.
+ *
+ * `SameSite=Lax` ו-`httpOnly`: העוגייה נקראת רק בשרת ואין לה שימוש
+ * בלקוח.
+ */
+function withSession(req: Parameters<Parameters<typeof auth>[0]>[0], res: NextResponse) {
+  if (req.cookies.get(SESSION_COOKIE)) return res;
+
+  res.cookies.set(SESSION_COOKIE, crypto.randomUUID(), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  });
+  return res;
+}
 
 function redirectToLogin(origin: string, target: string) {
   const url = new URL("/auth/login", origin);

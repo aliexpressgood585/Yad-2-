@@ -16,6 +16,7 @@ export function AdminNav({
 
   const items = [
     { href: "/admin", label: "סקירה", exact: true, badge: 0 },
+    { href: "/admin/metrics", label: "מדידה", badge: 0 },
     { href: "/admin/moderation", label: "תור מודרציה", badge: openReports + flagged },
     { href: "/admin/listings", label: "מודעות", badge: 0 },
     { href: "/admin/users", label: "משתמשים", badge: 0 },

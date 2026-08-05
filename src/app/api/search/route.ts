@@ -3,6 +3,8 @@ import { getAttributesForCategory, getCategoryBySlug, getCategoryIdsWithDescenda
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { searchListingCards } from "@/lib/listings";
+import { recordEvent } from "@/lib/metrics";
+import { sessionId } from "@/lib/metrics-session";
 import { PAGE_SIZE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +38,22 @@ export async function GET(req: Request) {
     }
 
     const countOnly = raw.countOnly === "1";
+
+    /*
+     * רק חיפוש אמיתי נספר.
+     *
+     * `countOnly=1` הוא הספירה החיה שרצה על כל הקשה בתיבת החיפוש
+     * ועל כל פתיחת פילטר; לספור אותה היה מנפח את שלב ה-SEARCH פי
+     * עשרות ומרסק את שיעור המעבר לצפייה — כלומר משפך שנראה נורא
+     * בגלל שיפור בממשק.
+     */
+    if (!countOnly) {
+      recordEvent({
+        step: "SEARCH",
+        sessionId: (await sessionId()) ?? "",
+        categoryId: categoryIds?.[0] ?? null,
+      });
+    }
     const query = toSearchQuery(state, attributes, {
       categoryIds,
       perPage: countOnly ? 1 : PAGE_SIZE,

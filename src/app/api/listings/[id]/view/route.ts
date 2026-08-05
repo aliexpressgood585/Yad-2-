@@ -1,5 +1,7 @@
 import { handleError, ok } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { recordEvent } from "@/lib/metrics";
+import { sessionId } from "@/lib/metrics-session";
 
 /** רישום צפייה במודעה. נקרא פעם אחת לכל טעינת דף מצד הלקוח. */
 export async function POST(
@@ -13,9 +15,16 @@ export async function POST(
 
     const exists = await prisma.listing.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true },
+      select: { id: true, categoryId: true },
     });
     if (!exists) return ok({ counted: false });
+
+    recordEvent({
+      step: "VIEW",
+      sessionId: (await sessionId()) ?? "",
+      listingId: id,
+      categoryId: exists.categoryId,
+    });
 
     await prisma.$transaction([
       prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }),
