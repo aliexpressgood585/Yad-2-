@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Assistant, Frank_Ruhl_Libre, Rubik } from "next/font/google";
+import { Assistant, Noto_Sans_Hebrew, Rubik } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -17,16 +17,26 @@ import "maplibre-gl/dist/maplibre-gl.css";
 /*
  * שלושה גופנים, שלושה תפקידים — ראה DESIGN.md.
  *
- * Frank Ruhl Libre הוא סריף עברי אמיתי ולא גרוטסק, וזה מה שנותן לדף
- * אופי במקום להיראות כמו כל לוח אחר. בשימוש מצומצם: כותרות מסך והמחיר
- * הראשי בדף מודעה, ולכן נטענים ממנו שני משקלים בלבד.
+ * הכותרות בגרוטסק עברי מעובה־צר, ולא בסריף.
+ *
+ * סריף נותן אופי, אבל האופי שהוא נותן הוא של עיתון או של ספר — לא של
+ * מכשיר מדידה. הכיוון קורא לצורה שנקראת כמו הדפסה על לוחית: צרה,
+ * כבדה, בלי תגים.
+ *
+ * `Noto Sans Hebrew` הוא הגופן העברי היחיד ב-Google Fonts עם ציר
+ * רוחב (`wdth`) אמיתי. החלופות — הבבו, רוביק, אלף — נותנות משקל אבל
+ * לא צרות, ו"צר" מזויף על ידי `transform: scaleX()` שובר את הצורה של
+ * האות ונראה בדיוק כמו מה שהוא.
+ *
+ * `axes` נטען בלי `weight`, כלומר כל טווח המשקלים מגיע כגופן משתנה
+ * אחד — זול יותר משלושה קבצים סטטיים.
  */
-const display = Frank_Ruhl_Libre({
+const display = Noto_Sans_Hebrew({
   subsets: ["hebrew", "latin"],
-  weight: ["500", "700"],
+  axes: ["wdth"],
   variable: "--font-display",
   display: "swap",
-  fallback: ["Georgia", "serif"],
+  fallback: ["Arial Narrow", "system-ui", "sans-serif"],
 });
 
 const assistant = Assistant({

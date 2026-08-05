@@ -14,11 +14,12 @@ const config: Config = {
       fontFamily: {
         /*
          * שלושה תפקידים, שלושה גופנים:
-         *   display — Frank Ruhl Libre, סריף עברי. כותרות מסך ומחיר ראשי בלבד.
+         *   display — Noto Sans Hebrew מעובה־צר. כותרות מסך ומחיר ראשי בלבד.
          *   sans    — Assistant. כל טקסט הממשק.
          *   data    — Rubik עם tabular-nums. מחירים, ק"מ, מ"ר, שנה, טלפון.
          */
-        heading: ["var(--font-display)", "Georgia", "serif"],
+        /* שרשרת הנפילה כבר בתוך המשתנה (`fallback` ב-next/font); כאן רק גנרי */
+        heading: ["var(--font-display)", "sans-serif"],
         sans: ["var(--font-body)", "system-ui", "sans-serif"],
         data: ["var(--font-data)", "var(--font-body)", "system-ui", "sans-serif"],
       },
