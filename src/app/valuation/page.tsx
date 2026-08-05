@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ValuationForm, type ValuationFormValues } from "@/components/valuation/valuation-form";
 import { NotEnoughData, ValuationResult } from "@/components/valuation/valuation-result";
+import { SpeedCurve } from "@/components/valuation/speed-curve";
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { formatNumber } from "@/lib/format";
 import { pricePaths } from "@/lib/hebrew-routes";
 import { SITE } from "@/lib/site";
+import { getCategoryBySlug } from "@/lib/categories";
+import { speedCurveFor } from "@/lib/time-to-sale";
 import { slugify } from "@/lib/utils";
 import {
   DEAL_LABEL,
@@ -160,6 +163,18 @@ async function VehicleResult({ values }: { values: ValuationFormValues }) {
     ? pricePaths.guide(slugify(values.manufacturer), slugify(values.model))
     : null;
 
+  /*
+   * עקומת המחיר-מהירות משלימה את הטווח.
+   *
+   * הטווח אומר "כמה זה שווה"; העקומה אומרת "כמה זמן זה ייקח" — ורק
+   * שתיהן יחד מאפשרות למוכר להכריע, כי בלי הזמן אין לו דרך לדעת אם
+   * כדאי לו לרדת במחיר.
+   *
+   * `null` כשאין מספיק מכירות, ואז פשוט לא מוצג דבר.
+   */
+  const carsCategory = await getCategoryBySlug("private-cars");
+  const curve = carsCategory ? await speedCurveFor(carsCategory.id) : null;
+
   return (
     <ValuationResult
       summary={result.summary}
@@ -170,6 +185,8 @@ async function VehicleResult({ values }: { values: ValuationFormValues }) {
       dropped={result.dropped}
       title={`טווח המחירים המבוקש ל${compared}`}
     >
+      {curve ? <SpeedCurve curve={curve} price={result.summary.median} /> : null}
+
       {guideHref ? (
         <p className="text-sm">
           <Link href={guideHref} className="inline-flex items-center gap-1 text-info hover:underline">

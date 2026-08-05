@@ -30,13 +30,15 @@ export async function PATCH(
 
     switch (action) {
       case "sold":
-        data = { status: "SOLD" };
+        // החותמת היא מה שהופך "נמכרה" לנתון: בלעדיה יודעים ש-כן ולא מתי
+        data = { status: "SOLD", soldAt: now };
         break;
       case "pause":
         data = { status: "DRAFT" };
         break;
       case "activate":
-        data = { status: "ACTIVE", publishedAt: now, expiresAt: expiryDate(now) };
+        // הפעלה מחדש מנקה את החותמת — מודעה פעילה לא נמכרה
+        data = { status: "ACTIVE", publishedAt: now, expiresAt: expiryDate(now), soldAt: null };
         break;
       case "renew":
         // חידוש גם מרענן את מיקום המודעה ברשימות

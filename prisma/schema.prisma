@@ -317,6 +317,12 @@ model Listing {
   promotedUntil      DateTime?
   bumpedAt           DateTime?
   publishedAt        DateTime?
+  /// מתי המודעה סומנה כנמכרה. ריק בכל סטטוס אחר.
+  ///
+  /// בלי החותמת הזו אפשר לדעת *ש*מודעה נמכרה אבל לא *מתי*, וזה בדיוק
+  /// ההפרש שממנו נגזר זמן המכירה — הנתון היחיד שעונה למוכר על
+  /// "כמה זמן זה ייקח במחיר הזה".
+  soldAt             DateTime?
   expiresAt          DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -349,6 +355,7 @@ model Listing {
 
   @@index([status, publishedAt])
   @@index([categoryId, status, publishedAt])
+  @@index([categoryId, soldAt])
   @@index([userId, status])
   @@index([city, status])
   @@index([price])

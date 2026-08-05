@@ -801,6 +801,59 @@ async function seedEngagement(
   );
 }
 
+/**
+ * היסטוריית מכירות — הבסיס לעקומת המחיר-מהירות.
+ *
+ * מסמן חלק מהמודעות כנמכרות ומזיז את `publishedAt` אחורה, כך שיהיה
+ * מרווח אמיתי בין פרסום למכירה.
+ *
+ * **הקשר בין מחיר למהירות כאן סינתטי בכוונה.** בנתוני אמת העקומה
+ * תהיה מה שתהיה; בזריעת דמו היא נבנית מונוטונית — הרבעון הזול נמכר
+ * תוך כשבוע והיקר תוך כחודשיים — כדי שהפיצ'ר יהיה ניתן להדגמה. מי
+ * שקורא מספרים מהסביבה הזו צריך לדעת שהם לא ממצא על השוק הישראלי.
+ *
+ * הפיזור נשאר רחב וחופף בין רבעונים, כי עקומה חלקה מדי נראית מזויפת
+ * ומלמדת לסמוך על המספר יותר משמותר.
+ */
+async function seedSalesHistory() {
+  console.log("🏷  יוצר היסטוריית מכירות…");
+
+  const updated = await prisma.$executeRawUnsafe(`
+    WITH ranked AS (
+      SELECT
+        id,
+        NTILE(4) OVER (PARTITION BY "categoryId" ORDER BY price) AS q,
+        ROW_NUMBER() OVER (PARTITION BY "categoryId" ORDER BY random()) AS rn,
+        COUNT(*) OVER (PARTITION BY "categoryId") AS n
+      FROM "Listing"
+      WHERE status = 'ACTIVE' AND price IS NOT NULL AND "deletedAt" IS NULL
+    ),
+    picked AS (
+      SELECT
+        id,
+        -- חציון עולה עם רבעון המחיר: כ-6, 12, 24 ו-48 יום
+        GREATEST(1, ROUND((6 * POWER(2.0, q - 1)) * (0.6 + random() * 0.8))) AS days,
+        -- לפני כמה זמן נמכרה. נדגם פעם אחת ומשמש לשני התאריכים.
+        (5 + random() * 200) AS age
+      FROM ranked
+      WHERE rn <= CEIL(n * 0.28)
+    )
+    /*
+     * שני התאריכים נגזרים מאותן שתי דגימות, ולכן ההפרש ביניהם שווה
+     * בדיוק למספר הימים שנדגם. דגימה נפרדת לכל תאריך הייתה נותנת פער
+     * אקראי לגמרי, והעקומה שמחושבת ממנו הייתה רעש שנראה כמו נתון.
+     */
+    UPDATE "Listing" l SET
+      status = 'SOLD',
+      "publishedAt" = NOW() - (INTERVAL '1 day' * (p.days + p.age)),
+      "soldAt"      = NOW() - (INTERVAL '1 day' * p.age)
+    FROM picked p
+    WHERE l.id = p.id
+  `);
+
+  console.log(`   ✓ ${updated} מודעות סומנו כנמכרות`);
+}
+
 /** מסנכרן דירוג ממוצע ומספר מועדפים לפי הנתונים שנוצרו. */
 async function syncAggregates() {
   console.log("🔄 מסנכרן מצרפים…");
@@ -839,6 +892,7 @@ async function main() {
   const leaves = await collectLeaves(registry);
   const listingIds = await seedListings(users, leaves);
   await seedEngagement(users, listingIds);
+  await seedSalesHistory();
   await syncAggregates();
 
   console.log(`\n✅ הזריעה הסתיימה תוך ${((Date.now() - started) / 1000).toFixed(1)} שניות`);
