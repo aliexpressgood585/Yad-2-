@@ -5,124 +5,167 @@
 /* ==========================================================================
    לוח — ערכת עיצוב
    ==========================================================================
-   מקור: שילוט הדרכים הישראלי והבאוהאוס של תל אביב.
-   ירוק שילוט בין-עירוני הוא צבע הפעולה היחיד; כחול שילוט עירוני הוא
-   צבע המידע; חול ירושלמי הוא הנייר. הנימוק המלא ב-DESIGN.md.
+   הלוח מעוצב כמכשיר מדידה, לא כחנות. מי שמחפש רכב או דירה לא בא
+   להתרשם — הוא בא למדוד, וכל מסך כאן בנוי סביב ההנחה הזו.
 
-   ערכי HSL ולא HEX — כדי ש-Tailwind יוכל לגזור שקיפויות (`bg-sign/10`).
+   מכאן נגזר הכול: גרפיט כשלדה, עצם כפני החוגה, וענבר זרחני של מד דלק
+   כצבע הקריאה היחיד. ציאן שמור לפסק דין בלבד. הנימוק המלא ב-DESIGN.md.
+
+   ערכי HSL ולא HEX — כדי ש-Tailwind יוכל לגזור שקיפויות (`bg-primary/10`).
    ========================================================================== */
 
 @layer base {
+  /* ------------------------------------------------------------------
+     קבועים שאינם תלויים בערכת הצבעים
+
+     לוחית הסקאלה היא גרפיט תמיד, בבהיר ובכהה כאחד. זו לא פשרה אלא
+     דיוק: לחוגה של מכשיר אמיתי יש פנים כהות בלי קשר לתאורה בחדר,
+     וזה גם מה שמאפשר לענבר לשמור על אותה עוצמה בשתי הערכות — ענבר
+     על רקע עצם בהיר נופל מתחת ל-AA, ולכן בחוגה בהירה לא היה מחוג.
+
+     שני הצבעים האלה אינם צבעי ממשק. אסור להשתמש בהם מחוץ לסקאלה.
+     ------------------------------------------------------------------ */
   :root {
-    /* --- הפלטה הגולמית --------------------------------------------------
-       ink    #14171A   paper  #F7F5F0   sign   #005F3C
-       route  #0B4A8F   stone  #DDD8CE   signal #C2410C              */
-    --ink: 210 12% 9%;
-    --paper: 40 24% 96%;
-    --sign: 158 100% 19%;
-    --route: 211 86% 30%;
-    --stone: 39 20% 84%;
-    --signal: 20 91% 40%;
+    --scale-plate: 216 10% 10%;
+    --scale-hair: 216 9% 26%;
+    --needle: 41 100% 50%;
+  }
+
+  :root {
+    /* --- הפלטה הגולמית — חוגה בהירה -------------------------------------
+       ink    #16181B   bone   #E6E2D6   amber  #8A5200
+       verdict #10606E  hair   #C9C3B4   alarm  #B33A12              */
+    --ink: 216 10% 10%;
+    --bone: 45 24% 87%;
+    --amber: 36 100% 27%;
+    --verdict: 189 75% 25%;
+    --hair: 43 16% 75%;
+    --alarm: 16 82% 39%;
 
     /* --- תפקידים --------------------------------------------------------- */
-    --background: var(--paper);
+    --background: var(--bone);
     --foreground: var(--ink);
 
-    /* הכרטיס לבן על נייר החול — ההפרדה נעשית בגוון, לא בקו כבד */
-    --card: 0 0% 100%;
+    /* המשטח בהיר מהחוגה — הפרדה בגוון, אף פעם לא בקו כבד */
+    --card: 44 28% 92%;
     --card-foreground: var(--ink);
 
-    --popover: 0 0% 100%;
+    --popover: 44 30% 94%;
     --popover-foreground: var(--ink);
 
-    /* צבע הפעולה היחיד באפליקציה */
-    --primary: var(--sign);
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 158 34% 93%;
+    /*
+     * צבע הפעולה היחיד.
+     * בחוגה בהירה הענבר מעומק לברונזה: #FFB000 מול עצם נותן יחס 1.4,
+     * כלומר כפתור שאי אפשר לקרוא. הענבר הזוהר נשאר בסקאלה בלבד.
+     */
+    --primary: var(--amber);
+    --primary-foreground: 45 30% 94%;
+    --primary-soft: 42 34% 82%;
 
-    --secondary: 40 18% 92%;
+    --secondary: 44 20% 83%;
     --secondary-foreground: var(--ink);
 
-    /* מידע וקישורים — לא פעולה. אין לו כפתור מלא בשום מסך. */
-    --info: var(--route);
-    --info-foreground: 0 0% 100%;
+    /* פסק דין — קריאה, לא פעולה. אין לו כפתור מלא בשום מסך. */
+    --info: var(--verdict);
+    --info-foreground: 45 30% 94%;
 
     /* אזהרות וירידות מחיר בלבד */
-    --accent: var(--signal);
-    --accent-foreground: 0 0% 100%;
+    --accent: var(--alarm);
+    --accent-foreground: 45 30% 94%;
 
-    --muted: 40 18% 93%;
-    --muted-foreground: 213 8% 38%;
+    --muted: 44 20% 85%;
+    --muted-foreground: 45 6% 35%;
 
-    --destructive: 0 72% 42%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 6 74% 38%;
+    --destructive-foreground: 45 30% 94%;
 
-    --success: var(--sign);
-    --success-foreground: 0 0% 100%;
+    --success: var(--verdict);
+    --success-foreground: 45 30% 94%;
 
-    --warning: var(--signal);
-    --warning-foreground: 0 0% 100%;
+    --warning: var(--alarm);
+    --warning-foreground: 45 30% 94%;
 
-    --border: var(--stone);
-    --input: 39 18% 78%;
-    --ring: var(--sign);
+    --border: var(--hair);
+    --input: 43 14% 68%;
+    --ring: var(--amber);
 
-    --shadow-color: 210 12% 9%;
-    --radius: 0.625rem; /* 10px בכרטיסים; כפתורים נגזרים ל-8px */
+    --shadow-color: 216 10% 10%;
+
+    /*
+     * שכבת הצבע הנדגם.
+     *
+     * `--listing-accent` מוזרק בדף המודעה כ-"H S%" בלבד, והבהירות
+     * מגיעה מכאן — ראה `src/lib/listing-accent.ts`. על חוגה בהירה
+     * ההדגשה חייבת להיות כהה מהרקע כדי להיראות בכלל.
+     */
+    --accent-hs: 43 16%;
+    --accent-l: 44%;
+
+    /*
+     * אפס עיגול. מכשיר מדידה אינו מעוגל, והפינה החדה היא מה שמבדיל
+     * את הלוח מכל כרטיס `rounded-lg` באינטרנט. הצ'יפים היחידים שנשארו
+     * עגולים משתמשים ב-`rounded-full` שאינו נגזר מהטוקן הזה.
+     */
+    --radius: 0rem;
   }
 
   /*
-   * מצב לילה נבנה מחדש ואינו היפוך של הבהיר.
-   * היפוך היה הופך את ירוק השילוט לכהה יותר ומאבד ניגודיות; כאן הוא
-   * מתבהר ל-#2FA875 כדי לשמור על AA מול הרקע.
+   * חוגה כהה — זו הערכה הקנונית של הכיוון.
+   * היא אינה היפוך של הבהירה: הענבר חוזר כאן לזוהר המלא שלו (#FFB000)
+   * מפני שעל גרפיט הוא נותן יחס 9.7, והציאן מתבהר מ-#10606E ל-#58C6D8
+   * מאותה סיבה בדיוק.
    */
   .dark {
-    --ink: 40 20% 94%;
-    --paper: 210 8% 10%;
-    --sign: 156 57% 42%;
-    --route: 211 70% 62%;
-    --stone: 210 7% 24%;
-    --signal: 20 85% 58%;
+    --ink: 45 24% 87%;
+    --bone: 216 10% 10%;
+    --amber: 41 100% 50%;
+    --verdict: 188 62% 60%;
+    --hair: 216 9% 22%;
+    --alarm: 16 76% 60%;
 
-    --background: var(--paper);
+    --background: var(--bone);
     --foreground: var(--ink);
 
-    --card: 210 8% 13%;
+    --card: 217 12% 13%;
     --card-foreground: var(--ink);
 
-    --popover: 210 8% 14%;
+    --popover: 217 12% 15%;
     --popover-foreground: var(--ink);
 
-    --primary: var(--sign);
-    --primary-foreground: 158 60% 7%;
-    --primary-soft: 158 26% 18%;
+    --primary: var(--amber);
+    --primary-foreground: 36 100% 8%;
+    --primary-soft: 40 30% 17%;
 
-    --secondary: 210 7% 18%;
+    --secondary: 217 10% 18%;
     --secondary-foreground: var(--ink);
 
-    --info: var(--route);
-    --info-foreground: 211 60% 8%;
+    --info: var(--verdict);
+    --info-foreground: 189 70% 8%;
 
-    --accent: var(--signal);
-    --accent-foreground: 20 60% 8%;
+    --accent: var(--alarm);
+    --accent-foreground: 16 60% 9%;
 
-    --muted: 210 7% 17%;
-    --muted-foreground: 210 8% 65%;
+    --muted: 217 10% 17%;
+    --muted-foreground: 210 5% 62%;
 
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 6 66% 58%;
+    --destructive-foreground: 6 60% 8%;
 
-    --success: var(--sign);
-    --success-foreground: 158 60% 7%;
+    --success: var(--verdict);
+    --success-foreground: 189 70% 8%;
 
-    --warning: var(--signal);
-    --warning-foreground: 20 60% 8%;
+    --warning: var(--alarm);
+    --warning-foreground: 16 60% 9%;
 
-    --border: var(--stone);
-    --input: 210 7% 28%;
-    --ring: var(--sign);
+    --border: var(--hair);
+    --input: 217 10% 28%;
+    --ring: var(--amber);
 
     --shadow-color: 0 0% 0%;
+
+    /* על גרפיט ההדגשה חייבת להיות בהירה מהרקע — אותו צבע, כיוון הפוך */
+    --accent-hs: 216 9%;
+    --accent-l: 64%;
   }
 
   * {
@@ -300,20 +343,20 @@
     inset: -8% -4% 40%;
     z-index: -1;
     border-radius: 999px;
-    background: hsl(var(--listing-accent, var(--stone)) / 0.28);
+    background: hsl(var(--listing-accent, var(--accent-hs)) var(--accent-l) / 0.28);
     filter: blur(56px);
     pointer-events: none;
   }
 
   .dark .accent-halo::before {
-    background: hsl(var(--listing-accent, var(--stone)) / 0.22);
+    background: hsl(var(--listing-accent, var(--accent-hs)) var(--accent-l) / 0.22);
   }
 
+  /* קו ההדגשה — חד, כמו כל שאר הקצוות בכיוון הזה */
   .accent-rule {
     height: 3px;
     width: 3.5rem;
-    border-radius: 999px;
-    background: hsl(var(--listing-accent, var(--primary)));
+    background: hsl(var(--listing-accent, var(--accent-hs)) var(--accent-l));
   }
 
   /* ------------------------------------------------------------------
@@ -338,6 +381,30 @@
   @container card (min-width: 26rem) {
     .listing-card[data-density="list"] .listing-card-media {
       width: 11rem;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     עמודת הסקאלה בשורת קריאה
+
+     ברוחב מכל של 34rem ומעלה היא עמודה בקצה השורה. מתחת לזה היא
+     מקבלת רוחב מלא, ומכיוון שהמאמר הוא `flex-wrap` היא נדחקת לשורה
+     משלה — הסקאלה יורדת אל מתחת לשורה במקום להיעלם.
+
+     זו הסיבה שהמעבר נעשה ברוחב ולא ב-`display: none`: המדד הוא הסיבה
+     שהמשתמש בלוח הזה ולא באחר, והוא לא נעלם במסך צר.
+     ------------------------------------------------------------------ */
+  .listing-card[data-density="list"] .listing-card-scale {
+    width: 100%;
+    border-inline-start: 0;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  @container card (min-width: 34rem) {
+    .listing-card[data-density="list"] .listing-card-scale {
+      width: 12rem;
+      border-inline-start: 1px solid hsl(var(--border));
+      border-top: 0;
     }
   }
 
@@ -387,6 +454,66 @@
       font-size: theme(fontSize.base[0]);
       line-height: theme(fontSize.base[1].lineHeight);
     }
+  }
+
+  /* ------------------------------------------------------------------
+     סקאלת המחיר — אלמנט החתימה של הלוח
+
+     לוחית גרפיט עם שנתות ומחוג ענבר שמסמן איפה המחיר יושב בתוך
+     המודעות הדומות. זה הרכיב שהופך את הלוח ממקום שמציג מחירים למקום
+     שמודד אותם, ולכן הוא נראה זהה בכל מסך שבו הוא מופיע.
+
+     השנתות מצוירות בשני גרדיאנטים חוזרים ולא ב-20 אלמנטים: בדף
+     תוצאות עם 40 מודעות זה ההבדל בין 40 צמתי DOM ל-800.
+
+     הלוחית גרפיט גם בערכה הבהירה — ראה הנימוק ב-`:root` למעלה.
+     ------------------------------------------------------------------ */
+  .price-scale {
+    position: relative;
+    height: 1.125rem;
+    background-color: hsl(var(--scale-plate));
+    background-image:
+      /* שנתה ראשית כל רבע — גובה מלא */
+      repeating-linear-gradient(
+        to left,
+        hsl(var(--scale-hair)) 0 1px,
+        transparent 1px 25%
+      ),
+      /* שנתת משנה כל 5% — גובה חלקי */
+      repeating-linear-gradient(
+        to left,
+        hsl(var(--scale-hair)) 0 1px,
+        transparent 1px 5%
+      );
+    background-size:
+      100% 100%,
+      100% 45%;
+    background-position:
+      bottom right,
+      bottom right;
+    background-repeat: no-repeat;
+  }
+
+  .price-scale-needle {
+    position: absolute;
+    bottom: 0;
+    width: 2px;
+    height: 100%;
+    margin-inline-start: -1px;
+    background: hsl(var(--needle));
+    box-shadow: 0 0 6px hsl(var(--needle) / 0.65);
+  }
+
+  /* ראש המחוג — מעוין קטן שמבליט את הקריאה בלי להגדיל את הרכיב */
+  .price-scale-needle::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    inset-inline-start: -2px;
+    width: 6px;
+    height: 6px;
+    background: hsl(var(--needle));
+    transform: rotate(45deg);
   }
 
   .img-scrim {

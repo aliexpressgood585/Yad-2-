@@ -58,7 +58,13 @@ export default async function HomePage() {
                   href={`/${category.slug}`}
                   className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-lifted"
                 >
-                  <span className="grid size-11 place-items-center rounded-lg bg-primary-soft text-primary transition-transform group-hover:scale-105">
+                  {/*
+                   * האייקון אינו ענבר במנוחה.
+                   * ענבר הוא צבע הקריאה, ושבעה ריבועי ענבר בדף הבית הופכים
+                   * אותו לקישוט — ואז מחוג ענבר בשורת תוצאות כבר לא אומר
+                   * כלום. הצבע נכנס בריחוף, כשיש כוונת פעולה.
+                   */}
+                  <span className="grid size-11 place-items-center bg-secondary text-muted-foreground transition-colors duration-ui ease-ui group-hover:text-primary">
                     <CategoryIcon name={category.icon} className="size-5" />
                   </span>
                   <span className="font-heading font-bold">{category.name}</span>

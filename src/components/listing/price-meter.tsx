@@ -2,46 +2,80 @@ import type { PriceMeter as PriceMeterData } from "@/lib/price-meter";
 import { cn } from "@/lib/utils";
 
 /**
- * מד המחיר — פס דק שמראה איפה המחיר יושב ביחס למודעות דומות.
+ * סטייה קטנה מהחציון היא רעש סטטיסטי ולא "מחיר טוב".
+ * מתחת לסף הזה הסקאלה לא מוצגת בכלל — מחוג שזז באחוז אחד מלמד את
+ * המשתמש להתעלם ממנו, וזה מחיר גבוה יותר מלא להציג אותו.
+ */
+const NOISE_FLOOR_PCT = 3;
+
+/**
+ * סקאלת המחיר — אלמנט החתימה של הלוח.
  *
- * אלמנט החתימה של הלוח: המחיר לבדו לא אומר אם העסקה טובה, והפס הזה
- * עונה על זה במבט אחד, בלי להעמיס על הכרטיס.
+ * לוחית גרפיט עם שנתות ומחוג ענבר שמסמן את האחוזון שבו יושב המחיר בתוך
+ * המודעות הדומות. המחיר לבדו לא אומר אם העסקה טובה; הסקאלה עונה על זה
+ * במבט אחד, באותה צורה בדיוק בכל מסך שבו היא מופיעה.
  *
- * `meter === null` (פחות מ-8 מודעות להשוואה) → לא מוצג כלום.
- * לעולם לא ממציאים נתון מתוך מדגם קטן.
+ * **`meter === null` (פחות מ-8 מודעות להשוואה) → לא מוצג כלום.** לא מחוג
+ * חיוור ולא הערכה זהירה. מכשיר שמראה קריאה שאין לו הוא מכשיר מקולקל,
+ * וזה ההבדל בין הרכיב הזה לבין גרף קישוטי.
  */
 export function PriceMeter({
   meter,
   className,
+  /**
+   * `column` — הרכיב יושב בעמודה משלו בשורת קריאה, ולכן הוא **חייב
+   * להחזיר משהו תמיד**: עמודה שנעלמת מזיזה את המחיר של אותה שורה
+   * ושוברת את יישור העמודה לאורך הרשימה. במכשיר זה חמור יותר מחוסר
+   * הנתון עצמו — עמודת מספרים שלא מתיישרת היא בדיוק מה שהסקאלה
+   * אמורה למנוע.
+   *
+   * במצב הזה היעדר קריאה נאמר במילים במקום להיעלם.
+   */
+  variant = "inline",
 }: {
   meter: PriceMeterData | null;
   className?: string;
+  variant?: "inline" | "column";
 }) {
-  if (!meter) return null;
+  const isColumn = variant === "column";
+
+  const note = (text: string) =>
+    isColumn ? <p className={cn("text-xs text-muted-foreground", className)}>{text}</p> : null;
+
+  if (!meter) return note("אין מספיק מודעות דומות להשוואה");
 
   const below = meter.deltaPct < 0;
   const magnitude = Math.abs(meter.deltaPct);
 
-  // סטייה של אחוז-שניים מהחציון היא רעש סטטיסטי, לא "מחיר טוב"
-  if (magnitude < 3) return null;
+  /*
+   * סטייה זניחה היא קריאה תקפה — "בדיוק כמו השוק" — ולא היעדר נתון.
+   * היא נאמרת במילים בלי מחוג, כי מחוג שזז באחוז אחד מלמד להתעלם ממנו.
+   */
+  if (magnitude < NOISE_FLOOR_PCT) return note("במחיר החציון");
+
+  /*
+   * המחוג ממוקם באחוזון, ו-`inset-inline-start` הוא מה שהופך אותו לנכון
+   * ב-RTL: הקצה הזול נמצא בצד שממנו מתחילים לקרוא, כלומר מימין.
+   * הצמדה ל-1%–99% מונעת מחוג שנחתך בדיוק בקצה הלוחית.
+   */
+  const position = Math.min(99, Math.max(1, meter.percentile * 100));
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       <div
-        className="relative h-0.5 w-full rounded-full bg-border"
+        className="price-scale w-full"
         role="img"
         aria-label={`המחיר ${below ? "נמוך" : "גבוה"} ב-${magnitude} אחוז מחציון ${meter.sample} מודעות דומות`}
       >
-        <span
-          className={cn(
-            "absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full",
-            below ? "bg-primary" : "bg-muted-foreground",
-          )}
-          // הסמן ממוקם באחוזון; ב-RTL הציר מתהפך, ולכן inset-inline-start
-          style={{ insetInlineStart: `calc(${(meter.percentile * 100).toFixed(1)}% - 3px)` }}
-        />
+        <span className="price-scale-needle" style={{ insetInlineStart: `${position}%` }} />
       </div>
-      <p className={cn("text-xs", below ? "text-primary" : "text-muted-foreground")}>
+
+      {/*
+       * פסק הדין בציאן כשהמחיר מתחת לחציון, ובצבע האזהרה כשהוא מעליו.
+       * שניהם צבעי קריאה ולא צבעי פעולה — לאף אחד מהם אין כפתור מלא
+       * בשום מסך, וזה מה שמשאיר את הענבר כצבע הפעולה היחיד.
+       */}
+      <p className={cn("text-xs", below ? "text-info" : "text-accent")}>
         <span className="num">{magnitude}%</span> {below ? "מתחת לחציון" : "מעל החציון"}
       </p>
     </div>

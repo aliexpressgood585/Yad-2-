@@ -8,6 +8,7 @@ import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { CompareBar } from "@/components/compare/compare-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { SiteJsonLd } from "@/components/seo/json-ld";
+import { PALETTE, PALETTE_DARK } from "@/lib/palette";
 import { SITE } from "@/lib/site";
 
 import "./globals.css";
@@ -73,8 +74,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#16181A" },
+    { media: "(prefers-color-scheme: light)", color: PALETTE.bone },
+    { media: "(prefers-color-scheme: dark)", color: PALETTE_DARK.bone },
   ],
 };
 

@@ -55,15 +55,30 @@ function rgbToHsl(r: number, g: number, b: number): Hsl {
 /** גבולות הריסון. מחוץ להם צבע התמונה מפסיק להיות רמז והופך לרעש. */
 const MIN_SATURATION = 0.14;
 const MAX_SATURATION = 0.42;
-const MIN_LIGHTNESS = 0.34;
-const MAX_LIGHTNESS = 0.56;
 
 /**
- * צבע ההדגשה מתוך blurhash, כמחרוזת ערכי HSL לשימוש ב-CSS
- * (`hsl(var(--listing-accent))`), או `null` כשאין ממה לגזור.
+ * מתחת לזה התמונה אפורה, ואין ממה לגזור צבע.
+ * לא מותחים רוויה מלאכותית מתוך תצלום חסר צבע — התוצאה היא גוון
+ * אקראי שנקבע בידי רעש דחיסה, לא בידי המוצר שבתמונה.
+ */
+const GREY_FLOOR = 0.04;
+
+/**
+ * גוון ורוויה בלבד — **בלי בהירות.**
+ *
+ * זו הנקודה העדינה בקובץ. הבהירות אינה נגזרת מהתמונה אלא מגיעה
+ * מהערכה הפעילה (`--accent-l` ב-`globals.css`), מפני שאותו צבע צריך
+ * לעבוד גם על חוגה בהירה וגם על גרפיט. צבע בבהירות 34% הוא הדגשה
+ * נכונה על עצם, ועל גרפיט הוא כתם שכמעט לא נראה; לכפות ערך אחד על
+ * שתי הערכות פירושו לוותר על אחת מהן.
+ *
+ * לכן מוחזר `"H S%"` ולא `"H S% L%"`, וה-CSS מרכיב:
+ * `hsl(var(--listing-accent) var(--accent-l))`.
  *
  * מוחזרת מחרוזת ולא אובייקט כי היעד הוא משתנה CSS אחד שממנו נגזרות גם
  * השקיפויות — בדיוק כמו שאר הטוקנים ב-`globals.css`.
+ *
+ * `null` כשאין ממה לגזור, ואז הדף חוזר לפלטה.
  */
 export function accentFromBlurhash(hash: string | null | undefined): string | null {
   if (!hash || hash.length < 6) return null;
@@ -75,13 +90,11 @@ export function accentFromBlurhash(hash: string | null | undefined): string | nu
   const g = linearToSrgb(((dc >> 8) & 255) / 255);
   const b = linearToSrgb((dc & 255) / 255);
 
-  const { h, s, l } = rgbToHsl(r, g, b);
+  const { h, s } = rgbToHsl(r, g, b);
 
-  // תמונה אפורה לגמרי לא מקבלת רוויה מלאכותית — היא פשוט אין לה צבע
-  if (s < 0.04) return null;
+  if (s < GREY_FLOOR) return null;
 
   const clampedS = Math.min(MAX_SATURATION, Math.max(MIN_SATURATION, s));
-  const clampedL = Math.min(MAX_LIGHTNESS, Math.max(MIN_LIGHTNESS, l));
 
-  return `${Math.round(h * 360)} ${Math.round(clampedS * 100)}% ${Math.round(clampedL * 100)}%`;
+  return `${Math.round(h * 360)} ${Math.round(clampedS * 100)}%`;
 }

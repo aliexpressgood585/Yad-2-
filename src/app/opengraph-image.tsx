@@ -33,7 +33,7 @@ export default async function OpengraphImage() {
             כל מה שצריך, במקום אחד נקי
           </div>
           {count > 0 ? (
-            <div style={{ display: "flex", fontSize: 34, color: OG.sign, fontWeight: 700 }}>
+            <div style={{ display: "flex", fontSize: 34, color: OG.amber, fontWeight: 700 }}>
               {count.toLocaleString("en-US")} מודעות פעילות
             </div>
           ) : null}

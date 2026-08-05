@@ -18,8 +18,36 @@ function check(ok: boolean, what: string, detail = "") {
 
 function parse(accent: string | null) {
   if (!accent) return null;
-  const [h, s, l] = accent.split(" ");
-  return { h: Number(h), s: Number(s!.replace("%", "")), l: Number(l!.replace("%", "")) };
+  const parts = accent.split(" ");
+  if (parts.length !== 2) return null;
+  return { h: Number(parts[0]), s: Number(parts[1]!.replace("%", "")) };
+}
+
+/**
+ * הבהירות שכל ערכה מספקת ל-`--accent-l`. חייב להישאר תואם ל-`globals.css`.
+ * הבדיקה למטה מקבעת שהיא באמת שונה בין הערכות: ערך אחד לשתיהן היה
+ * מחזיר בדיוק את הבאג שהמנגנון הזה נועד למנוע.
+ */
+const ACCENT_L = { light: 44, dark: 64 };
+
+/**
+ * בהירות יחסית מתוך בהירות HSL — **קירוב, לא מדידת WCAG.**
+ *
+ * הבהירות ב-HSL אינה ערך ערוץ sRGB, ולכן המספר כאן אינו יחס הניגודיות
+ * האמיתי של הצבע הסופי; הוא מספיק כדי לתפוס את מה שהבדיקה הזו מחפשת,
+ * שזו הדגשה שנבלעת ברקע. ניגודיות טקסט נבדקת במקום אחר.
+ *
+ * העקומה היא הליניאריזציה של sRGB. הכיוון ההפוך — `1.055 * v^(1/2.4)`
+ * — הוא קידוד ולא פענוח, והוא מחזיר יחסים שטוחים מדי שנראים אמינים.
+ */
+function relativeLuminance(l: number): number {
+  const v = l / 100;
+  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+function contrast(a: number, b: number): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi! + 0.05) / (lo! + 0.05);
 }
 
 /* --- קלט לא תקין ---------------------------------------------------------- */
@@ -54,10 +82,42 @@ for (const hash of SAMPLES) {
     console.log(`✓ ${hash.slice(0, 12)}… → אין צבע (אפור או לא תקין)`);
     continue;
   }
-  const inRange =
-    hsl.h >= 0 && hsl.h <= 360 && hsl.s >= 14 && hsl.s <= 42 && hsl.l >= 34 && hsl.l <= 56;
+  const inRange = hsl.h >= 0 && hsl.h <= 360 && hsl.s >= 14 && hsl.s <= 42;
   check(inRange, `${hash.slice(0, 12)}… בתוך הטווח`, accent!);
 }
+
+/* --- הבהירות מגיעה מהערכה ולא מהתמונה ------------------------------------- */
+
+console.log("\nבהירות לפי ערכה\n");
+
+check(
+  parse(accentFromBlurhash(SAMPLES[0]!))?.s !== undefined,
+  "הצבע מוחזר כגוון ורוויה בלבד, בלי בהירות",
+  accentFromBlurhash(SAMPLES[0]!)!,
+);
+
+/*
+ * זו הבדיקה שמגנה על המנגנון עצמו.
+ *
+ * אותה הדגשה צריכה להיראות גם על חוגה בהירה (87%) וגם על גרפיט (10%).
+ * ערך בהירות אחד לשתיהן נכשל תמיד באחת מהן — וזה בדיוק מה שקרה כשהצבע
+ * כלל בהירות שנגזרה מהתמונה: 34% על גרפיט הוא כתם שלא נראה.
+ */
+check(
+  contrast(ACCENT_L.light, 87) >= 2,
+  "ההדגשה נבדלת מהחוגה הבהירה",
+  `יחס ${contrast(ACCENT_L.light, 87).toFixed(2)}`,
+);
+check(
+  contrast(ACCENT_L.dark, 10) >= 2,
+  "ההדגשה נבדלת מהחוגה הכהה",
+  `יחס ${contrast(ACCENT_L.dark, 10).toFixed(2)}`,
+);
+check(
+  ACCENT_L.light !== ACCENT_L.dark,
+  "כל ערכה מספקת בהירות משלה",
+  `בהיר ${ACCENT_L.light}% · כהה ${ACCENT_L.dark}%`,
+);
 
 /* --- עקביות --------------------------------------------------------------- */
 

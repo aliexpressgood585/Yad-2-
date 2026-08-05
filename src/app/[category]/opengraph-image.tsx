@@ -63,12 +63,12 @@ export default async function OpengraphImage({
 
           {count > 0 ? (
             <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-              <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: OG.sign }}>
+              <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: OG.amber }}>
                 {count.toLocaleString("en-US")} מודעות
               </div>
               {min !== null ? (
                 <>
-                  <div style={{ display: "flex", fontSize: 34, color: OG.stone }}>·</div>
+                  <div style={{ display: "flex", fontSize: 34, color: OG.hair }}>·</div>
                   <div style={{ display: "flex", fontSize: 34, color: OG.muted }}>
                     {`החל מ-₪${min.toLocaleString("en-US")}`}
                   </div>

@@ -18,7 +18,7 @@ const shellStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  background: OG.paper,
+  background: OG.bone,
   direction: "rtl",
   padding: 64,
 };
@@ -35,7 +35,7 @@ export function OgWordmark({ scale = 1 }: { scale?: number }) {
           width: 56 * scale,
           height: 56 * scale,
           borderRadius: 14 * scale,
-          background: OG.sign,
+          background: OG.amber,
           color: "#ffffff",
           fontSize: 36 * scale,
           fontWeight: 700,

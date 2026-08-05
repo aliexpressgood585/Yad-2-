@@ -39,9 +39,10 @@ export function ListingCard({ listing, density = "grid", priority = false, class
     <article
       data-density={density}
       className={cn(
-        "listing-card group relative overflow-hidden rounded-lg border border-border bg-card",
-        "transition-shadow duration-ui ease-ui focus-within:ring-2 focus-within:ring-ring hover:shadow-lifted",
-        isList && "flex",
+        "listing-card group relative overflow-hidden border border-border bg-card",
+        // אין כאן צל: ההיענות היא הארה של המשטח, כמו שורה שנבחרת במכשיר
+        "transition-colors duration-ui ease-ui focus-within:ring-2 focus-within:ring-ring hover:bg-secondary",
+        isList && "flex flex-wrap items-stretch",
         className,
       )}
     >
@@ -87,11 +88,24 @@ export function ListingCard({ listing, density = "grid", priority = false, class
        * גוף הכרטיס אל מחוץ לגבולותיו במקום להיחתך.
        */}
       <div className={cn("flex min-w-0 flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
-        <p className="listing-card-price num text-lg font-medium leading-none text-foreground">
-          {formatPrice(listing.price, { currency: listing.currency })}
+        {/*
+         * `.num` יושב על ה-span ולא על ה-`<p>`.
+         *
+         * המחלקה מחילה `direction: ltr`, ועל הפסקה עצמה היא גררה גם את
+         * היישור: המחיר נצמד לשמאל בעוד הכותרת שמתחתיו נצמדת לימין,
+         * ובשורת קריאה רחבה הם נראו כשני טורים שונים. הבידוד נדרש למספר
+         * בלבד — לא לשורה שמכילה אותו.
+         */}
+        <p className="listing-card-price text-lg font-medium leading-none text-foreground">
+          <span className="num">{formatPrice(listing.price, { currency: listing.currency })}</span>
         </p>
 
-        <PriceMeter meter={listing.priceMeter} />
+        {/*
+         * בגריד הסקאלה יושבת מתחת למחיר; בשורת קריאה היא עוברת לעמודה
+         * משלה בקצה השורה (למטה). היא לא מרונדרת פעמיים — רק במקום אחד
+         * מבין השניים, אחרת היו שני `role="img"` עם אותו תיאור.
+         */}
+        {isList ? null : <PriceMeter meter={listing.priceMeter} />}
 
         <h3 className="truncate text-base font-semibold leading-snug">
           {/* הקישור פרוס על כל הכרטיס כדי להגדיל את שטח הלחיצה */}
@@ -137,6 +151,22 @@ export function ListingCard({ listing, density = "grid", priority = false, class
           <time dateTime={listing.date}>{timeAgo(listing.date)}</time>
         </p>
       </div>
+
+      {/*
+       * עמודת הקריאה — הצד שהופך שורה ברשימה לשורה במכשיר.
+       *
+       * היא מרונדרת רק כשיש מה לקרוא. הרכיב עצמו כבר מחזיר null בלי
+       * מדגם, אבל עמודה ריקה ברוחב 12rem הייתה משאירה חור בשורה, ולכן
+       * ההחלטה נופלת כאן ולא רק בפנים.
+       *
+       * ברוחב מכל קטן העמודה עוברת לשורה משלה מתחת (ראה `globals.css`).
+       * זו הסיבה שהמאמר הוא `flex-wrap` ולא `flex` — ולא כדי לעטוף תוכן.
+       */}
+      {isList ? (
+        <div className="listing-card-scale flex shrink-0 flex-col justify-center border-s border-border p-3">
+          <PriceMeter meter={listing.priceMeter} variant="column" />
+        </div>
+      ) : null}
     </article>
   );
 }
