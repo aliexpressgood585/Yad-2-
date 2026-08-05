@@ -1,6 +1,6 @@
 import { handleError, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
-import { notifyListingExpiring, notifySavedSearchMatch } from "@/lib/notifications";
+import { enqueue, runQueue } from "@/lib/notify-queue";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { getAttributesForCategory, getCategoryBySlug, getCategoryIdsWithDescendants } from "@/lib/categories";
 import { searchListings } from "@/lib/listings";
@@ -37,6 +37,13 @@ export async function GET(req: Request) {
     if (job === "all" || job === "saved-searches") {
       results.savedSearches = await runSavedSearchAlerts();
     }
+    /*
+     * התור רץ אחרון ובכוונה: כל המשימות שמעליו רק מכניסות עבודות,
+     * וכך התראות שנוצרו בהרצה הזו יוצאות בה ולא ממתינות ליום הבא.
+     */
+    if (job === "all" || job === "notify") {
+      results.notify = await runQueue();
+    }
 
     return ok({ ran: job, results });
   } catch (err) {
@@ -72,11 +79,18 @@ async function notifyExpiringSoon() {
     const daysLeft = Math.ceil(
       ((listing.expiresAt?.getTime() ?? Date.now()) - Date.now()) / 86_400_000,
     );
-    await notifyListingExpiring({
+    await enqueue({
       userId: listing.userId,
-      listingId: listing.id,
-      listingTitle: listing.title,
-      daysLeft,
+      kind: "LISTING_EXPIRING",
+      // יום התפוגה במפתח: מודעה מחודשת מקבלת התראה חדשה, ריצה חוזרת לא
+      dedupeKey: `expiring:${listing.id}:${listing.expiresAt?.toISOString().slice(0, 10)}`,
+      payload: {
+        title: "המודעה שלך עומדת לפוג",
+        body: `"${listing.title}" תפוג בעוד ${daysLeft} ימים. אפשר לחדש אותה בלחיצה.`,
+        url: "/my/listings",
+        itemLabel: listing.title,
+        email: true,
+      },
     });
   }
 
@@ -145,12 +159,18 @@ async function runSavedSearchAlerts() {
       if (newCount === 0) continue;
 
       matched += newCount;
-      await notifySavedSearchMatch({
+      await enqueue({
         userId: search.userId,
-        searchName: search.name,
-        count: newCount,
-        searchId: search.id,
-        email: search.frequency !== "INSTANT",
+        kind: "SAVED_SEARCH_MATCH",
+        // חלון ההתראה במפתח, כדי ששתי הרצות באותו חלון לא יתריעו פעמיים
+        dedupeKey: `saved-search:${search.id}:${since.toISOString()}`,
+        payload: {
+          title: `${newCount} מודעות חדשות ב"${search.name}"`,
+          body: `נמצאו ${newCount} מודעות חדשות שמתאימות לחיפוש ששמרת.`,
+          url: `/my/searches`,
+          itemLabel: search.name,
+          email: search.frequency !== "INSTANT",
+        },
       });
       await prisma.savedSearch.update({
         where: { id: search.id },

@@ -9,7 +9,7 @@ import {
 import { prisma } from "@/lib/db";
 import { recordEvent } from "@/lib/metrics";
 import { sessionId } from "@/lib/metrics-session";
-import { notifyNewMessage } from "@/lib/notifications";
+import { enqueue } from "@/lib/notify-queue";
 import { messageSchema, replySchema } from "@/lib/validators";
 import { sanitizeText } from "@/lib/utils";
 
@@ -67,12 +67,21 @@ export async function POST(req: Request) {
       categoryId: listing.categoryId,
     });
 
-    await notifyNewMessage({
-      recipientId: conversation.sellerId,
-      senderName: session.user.name ?? "משתמש",
-      conversationId: conversation.id,
-      listingTitle: listing.title,
-      preview: clean,
+    /*
+     * המפתח כולל את מזהה השיחה בלבד, בלי חותמת זמן: כמה הודעות רצופות
+     * באותה שיחה לפני שהתור רץ הופכות להתראה אחת. אדם שמקבל שש התראות
+     * מאותה שיחה מכבה התראות; אדם שמקבל אחת נכנס לענות.
+     */
+    await enqueue({
+      userId: conversation.sellerId,
+      kind: "NEW_MESSAGE",
+      dedupeKey: `message:${conversation.id}:${session.user.id}`,
+      payload: {
+        title: `הודעה חדשה מ${session.user.name ?? "משתמש"}`,
+        body: clean.slice(0, 140),
+        url: `/my/messages/${conversation.id}`,
+        itemLabel: listing.title,
+      },
     });
 
     return ok({ conversationId: conversation.id }, { status: 201 });
@@ -143,12 +152,16 @@ export async function PUT(req: Request) {
       }),
     ]);
 
-    await notifyNewMessage({
-      recipientId,
-      senderName: session.user.name ?? "משתמש",
-      conversationId,
-      listingTitle: conversation.listing.title,
-      preview: clean,
+    await enqueue({
+      userId: recipientId,
+      kind: "NEW_MESSAGE",
+      dedupeKey: `message:${conversationId}:${userId}`,
+      payload: {
+        title: `הודעה חדשה מ${session.user.name ?? "משתמש"}`,
+        body: clean.slice(0, 140),
+        url: `/my/messages/${conversationId}`,
+        itemLabel: conversation.listing.title,
+      },
     });
 
     return ok({

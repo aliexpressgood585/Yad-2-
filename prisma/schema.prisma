@@ -135,6 +135,7 @@ model User {
   pushSubscriptions   PushSubscription[]
   phoneReveals        PhoneReveal[]
   boosts              Boost[]
+  notificationJobs    NotificationJob[]
 
   @@index([role])
   @@index([createdAt])
@@ -630,4 +631,42 @@ model FunnelEvent {
 
   @@index([day, step])
   @@index([step, sessionId, listingId])
+}
+
+/// מצב עבודת התראה בתור.
+enum JobState {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// עבודת התראה בתור עמיד.
+///
+/// למה תור ולא שליחה ישירה: התראה נשלחת דרך שירות חיצוני שיכול ליפול,
+/// ומשימת cron יכולה להיקטע באמצע. בשליחה ישירה כישלון פירושו התראה
+/// שאבדה, ו-cron שרץ פעמיים פירושו התראה שנשלחה פעמיים. שניהם פוגעים
+/// באמון המשתמש, והשני חמור מהראשון.
+///
+/// `dedupeKey` ייחודי וחוסם את הכפילות במסד ולא בקוד: שתי הרצות
+/// במקביל יכולות שתיהן לעבור בדיקת "האם כבר נשלח" לפני שאחת מהן כתבה.
+model NotificationJob {
+  id        String           @id @default(cuid())
+  userId    String
+  kind      NotificationType
+  /// מזהה לוגי של האירוע. מונע כפילות גם בין הרצות מקבילות.
+  dedupeKey String           @unique
+  /// נתוני ההתראה — כותרת, גוף, קישור, וכל מה שהקיבוץ צריך.
+  payload   Json
+  state     JobState         @default(PENDING)
+  /// לא לשלוח לפני הזמן הזה. משמש גם להשהיה בשעות שקט וגם ל-backoff.
+  runAfter  DateTime         @default(now())
+  attempts  Int              @default(0)
+  lastError String?
+  sentAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([state, runAfter])
+  @@index([userId, state])
 }

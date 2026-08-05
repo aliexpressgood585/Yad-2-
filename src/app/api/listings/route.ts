@@ -16,6 +16,7 @@ import {
   uniqueSlug,
 } from "@/lib/listing-write";
 import { listingInputSchema, publishSchema } from "@/lib/validators";
+import { notifyPriceDrop } from "@/lib/notify-queue";
 import { sanitizeText } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     if (body.listingId) {
       const existing = await prisma.listing.findFirst({
         where: { id: body.listingId, userId: session.user.id, deletedAt: null },
-        select: { id: true, slug: true, price: true, status: true },
+        select: { id: true, slug: true, price: true, status: true, title: true, currency: true },
       });
       if (!existing) throw new ApiError(404, "המודעה לא נמצאה");
 
@@ -145,6 +146,21 @@ export async function POST(req: Request) {
             ]
           : []),
       ]);
+
+      /*
+       * ירידת מחיר בלבד מתריעה, ורק למי שסימן את המודעה במועדפים.
+       * עלייה במחיר אינה חדשה שמישהו ביקש לשמוע, והתראה עליה הופכת
+       * את המועדפים ממעקב אחרי הזדמנויות לרעש.
+       */
+      if (priceChanged && existing.price !== null && input.price! < existing.price) {
+        await notifyPriceDrop({
+          listingId: existing.id,
+          listingTitle: existing.title,
+          oldPrice: existing.price,
+          newPrice: input.price!,
+          currency: existing.currency,
+        });
+      }
 
       await runFraudChecks(existing.id);
       revalidatePath(`/item/${existing.slug}`);
