@@ -27,12 +27,21 @@ export default async function MyLayout({ children }: { children: React.ReactNode
       prisma.notification.count({ where: { userId, readAt: null } }),
     ]);
 
+  // לוח הסוחר מוצג רק לחשבונות עסקיים — למשתמש פרטי אין בו דבר
+  const business = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { businessName: true },
+  });
+
   const items = [
     { href: "/my", label: "המודעות שלי", icon: "LayoutDashboard", count: listings, exact: true },
     { href: "/my/messages", label: "הודעות", icon: "MessageCircle", count: unreadMessages },
     { href: "/my/favorites", label: "מועדפים", icon: "Heart", count: favorites },
     { href: "/my/searches", label: "חיפושים שמורים", icon: "Search", count: searches },
     { href: "/my/notifications", label: "התראות", icon: "Bell", count: unreadNotifications },
+    ...(business?.businessName
+      ? [{ href: "/my/business", label: "לוח הסוחר", icon: "Store", count: 0 }]
+      : []),
     { href: "/my/profile", label: "הפרופיל שלי", icon: "UserRound", count: 0 },
   ];
 
