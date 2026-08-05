@@ -27,6 +27,7 @@ import { blurDataUrl } from "@/lib/blur";
 import { accentFromBlurhash } from "@/lib/listing-accent";
 import { computeTrust } from "@/lib/trust";
 import { AvailabilityChip } from "@/components/listing/availability-chip";
+import { SellerHistoryNote } from "@/components/listing/seller-history-note";
 import { decodeSlugParam } from "@/lib/slug";
 import { SITE } from "@/lib/site";
 import { listingImageTransition } from "@/lib/view-transitions";
@@ -117,6 +118,20 @@ export default async function ListingPage({ params }: Props) {
 
   const isOwner = session?.user?.id === listing.userId;
   const path = await getCategoryPath(listing.categoryId);
+
+  /*
+   * ריפרוט: אותו תוכן, אותו מוכר.
+   *
+   * נספרות גם מודעות מחוקות — מחיקה ופרסום מחדש היא בדיוק השיטה
+   * שהנתון הזה חושף, ולסנן אותן היה מבטל את הבדיקה.
+   */
+  const repost = listing.contentHash
+    ? await prisma.listing.aggregate({
+        where: { userId: listing.userId, contentHash: listing.contentHash },
+        _count: { _all: true },
+        _min: { publishedAt: true },
+      })
+    : null;
 
   const trust = computeTrust({
     createdAt: listing.user.createdAt,
@@ -316,6 +331,19 @@ export default async function ListingPage({ params }: Props) {
              * ולכן היא צריכה לשבת שם שקוראים את המודעה — לא במקום שאליו
              * מגיעים רק אחרי שכבר החליטו.
              */}
+            <SellerHistoryNote
+              className="mt-3"
+              repost={
+                repost && repost._min.publishedAt
+                  ? { times: repost._count._all, firstSeen: repost._min.publishedAt }
+                  : null
+              }
+              priceHistory={listing.priceHistory.map((p) => ({
+                price: p.price,
+                at: p.createdAt,
+              }))}
+            />
+
             <AvailabilityChip
               listingId={listing.id}
               availabilityAt={listing.availabilityAt?.toISOString() ?? null}
