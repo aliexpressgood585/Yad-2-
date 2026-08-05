@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { MessageCircle, Phone, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { SafeDealTips } from "@/components/listing/safe-deal-tips";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
@@ -21,6 +22,10 @@ type Props = {
   allowChat: boolean;
   isOwner: boolean;
   isActive: boolean;
+  /** שורש הקטגוריה — קובע אילו אזהרות עסקה מוצגות */
+  rootSlug?: string | null;
+  /** האם המודעה סומנה על ידי מנוע הסיכון */
+  flagged?: boolean;
 };
 
 const QUICK_MESSAGES = [
@@ -37,6 +42,8 @@ export function ContactPanel({
   allowChat,
   isOwner,
   isActive,
+  rootSlug,
+  flagged = false,
 }: Props) {
   const router = useRouter();
   const { status } = useSession();
@@ -152,6 +159,17 @@ export function ContactPanel({
             הצגת מספר הטלפון
           </Button>
         )}
+
+        {/*
+         * אזהרות העסקה נפתחות **עם המספר** ולא לפניו.
+         *
+         * מנוע הסיכון כבר מסמן מודעות חשודות למודרציה, אבל הרגע שבו
+         * הקונה באמת בסכנה אינו הרגע שבו הוא רואה את המודעה — הוא
+         * הרגע שבו הוא עומד להתקשר, ומשם הכל קורה מחוץ למערכת.
+         * אזהרה בדף המודעה נקראת כרעש רקע; אזהרה שנפתחת עם המספר
+         * נקראת.
+         */}
+        {phone ? <SafeDealTips rootSlug={rootSlug} flagged={flagged} /> : null}
 
         {allowChat ? (
           <>

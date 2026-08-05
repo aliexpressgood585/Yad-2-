@@ -402,6 +402,13 @@ export default async function ListingPage({ params }: Props) {
             allowChat={listing.allowChat}
             isOwner={isOwner}
             isActive={listing.status === "ACTIVE"}
+            /*
+             * שורש הקטגוריה ולא העלה: דפוסי ההונאה זהים לרכב פרטי
+             * ולמסחרי, ורשימה נפרדת לכל אחת מ-49 הקטגוריות הייתה
+             * דורשת תחזוקה שאיש לא יעשה.
+             */
+            rootSlug={path[0]?.slug ?? null}
+            flagged={publicWarning.length > 0}
           />
           <SellerCard
             seller={{

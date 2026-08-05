@@ -1,0 +1,129 @@
+name: CI
+
+# ------------------------------------------------------------------
+# רשת הביטחון של הפרויקט, שרצה בלי שאף אחד יזכור להריץ אותה.
+#
+# עד עכשיו כל עשר חבילות הבדיקה רצו רק ידנית. הן תפסו באגים אמיתיים —
+# משקל שהיה מתחת לסף, שקיעה שחושבה בהפרש של חצי יום, בדיקה שדלף לתוכה
+# מידע — אבל בדיקה שתלויה בכך שמישהו יזכור להריץ אותה היא בדיקה שלא
+# תרוץ ביום שבו היא הכי נחוצה.
+# ------------------------------------------------------------------
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# דחיפה חדשה מבטלת ריצה קודמת על אותו ענף — אין טעם לבדוק קוד שכבר הוחלף
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # ------------------------------------------------------------------
+    # Postgres אמיתי ולא מוק.
+    #
+    # החיפוש נשען על `pg_trgm` ועל FTS, מדד המחירים על `PERCENTILE_CONT`
+    # ועל `NTILE`, והמדידה על `COUNT(DISTINCT)` בשאילתות גולמיות. מוק
+    # היה מאמת שהקוד רץ ולא שהוא נכון, וזה בדיוק ההפך ממה שנחוץ כאן.
+    # ------------------------------------------------------------------
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: luach
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/luach?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/luach?schema=public
+      AUTH_SECRET: ci-secret-not-used-in-production-0000000000
+      AUTH_URL: http://localhost:3000
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: התקנת תלויות
+        run: npm ci
+
+      - name: מיגרציות וזריעה
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: בדיקת טיפוסים
+        run: npm run typecheck
+
+      - name: לינט
+        run: npm run lint
+
+      - name: בנייה
+        run: npm run build
+
+      # עשר חבילות: פורמט, חיפוש, סיכון, שווי, צבע נגזר, מדידה,
+      # התראות, ייבוא, זמן מכירה, טריות
+      - name: בדיקות יחידה
+        run: npm run check:all
+
+      - name: הרמת שרת
+        run: |
+          npm start > /tmp/server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://127.0.0.1:3000 && break
+            sleep 2
+          done
+          curl -sf -o /dev/null http://127.0.0.1:3000
+
+      # ------------------------------------------------------------------
+      # מזהה הקטגוריה נשלף מהמסד ולא מקובע.
+      #
+      # cuid נוצר מחדש בכל זריעה, ומזהה שכתוב בקובץ היה שובר את הריצה
+      # בכל פעם שהזריעה רצה — כלומר תמיד.
+      # ------------------------------------------------------------------
+      - name: בדיקת קבלה מול ה-API
+        run: |
+          CID=$(node -e "
+            const { PrismaClient } = require('@prisma/client');
+            new PrismaClient().category
+              .findFirst({ where: { slug: 'private-cars' }, select: { id: true } })
+              .then((c) => { console.log(c.id); process.exit(0); });
+          ")
+          E2E_CATEGORY_ID="$CID" E2E_SERVER_LOG=/tmp/server.log \
+            npm run e2e -- http://127.0.0.1:3000
+
+      - name: התקנת דפדפן
+        run: npx playwright install --with-deps chromium
+
+      - name: בדיקות דפדפן
+        run: npm run test:ui
+
+      - name: העלאת ממצאים בכישלון
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-artifacts
+          path: |
+            test-results/
+            /tmp/server.log
+          retention-days: 7
+          if-no-files-found: ignore
