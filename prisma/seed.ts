@@ -148,7 +148,11 @@ const DISTRIBUTION: Record<string, number> = {
   rodents: 1,
   "pet-supplies": 3,
 
-  businesses: 10,
+  "business-food": 3,
+  "business-retail": 3,
+  "business-services": 2,
+  "business-online": 1,
+  "business-franchise": 1,
 
   renovations: 3,
   "electrician-plumber": 2,

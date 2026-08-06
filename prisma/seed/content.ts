@@ -390,6 +390,32 @@ function priceLevelOf(city: string): number {
   return (region && REGION_PRICE_LEVEL[region]) ?? 0.85;
 }
 
+/**
+ * מה כל סוג נכס אומר על השטח ועל הקומה.
+ *
+ * `perRoom` — טווח מ"ר לחדר, `minSize` — רצפה מוחלטת, `floor` — קרקע
+ * לבתים ולדירות גן, קומה עליונה לפנטהאוז, וכל השאר חופשי.
+ */
+const PROPERTY_SHAPE: Record<
+  string,
+  { perRoom: [number, number]; minSize: number; floor?: "ground" | "top" }
+> = {
+  "דירה": { perRoom: [22, 30], minSize: 38 },
+  "דירת גן": { perRoom: [26, 34], minSize: 60, floor: "ground" },
+  "פנטהאוז": { perRoom: [33, 46], minSize: 95, floor: "top" },
+  "דופלקס": { perRoom: [30, 42], minSize: 85 },
+  "בית פרטי": { perRoom: [35, 52], minSize: 110, floor: "ground" },
+  "דו משפחתי": { perRoom: [30, 44], minSize: 100, floor: "ground" },
+  "קוטג'": { perRoom: [30, 44], minSize: 100, floor: "ground" },
+  "יחידת דיור": { perRoom: [18, 26], minSize: 24 },
+  "משק חקלאי": { perRoom: [40, 70], minSize: 140, floor: "ground" },
+  "וילה": { perRoom: [40, 62], minSize: 130, floor: "ground" },
+  "בקתה": { perRoom: [18, 28], minSize: 26, floor: "ground" },
+  "צימר": { perRoom: [20, 32], minSize: 28, floor: "ground" },
+  "לופט": { perRoom: [30, 45], minSize: 55 },
+  "מגרש": { perRoom: [1, 1], minSize: 250, floor: "ground" },
+};
+
 function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListing {
   const level = priceLevelOf(city);
   // פערי השכירות בין ערים צרים מפערי המכירה — אותה עיר יקרה פי שניים
@@ -400,9 +426,6 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
   const rooms = rng.weighted([
     [2, 5], [2.5, 6], [3, 20], [3.5, 16], [4, 20], [4.5, 10], [5, 8], [5.5, 3], [6, 2],
   ]);
-  const size = Math.round(rooms * rng.int(20, 30));
-  const floor = rng.int(0, 12);
-  const totalFloors = Math.max(floor, rng.int(floor, floor + 8));
   const isRent = sub === "apartments-rent";
   const isRoommate = sub === "roommates";
   const isVacation = sub === "vacation";
@@ -425,6 +448,26 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
   const propertyType = propertyTypePool
     ? rng.pick([propertyTypePool[0]!, propertyTypePool[0]!, ...propertyTypePool])
     : "מגרש";
+
+  /*
+   * השטח והקומה נגזרים מ**סוג הנכס** ולא מנוסחה אחת לכולם.
+   *
+   * `rooms * 20..30` ייצר "פנטהאוז 3 חדרים 63 מ\"ר" — מספר תקין
+   * לדירה קטנה ובלתי אפשרי לפנטהאוז. פנטהאוז גם לא יושב בקומה 2
+   * ובית פרטי לא יושב בקומה 7. סוג הנכס הוא שקובע את שניהם.
+   */
+  const shape = PROPERTY_SHAPE[isLot ? "מגרש" : propertyType] ?? PROPERTY_SHAPE["דירה"]!;
+  const size = isLot
+    ? rng.int(250, 1400)
+    : Math.max(shape.minSize, Math.round(rooms * rng.int(shape.perRoom[0], shape.perRoom[1])));
+
+  const totalFloors = rng.int(2, 14);
+  const floor =
+    shape.floor === "ground"
+      ? 0
+      : shape.floor === "top"
+        ? totalFloors
+        : rng.int(0, totalFloors);
 
   let price: number;
   if (isRent) price = Math.round(((2000 + size * rng.int(20, 38)) * rentLevel) / 50) * 50;
@@ -708,6 +751,24 @@ const COMPANIES = [
   "רשת המסעדות ״לחם וים״",
 ];
 
+/**
+ * נושא התמונה לפי משפחת המשרה.
+ *
+ * כל המשרות קיבלו "office", ולכן מודעת "עוזר/ת טבח" הופיעה עם תמונת
+ * חלל משרדים. התמונה היא הדבר הראשון שנקרא בכרטיס, וכשהיא סותרת את
+ * הכותרת היא מלמדת שאי אפשר לסמוך על מה שמוצג.
+ */
+const JOB_IMAGE_TOPIC: Record<string, string> = {
+  "jobs-hospitality": "kitchen",
+  "jobs-construction": "site",
+  "jobs-health": "clinic",
+  "jobs-logistics": "warehouse",
+  "jobs-education": "classroom",
+  "jobs-tech": "office",
+  "jobs-sales": "office",
+  "jobs-admin": "office",
+};
+
 function generateJob(rng: Rng, sub: string, city: string): GeneratedListing {
   const title = rng.pick(JOB_TITLES[sub] ?? JOB_TITLES["jobs-admin"]!);
   const scope = rng.pick(["משרה מלאה", "משרה מלאה", "משרה חלקית", "משמרות", "פרילנס"]);
@@ -735,7 +796,7 @@ function generateJob(rng: Rng, sub: string, city: string): GeneratedListing {
     ].join(" "),
     price,
     attrs,
-    imageTopic: "office",
+    imageTopic: JOB_IMAGE_TOPIC[sub] ?? "office",
     imageCount: rng.int(1, 3),
   };
 }
@@ -801,18 +862,46 @@ function generatePet(rng: Rng, sub: string): GeneratedListing {
 /* עסקים ושירותים                                                              */
 /* -------------------------------------------------------------------------- */
 
-function generateBusiness(rng: Rng, city: string): GeneratedListing {
-  const field = rng.pick([
-    "מסעדנות ובתי קפה",
-    "קמעונאות",
-    "מספרה וטיפוח",
-    "מכולת / סופר",
-    "מוסך",
-    "אונליין ואיקומרס",
-    "חדר כושר",
-    "קיוסק",
-  ]);
-  const revenue = rng.int(30_000, 450_000);
+/**
+ * מחזור חודשי סביר לפי ענף.
+ *
+ * מחזור אחיד לכל הענפים ייצר "קיוסק פעיל למכירה ₪2,130,000" — המחיר
+ * נגזר מהרווח, והרווח מהמחזור, ולכן קיוסק עם מחזור של רשת מסעדות קיבל
+ * מחיר של רשת מסעדות. סדר הגודל הוא מאפיין של הענף ולא רעש.
+ */
+const BUSINESS_SCALE: Record<string, [number, number]> = {
+  "קיוסק": [25_000, 70_000],
+  "מספרה וטיפוח": [25_000, 90_000],
+  "אונליין ואיקומרס": [30_000, 260_000],
+  "קמעונאות": [50_000, 220_000],
+  "חדר כושר": [50_000, 200_000],
+  "מוסך": [60_000, 280_000],
+  "מכולת / סופר": [80_000, 380_000],
+  "מסעדנות ובתי קפה": [90_000, 420_000],
+};
+
+/** אילו ענפים שייכים לכל תת-קטגוריה. */
+/** נושא התמונה לפי סוג העסק. */
+const BUSINESS_IMAGE_TOPIC: Record<string, string> = {
+  "business-food": "kitchen",
+  "business-retail": "shop",
+  "business-services": "shop",
+  "business-online": "electronics",
+  "business-franchise": "shop",
+};
+
+const BUSINESS_FIELDS: Record<string, string[]> = {
+  "business-food": ["מסעדנות ובתי קפה", "קיוסק"],
+  "business-retail": ["קמעונאות", "מכולת / סופר", "קיוסק"],
+  "business-services": ["מספרה וטיפוח", "מוסך", "חדר כושר"],
+  "business-online": ["אונליין ואיקומרס"],
+  "business-franchise": ["מסעדנות ובתי קפה", "קמעונאות", "חדר כושר"],
+};
+
+function generateBusiness(rng: Rng, sub: string, city: string): GeneratedListing {
+  const field = rng.pick(BUSINESS_FIELDS[sub] ?? Object.keys(BUSINESS_SCALE));
+  const [revLow, revHigh] = BUSINESS_SCALE[field] ?? [40_000, 250_000];
+  const revenue = rng.int(revLow, revHigh);
   const profit = Math.round(revenue * rng.float(0.12, 0.32));
   const price = Math.round((profit * rng.int(14, 30)) / 5000) * 5000;
 
@@ -837,7 +926,7 @@ function generateBusiness(rng: Rng, city: string): GeneratedListing {
     ].join(" "),
     price,
     attrs,
-    imageTopic: "shop",
+    imageTopic: BUSINESS_IMAGE_TOPIC[sub] ?? "shop",
     imageCount: rng.int(3, 6),
   };
 }
@@ -913,7 +1002,7 @@ export function generateListing(
     case "pets":
       return generatePet(rng, subSlug);
     case "businesses":
-      return generateBusiness(rng, city);
+      return generateBusiness(rng, subSlug, city);
     case "services":
       return generateService(rng, subSlug, region);
     default:

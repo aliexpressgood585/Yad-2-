@@ -86,10 +86,19 @@ export function Logo({
         </svg>
       </span>
 
+      {/*
+       * הטקסט הנסתר משלים את מה שחסר ולא חוזר על מה שכבר נאמר.
+       * כששם המותג מוצג, קורא מסך הקריא אותו פעמיים ("כדאיכדאי — דף
+       * הבית"): הסימן החזותי כבר נושא את השם, ולנסתר נשאר רק היעד.
+       */}
       {showWordmark ? (
-        <span className="font-heading text-xl font-extrabold">{BRAND.name}</span>
-      ) : null}
-      <span className="sr-only">{BRAND.name} — דף הבית</span>
+        <>
+          <span className="font-heading text-xl font-extrabold">{BRAND.name}</span>
+          <span className="sr-only">דף הבית</span>
+        </>
+      ) : (
+        <span className="sr-only">{BRAND.name} — דף הבית</span>
+      )}
     </span>
   );
 

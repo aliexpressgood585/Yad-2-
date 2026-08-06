@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { hebrewRewrites } from "./src/lib/hebrew-routes";
+import { hebrewRedirects } from "./src/lib/hebrew-routes";
 
 /** מקורות תמונה מותרים (תמונות דמו + ספקי אחסון). */
 const remoteHosts = [
@@ -95,15 +95,12 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * הכתובות בעברית ממופות לנתיבים הלטיניים שבעץ הקבצים.
-   * ראה `src/lib/hebrew-routes.ts` להסבר למה זה נדרש.
+   * כל הכתובות הציבוריות לטיניות. הכתובות הישנות בעברית מפנות
+   * אליהן ב-301 — ראה `src/lib/hebrew-routes.ts`.
    */
-  async rewrites() {
-    return hebrewRewrites();
-  },
-
   async redirects() {
     return [
+      ...hebrewRedirects(),
       { source: "/login", destination: "/auth/login", permanent: true },
       { source: "/register", destination: "/auth/register", permanent: true },
     ];

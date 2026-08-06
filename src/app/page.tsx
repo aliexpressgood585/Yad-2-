@@ -54,8 +54,15 @@ export default async function HomePage() {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {tree.map((category) => (
               <li key={category.id}>
+                {/*
+                 * `aria-label` מפורש: בלי זה שם הקטגוריה ורשימת התתי
+                 * נדבקים בשם הנגיש לכלל אחד ("רכברכב פרטי · ג'יפים").
+                 * רשימת התתי היא תצוגה מקדימה חזותית — כל אחת מהן
+                 * נגישה בדף הקטגוריה עצמו — ולכן היא מוסתרת מהקורא.
+                 */}
                 <Link
                   href={`/${category.slug}`}
+                  aria-label={category.name}
                   className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-lifted"
                 >
                   {/*
@@ -68,7 +75,7 @@ export default async function HomePage() {
                     <CategoryIcon name={category.icon} className="size-5" />
                   </span>
                   <span className="font-heading font-bold">{category.name}</span>
-                  <span className="line-clamp-2 text-xs text-muted-foreground">
+                  <span aria-hidden className="line-clamp-2 text-xs text-muted-foreground">
                     {category.children
                       .slice(0, 4)
                       .map((c) => c.name)

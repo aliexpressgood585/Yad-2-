@@ -39,10 +39,24 @@ const TOPICS = {
   pet:         { sky: "#dfe6dd", skyLow: "#f2f6f1", floor: "#b8c2b2", body: "#a6825a", glass: "#d3c4a8", rim: "#6d5436" },
   shop:        { sky: "#dfdce8", skyLow: "#f3f2f8", floor: "#bfb9cc", body: "#6b5a86", glass: "#b8c9dd", rim: "#a04a55" },
   work:        { sky: "#dbe3e6", skyLow: "#f1f5f6", floor: "#bcc5c9", body: "#3d7285", glass: "#a9c2cc", rim: "#c9903a" },
+  // משפחות המשרות: מודעת "עוזר/ת טבח" עם תמונת משרדים לימדה שאי אפשר
+  // לסמוך על מה שמוצג בכרטיס. לכל משפחה סצנה משלה.
+  kitchen:     { sky: "#e3e6e4", skyLow: "#f4f6f5", floor: "#b7bfbb", body: "#8d9aa0", glass: "#dfe6e4", rim: "#5a6b63" },
+  site:        { sky: "#dfe0da", skyLow: "#f3f3ef", floor: "#bcb6a4", body: "#c98a2c", glass: "#d6cdb4", rim: "#55534c" },
+  clinic:      { sky: "#e0e9ea", skyLow: "#f4f8f9", floor: "#c3cdd0", body: "#eef2f3", glass: "#a9c6cd", rim: "#4f7d86" },
+  warehouse:   { sky: "#dde0e4", skyLow: "#f2f3f5", floor: "#bcc1c8", body: "#7b6b52", glass: "#c8bfa8", rim: "#4d5460" },
+  classroom:   { sky: "#e6e3da", skyLow: "#f7f5f0", floor: "#c3b79c", body: "#5f7a58", glass: "#cdd8c4", rim: "#8a6d47" },
 };
 
-/** מספר וריאציות לכל נושא, כדי שהרשימות לא ייראו מונוטוניות. */
-const VARIANTS = 4;
+/**
+ * מספר וריאציות לכל נושא.
+ *
+ * ארבע היו מעט מדי: אותה תמונה בדיוק חזרה עשרות פעמים באותה רשימה,
+ * וגם גולף וגם סיוויק קיבלו את `car-1`. שתים-עשרה נותנות לפחות תריסר
+ * תמונות ייחודיות לכל קטגוריה ראשית, וזה מספיק כדי שרשימה לא תיראה
+ * כמו אותה מודעה שהודבקה שוב ושוב.
+ */
+const VARIANTS = 12;
 const WIDTH = 1200;
 const HEIGHT = 900;
 

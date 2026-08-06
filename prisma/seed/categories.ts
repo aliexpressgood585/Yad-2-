@@ -410,7 +410,8 @@ const RESIDENTIAL_RENT_TYPES = [
   "בית פרטי",
   "קוטג'",
   "יחידת דיור",
-  "מרתף",
+  // "מרתף" הוסר: הוא אינו סוג נכס שמפרסמים תחתיו דירה, ומודעת
+  // "מרתף 2.5 חדרים להשכרה" נקראה כמו תקלה בגנרטור — כי היא הייתה.
 ];
 
 /** בשותפים משכירים חדר בתוך דירה — לא בית פרטי ולא משק חקלאי. */
@@ -796,6 +797,19 @@ const BUSINESSES: CatDef = {
     { key: "employees", label: "מספר עובדים", type: "NUMBER", min: 0, max: 500, step: 1 },
     { key: "monthlyRent", label: "שכירות חודשית", type: "NUMBER", unit: "₪", min: 0, max: 200_000, step: 500 },
     { key: "reasonForSale", label: "סיבת המכירה", type: "TEXT", filter: false },
+  ],
+  /*
+   * "עסקים למכירה" הייתה הקטגוריה הראשית היחידה בלי תתי-קטגוריות,
+   * וכרטיס הקטגוריה שלה בדף הבית נשאר ריק מתחת לשם. החלוקה היא לפי
+   * סוג העסק מפני שזה מה שקובע גם את טווח המחירים וגם את מי שמחפש:
+   * מי שמחפש מסעדה אינו מי שמחפש חנות אונליין.
+   */
+  children: [
+    { slug: "business-food", name: "מסעדנות ובתי קפה", icon: "Store" },
+    { slug: "business-retail", name: "קמעונאות וחנויות", icon: "Store" },
+    { slug: "business-services", name: "שירותים ומקצועות", icon: "Store" },
+    { slug: "business-online", name: "אונליין ואיקומרס", icon: "Store" },
+    { slug: "business-franchise", name: "זכיינות ושותפויות", icon: "Store" },
   ],
 };
 

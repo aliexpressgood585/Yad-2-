@@ -1,14 +1,15 @@
 /**
- * נתיבים ציבוריים בעברית.
+ * הכתובות בעברית — היסטוריה בלבד.
  *
- * למה זה קיים ולא תיקיות בעברית תחת `src/app`: Next מתאים את הנתיב
- * הנכנס בצורתו המקודדת (`/%D7%A9%D7%95%D7%95%D7%99`) מול שמות התיקיות
- * כפי שהם, ולכן תיקייה בשם `שווי` פשוט אינה נתפסת והבקשה נופלת
- * ל-`[category]` ומשם ל-404. אומת בפועל על 15.5.
+ * הן היו הכתובות הציבוריות, וזו הייתה טעות: הלוח הגיש `/vehicles`
+ * ו-`/realestate` באנגלית לצד `/שווי` ו-`/מחירון` בעברית, כלומר שתי
+ * מוסכמות באותו אתר. משתמש שמשתף קישור מקבל
+ * `/%D7%A9%D7%95%D7%95%D7%99` בוואטסאפ, וגוגל רואה שני דפוסי כתובות
+ * לאותו מוצר.
  *
- * הפתרון: הדפים יושבים בנתיבים לטיניים, וכתיבה מחדש (rewrite) ממפה
- * אליהם את הכתובות בעברית. הכתובת בעברית היא הכתובת הציבורית — היא זו
- * שמופיעה בקישורים, ב-canonical ובמפת האתר.
+ * מעכשיו הכתובת הקנונית לטינית, והכתובות בעברית מפנות אליה ב-301.
+ * הפניה ולא rewrite: קישורים שכבר שותפו ימשיכו לעבוד, אבל הם יעבירו
+ * את הדירוג לכתובת אחת במקום לפצל אותו.
  *
  * הקובץ נטען גם מ-`next.config.ts` ולכן אסור שיהיו בו ייבואים.
  */
@@ -22,23 +23,24 @@ export const HEBREW_ROUTES = [
   { hebrew: "/מחירים/:city", app: "/city-prices/:city" },
 ] as const;
 
-/** רשימת ה-rewrites ל-`next.config.ts`. */
-export function hebrewRewrites() {
+/** הפניות 301 מהכתובות הישנות בעברית, ל-`next.config.ts`. */
+export function hebrewRedirects() {
   return HEBREW_ROUTES.map((r) => ({
     source: encodeURI(r.hebrew),
     destination: r.app,
+    permanent: true,
   }));
 }
 
 /**
- * בוני הנתיבים. מקבלים ערך שכבר עבר `slugify` — הקובץ הזה חייב להישאר
- * נטול ייבואים כדי שיהיה אפשר לטעון אותו מקובץ ההגדרות.
+ * בוני הנתיבים הקנוניים. מקבלים ערך שכבר עבר `slugify` — הקובץ הזה
+ * חייב להישאר נטול ייבואים כדי שיהיה אפשר לטעון אותו מקובץ ההגדרות.
  */
 export const pricePaths = {
-  valuation: "/שווי",
-  guideIndex: "/מחירון",
+  valuation: "/valuation",
+  guideIndex: "/price-guide",
   guide: (makeSlug: string, modelSlug?: string) =>
-    modelSlug ? `/מחירון/${makeSlug}/${modelSlug}` : `/מחירון/${makeSlug}`,
-  cityIndex: "/מחירים",
-  city: (citySlug: string) => `/מחירים/${citySlug}`,
+    modelSlug ? `/price-guide/${makeSlug}/${modelSlug}` : `/price-guide/${makeSlug}`,
+  cityIndex: "/city-prices",
+  city: (citySlug: string) => `/city-prices/${citySlug}`,
 } as const;
