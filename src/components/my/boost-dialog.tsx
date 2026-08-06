@@ -53,6 +53,15 @@ export function BoostDialog({
         toast.error(data.error ?? "הפעלת הקידום נכשלה");
         return;
       }
+      /*
+       * יש סליקה → השרת מחזיר כתובת של דף התשלום ולא קידום מופעל.
+       * ההפעלה קורית רק אחרי שהספק מאשר, בקריאה החוזרת.
+       */
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl as string;
+        return;
+      }
+
       toast.success("הקידום הופעל. המודעה תבלוט בתוצאות.");
       onOpenChange(false);
       router.refresh();

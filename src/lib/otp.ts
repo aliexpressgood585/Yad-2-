@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 
 import { BRAND } from "@/lib/brand";
+import { sendSms, smsConfigured } from "@/lib/sms";
 import { prisma } from "@/lib/db";
 
 const OTP_TTL_MS = 5 * 60_000;
@@ -18,7 +19,7 @@ function generateCode(): string {
 export async function issueOtp(
   phone: string,
   purpose: "login" | "verify" = "login",
-): Promise<{ sent: true; devCode?: string }> {
+): Promise<{ sent: boolean; devCode?: string }> {
   const code = generateCode();
   const codeHash = await bcrypt.hash(code, 10);
 
@@ -32,18 +33,18 @@ export async function issueOtp(
   });
 
   const body = `${BRAND.name} — קוד האימות שלך: ${code}`;
-  const provider = process.env.SMS_PROVIDER;
+  const result = await sendSms(phone, body);
 
-  if (!provider || !process.env.SMS_API_KEY) {
-    // מוק פיתוח — אין ספק SMS מוגדר.
-    console.info(`[SMS→${phone}] ${body}`);
-    return process.env.NODE_ENV === "production"
-      ? { sent: true }
-      : { sent: true, devCode: code };
-  }
+  /*
+   * הקוד מוחזר לקורא רק כשאין ספק אמיתי **ואנחנו לא בפרודקשן** — כדי
+   * שפיתוח ובדיקות קבלה יעבדו בלי חשבון SMS. בפרודקשן הוא לעולם לא
+   * חוזר בתגובה, גם אם הספק נפל: קוד אימות שנשלח ללקוח בגוף התשובה
+   * מבטל את כל מה שהאימות אמור להשיג.
+   */
+  const devCode =
+    process.env.NODE_ENV !== "production" && !smsConfigured() ? code : undefined;
 
-  await sendSms(phone, body);
-  return { sent: true };
+  return { sent: result.sent, devCode };
 }
 
 /**
@@ -82,29 +83,4 @@ export async function consumeOtp(
     data: { usedAt: new Date() },
   });
   return true;
-}
-
-/** שליחת SMS דרך ספק חיצוני. מופרד כדי שיהיה קל להחליף ספק. */
-async function sendSms(phone: string, body: string): Promise<void> {
-  const url = process.env.SMS_PROVIDER;
-  if (!url) return;
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${process.env.SMS_API_KEY ?? ""}`,
-      },
-      body: JSON.stringify({
-        to: phone,
-        from: process.env.SMS_SENDER ?? "Luach",
-        text: body,
-      }),
-    });
-    if (!res.ok) {
-      console.error("SMS provider error", res.status, await res.text());
-    }
-  } catch (err) {
-    console.error("SMS provider unreachable", err);
-  }
 }

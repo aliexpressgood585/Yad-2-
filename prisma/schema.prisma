@@ -140,6 +140,7 @@ model User {
   pushSubscriptions   PushSubscription[]
   phoneReveals        PhoneReveal[]
   boosts              Boost[]
+  payments            Payment[]
   notificationJobs    NotificationJob[]
 
   @@index([role])
@@ -469,8 +470,48 @@ model Boost {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  paymentId String?   @unique
+  payment   Payment?  @relation(fields: [paymentId], references: [id])
+
   @@index([listingId])
   @@index([endsAt])
+}
+
+/// תשלום מול ספק סליקה.
+///
+/// הקידום אינו מופעל בעת יצירת התשלום אלא רק אחרי אימות מול הספק
+/// (`VerifyPayment`). לקוח יכול לזייף כל דבר שהוא שולח, כולל "שילמתי" —
+/// ולכן ההפעלה נשענת על שיחה שרת-אל-שרת בלבד.
+model Payment {
+  id         String        @id @default(cuid())
+  userId     String
+  /// מזהה ההזמנה שנשלח לספק, ומוחזר ממנו בקריאה החוזרת
+  reference  String        @unique
+  provider   String
+  amountIls  Int
+  status     PaymentStatus @default(PENDING)
+  /// מזהה העסקה אצל הספק, אחרי אימות
+  externalId String?
+  /// מה נקנה — כדי שהקריאה החוזרת תדע מה להפעיל
+  kind       BoostKind
+  listingId  String
+  /// התשובה הגולמית מהספק, לבירורים מול חיובים
+  raw        Json?
+  createdAt  DateTime      @default(now())
+  paidAt     DateTime?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boost Boost?
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
 // ---------------------------------------------------------------------------

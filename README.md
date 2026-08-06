@@ -242,17 +242,58 @@ prisma generate && prisma migrate deploy && next build
 DATABASE_URL="$DIRECT_URL" npm run db:seed
 ```
 
-### 4. הגדרות מומלצות לפרודקשן
+### 4. מה חייב להיות מוגדר ב-Vercel
+
+הרשימה מסודרת לפי מה שנשבר בלעדיו. ההסבר המלא לכל משתנה נמצא
+ב-`.env.example`.
+
+**חובה לפני שמשתמשים אמיתיים נכנסים:**
+
+| משתנה | מה נשבר בלעדיו |
+| --- | --- |
+| `DATABASE_URL` + `DIRECT_URL` | הכול |
+| `NEXT_PUBLIC_SITE_URL` | כל קישור ששותף מצביע ל-localhost — כולל כתובות החזרה מהסליקה |
+| `AUTH_SECRET` | אין התחברות |
+| `SMS_PROVIDER` + מפתחות הספק | **אף אחד לא מאמת טלפון, ולכן אף אחד לא מפרסם מודעה.** זה חוסם הכול |
+| `UPLOAD_PROVIDER=cloudinary` + מפתחות | התמונות נעלמות בכל פריסה — מערכת הקבצים של Vercel אינה נשמרת |
+| `UPSTASH_REDIS_REST_URL` / `TOKEN` | הגבלת הקצב לא עובדת: ב-serverless כל הפעלה מקבלת מונה חדש |
+| `CRON_SECRET` | כל אחד יכול להריץ את משימות התחזוקה |
+| *(להשאיר ריק)* `ALLOW_DEMO_DATA` | מודעות הדמו נחשפות, והטלפונים שלהן אינם קיימים |
+
+**חובה כדי שהלוח יחזיר משתמשים:**
+
+| משתנה | מה נשבר בלעדיו |
+| --- | --- |
+| `RESEND_API_KEY` + `EMAIL_FROM` | התראות וחיפושים שמורים לא מגיעים — זה מנוע החזרה של הלוח |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | אין התראות דחיפה (`npx web-push generate-vapid-keys`) |
+
+> **הדומיין ב-Resend חייב אימות SPF ו-DKIM.** בלעדיו ההודעות נוחתות
+> בספאם, וזה גרוע יותר מלא לשלוח אותן: הן נשרפות גם לעתיד.
+
+**חובה כדי לגבות תשלום:**
+
+| משתנה | מה נשבר בלעדיו |
+| --- | --- |
+| `PAYMENT_PROVIDER=tranzila` + `TRANZILA_*` | חבילות הקידום מופעלות **בחינם**. זה מצב פיתוח, לא מצב השקה |
+
+**מומלץ:**
 
 | משתנה | למה |
 | --- | --- |
-| `UPLOAD_PROVIDER=cloudinary` + מפתחות | מערכת הקבצים של Vercel אינה קבועה — אחסון מקומי לא ישרוד בין הרצות |
-| `UPSTASH_REDIS_REST_URL` / `TOKEN` | rate limiting חוצה מופעים (בלעדיו המגביל פועל בזיכרון של כל מופע בנפרד) |
-| `RESEND_API_KEY` + `EMAIL_FROM` | שליחת מיילים בפועל |
-| `SMS_PROVIDER` + `SMS_API_KEY` | שליחת OTP אמיתי; בלעדיו הקוד רק נכתב ללוג |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | התראות Push (`npx web-push generate-vapid-keys`) |
+| `NEXT_PUBLIC_SENTRY_DSN` | בלעדיו שגיאות פרודקשן נעלמות בלוגים |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | התחברות עם Google |
-| `CRON_SECRET` | הגנה על נתיב המשימות המתוזמנות |
+| `ANTHROPIC_API_KEY` | ניסוח מודעה אוטומטי (הפיצ'ר מוסתר בלעדיו) |
+
+### 4.1 ניקוי נתוני ההדגמה לפני ההשקה
+
+```bash
+npm run demo:purge -- --dry-run   # מה יימחק
+npm run demo:purge                # מחיקה בפועל
+```
+
+בפרודקשן ללא `ALLOW_DEMO_DATA=true` מודעות הדמו מסוננות מכל שאילתה
+ממילא, אבל עדיף למחוק: שורה שלא נראית עדיין תופסת מקום ועדיין
+מופיעה בגיבויים.
 
 ### 5. משימות מתוזמנות
 
