@@ -1,4 +1,3 @@
-import { blurDataUrl } from "@/lib/blur";
 import { formatAttributeEntry, type AttributeEntry } from "@/lib/format";
 import { comparableKind, priceKindFor, type PriceKind } from "@/lib/price-kind";
 import type { PriceMeter } from "@/lib/price-meter";
@@ -107,7 +106,16 @@ export function toListingCardDto(
      * המספר לא יוצג כ"12% מתחת לחציון" של משהו אחר לגמרי.
      */
     priceMeter: comparableKind(priceKind) ? priceMeter : null,
-    blurDataURL: image?.blurhash ? blurDataUrl(image.blurhash) : null,
+    /*
+     * בלי placeholder מטושטש בכרטיס.
+     *
+     * ה-data URI של ה-blurhash שוקל 3KB, והתמונונת שהוא מחליף שוקלת
+     * 2-3KB. בעמוד של 24 כרטיסים זה 75KB של מציין מקום עבור 60KB של
+     * תמונות — כלומר המסמך גדל פי שניים כדי להסתיר טעינה שנמשכת פחות
+     * מ-20 מילישניות. הכרטיס נופל לרקע אחיד, וה-blurhash נשאר בגלריה
+     * של דף המודעה שבה התמונות גדולות פי עשרה וההסתרה משתלמת.
+     */
+    blurDataURL: null,
     imageCount: listing.images.length,
     highlights: pickHighlights(listing),
     distanceKm: listing.distanceKm,

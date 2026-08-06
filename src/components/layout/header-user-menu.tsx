@@ -35,7 +35,7 @@ export function HeaderUserMenu() {
   if (!session?.user) {
     return (
       <Button asChild variant="ghost" size="sm">
-        <Link href="/auth/login">
+        <Link href="/auth/login" prefetch={false}>
           <UserIcon aria-hidden />
           {/*
            * `sr-only` ולא `hidden`.
@@ -83,7 +83,7 @@ export function HeaderUserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/my/favorites">
+          <Link href="/my/favorites" prefetch={false}>
             <Heart aria-hidden /> מועדפים
           </Link>
         </DropdownMenuItem>
@@ -93,7 +93,7 @@ export function HeaderUserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/my/messages">
+          <Link href="/my/messages" prefetch={false}>
             <MessageCircle aria-hidden /> הודעות
           </Link>
         </DropdownMenuItem>

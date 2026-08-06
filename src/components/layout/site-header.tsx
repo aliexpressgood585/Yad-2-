@@ -24,7 +24,7 @@ export async function SiteHeader() {
           <ThemeToggle />
           <HeaderUserMenu />
           <Button asChild size="sm" className="hidden md:inline-flex">
-            <Link href="/publish">
+            <Link href="/publish" prefetch={false}>
               <Plus aria-hidden />
               פרסום מודעה
             </Link>

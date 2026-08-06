@@ -80,7 +80,7 @@ export function MobileNav({ categories }: { categories: NavCategory[] }) {
         </nav>
 
         <Button asChild className="mt-auto" size="lg">
-          <Link href="/publish">פרסום מודעה חינם</Link>
+          <Link href="/publish" prefetch={false}>פרסום מודעה חינם</Link>
         </Button>
       </SheetContent>
     </Dialog>

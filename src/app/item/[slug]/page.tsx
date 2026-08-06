@@ -15,7 +15,7 @@ import { ShareButton } from "@/components/listing/share-button";
 import { SellerCard } from "@/components/listing/seller-card";
 import { SimilarListings } from "@/components/listing/similar-listings";
 import { TrackView } from "@/components/listing/track-view";
-import { ListingMap } from "@/components/map/listing-map";
+import { ListingMapLazy } from "@/components/map/listing-map-lazy";
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -411,7 +411,7 @@ export default async function ListingPage({ params }: Props) {
               <h2 id="location-heading" className="mb-2 font-heading text-lg font-bold">
                 מיקום מקורב
               </h2>
-              <ListingMap
+              <ListingMapLazy
                 lat={listing.displayLat}
                 lng={listing.displayLng}
                 label={`${listing.city}${listing.neighborhood ? `, ${listing.neighborhood}` : ""}`}

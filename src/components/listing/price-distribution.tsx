@@ -88,7 +88,12 @@ export async function PriceDistribution({
       <p className="mt-3 text-xs text-muted-foreground">
         ההשוואה היא מול מודעות פעילות באותה תת-קטגוריה ובטווח הקרוב של שנת הייצור או מספר
         החדרים.{" "}
-        <Link href={pricePaths.valuation} className="text-info hover:underline">
+        {/*
+         * קו תחתון קבוע ולא רק בריחוף: קישור בתוך פסקה שנבדל בצבע
+         * בלבד אינו נראה כקישור למי שאינו מבחין בגוון הזה, וזה בדיוק
+         * מה ש-link-in-text-block בודק.
+         */}
+        <Link href={pricePaths.valuation} className="text-info underline underline-offset-2">
           בדיקת שווי לפריט משלך
         </Link>
       </p>

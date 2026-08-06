@@ -89,7 +89,15 @@ test("הפריסה אינה גולשת אופקית", async ({ page }, testInfo)
    */
   for (const path of ["/", "/vehicles", "/search?q=דירה"]) {
     await page.goto(path);
-    await page.waitForLoadState("networkidle");
+    /*
+     * ההמתנה היא לפריסה ולא לרשת. `networkidle` דורש 500ms בלי אף
+     * בקשה, וזה תנאי שלוח עם אלפי מודעות, טעינה עצלה של תמונות
+     * ורענון קריאות שוק אינו מקיים בהכרח — כלומר בדיקה שנכשלת על
+     * עומס ולא על גלישה. מה שנמדד כאן הוא רוחב, ולכן די בכך שהתוכן
+     * העיקרי מצויר.
+     */
+    await page.locator("main").first().waitFor({ state: "visible" });
+    await page.waitForLoadState("domcontentloaded");
 
     const overflow = await page.evaluate(() => {
       const el = document.documentElement;

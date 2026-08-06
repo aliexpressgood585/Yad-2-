@@ -38,6 +38,8 @@ export function MobileTabBar() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
+                /* מסכים מאחורי התחברות — ראה ההערה ב-header-user-menu */
+                prefetch={tab.href.startsWith("/my") ? false : undefined}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
