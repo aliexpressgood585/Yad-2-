@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
+import { LEGAL } from "@/lib/legal";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -55,11 +56,18 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>4. אכיפה</h2>
+        <h2>4. אכיפה והסרת תוכן</h2>
         <p>
           אנו רשאים להסיר מודעה, להשהות או לחסום חשבון בכל מקרה של הפרת התנאים, חשד
           להונאה או פגיעה במשתמשים אחרים. כל פעולת אכיפה מתועדת ביומן פעולות פנימי.
           במקרה של הסרה תישלח הודעה למפרסם, וניתן לפנות אלינו לבירור.
+        </p>
+        <p>
+          <strong>בקשת הסרה:</strong> נתקלתם במודעה שמפרה זכויות שלכם — זכויות
+          יוצרים, סימן מסחר, פרטיות או לשון הרע? פנו אל {LEGAL.email} וציינו את
+          כתובת המודעה, מהי ההפרה ומה זכותכם בעניין. נבחן כל פנייה ונשיב תוך
+          שלושה ימי עסקים. במקרים ברורים נסיר את המודעה מיד ונודיע למפרסם, שרשאי
+          להשיג על ההסרה.
         </p>
       </section>
 
@@ -91,7 +99,12 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>8. דין וסמכות שיפוט</h2>
+        <h2>8. זהות המפעיל, דין וסמכות שיפוט</h2>
+        <p>
+          השירות מופעל על ידי <strong>{LEGAL.operator}</strong>, ח.פ.{" "}
+          {LEGAL.companyId}, מכתובת {LEGAL.address}. לפניות: {LEGAL.email},{" "}
+          {LEGAL.phone}.
+        </p>
         <p>
           על תנאים אלה יחולו דיני מדינת ישראל. סמכות השיפוט הבלעדית נתונה לבתי המשפט
           המוסמכים במחוז תל אביב.

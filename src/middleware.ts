@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authConfig } from "@/lib/auth.config";
+import { CONSENT_COOKIE, measurementAllowed } from "@/lib/consent";
 import { SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session-cookie";
 
 const { auth } = NextAuth(authConfig);
@@ -48,6 +49,18 @@ export default auth((req) => {
  * בלקוח.
  */
 function withSession(req: Parameters<Parameters<typeof auth>[0]>[0], res: NextResponse) {
+  /*
+   * בלי הסכמה אין מדידה, וזה נאכף כאן ולא בלקוח: העוגייה היא
+   * `httpOnly`, כלומר `document.cookie` אינו יכול למחוק אותה. משתמש
+   * שסירב וממשיך להיות נמדד הוא בדיוק מה שהבאנר אמור למנוע.
+   *
+   * גם היעדר החלטה הוא היעדר הסכמה. העוגייה נכתבת רק אחרי "מאשר/ת".
+   */
+  if (!measurementAllowed(req.cookies.get(CONSENT_COOKIE)?.value)) {
+    if (req.cookies.get(SESSION_COOKIE)) res.cookies.delete(SESSION_COOKIE);
+    return res;
+  }
+
   if (req.cookies.get(SESSION_COOKIE)) return res;
 
   res.cookies.set(SESSION_COOKIE, crypto.randomUUID(), {

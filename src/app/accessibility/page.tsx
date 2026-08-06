@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ContentPage } from "@/components/content-page";
+import { LEGAL } from "@/lib/legal";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -59,11 +60,34 @@ export default function AccessibilityPage() {
       </section>
 
       <section>
-        <h2>פניות בנושא נגישות</h2>
+        <h2>רכז הנגישות</h2>
+        {/*
+         * תקן ישראלי 5568 מחייב לנקוב בשם רכז הנגישות ובדרך ליצור איתו
+         * קשר ישירות — לא "דרך עמוד העזרה". זה הפרט שהופך את ההצהרה
+         * ממסמך שיווקי למסמך שאפשר לממש מולו זכות.
+         */}
+        <ul>
+          <li>
+            <strong>שם:</strong> {LEGAL.accessibilityCoordinator}
+          </li>
+          <li>
+            <strong>דוא&quot;ל:</strong> {LEGAL.accessibilityEmail}
+          </li>
+          <li>
+            <strong>טלפון:</strong> {LEGAL.accessibilityPhone}
+          </li>
+          <li>
+            <strong>כתובת:</strong> {LEGAL.address}
+          </li>
+        </ul>
         <p>
-          נתקלתם בבעיית נגישות? נשמח שתעדכנו אותנו דרך עמוד העזרה, ונטפל בפנייה בהקדם.
-          בפנייה מומלץ לפרט את הדף שבו נתקלתם בבעיה, את הדפדפן ואת טכנולוגיית הסיוע שבה
-          אתם משתמשים.
+          נתקלתם בבעיית נגישות? פנו אלינו ונטפל בפנייה תוך שני ימי עסקים. בפנייה
+          מומלץ לפרט את הדף שבו נתקלתם בבעיה, את הדפדפן ואת טכנולוגיית הסיוע שבה
+          אתם משתמשים — שלושת אלה הם מה שמאפשר לשחזר את התקלה ולתקן אותה.
+        </p>
+        <p>
+          ההצהרה עודכנה ב{LEGAL.updatedAt}. אם התשובה שקיבלתם אינה מספקת, אתם
+          רשאים לפנות לנציבות שוויון זכויות לאנשים עם מוגבלות במשרד המשפטים.
         </p>
       </section>
     </ContentPage>
