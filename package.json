@@ -2,7 +2,7 @@
   "name": "metzia",
   "version": "1.0.0",
   "private": true,
-  "description": "מציאה — לוח מודעות ישראלי שמודד מחירים",
+  "description": "כדאי — לוח מודעות ישראלי שמודד מחירים",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",

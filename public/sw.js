@@ -1,5 +1,5 @@
 /**
- * Service Worker של מציאה.
+ * Service Worker של כדאי.
  *
  * אסטרטגיות:
  * - ניווטים: network-first עם נפילה למטמון ואז לעמוד /offline

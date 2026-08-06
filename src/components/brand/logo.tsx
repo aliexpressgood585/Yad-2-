@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BRAND } from "@/lib/brand";
 import { markGeometry, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
  * יושב מול השוק.
  *
  * ההבדל בין סימן טוב לסימן נכון הוא היכן עומד המחוג. מחוג במרכז מצייר
- * *מכשיר*; מחוג עמוק בקצה הזול מצייר **מציאה**. שבירה אחת בלבד במקצב
+ * *מכשיר*; מחוג עמוק בקצה הזול מצייר **פסק דין**. שבירה אחת בלבד במקצב
  * האפור, והיא בצבע הפעולה היחיד של המערכת — זה כל הסימן.
  *
  * הגאומטריה מיובאת מ-`@/lib/brand-mark` ולא כתובה כאן, מפני שאותה צורה
@@ -64,7 +65,7 @@ export function Logo({
             />
           ))}
 
-          {/* המציאה: המחוג היחיד, בענבר, בשמינית התחתונה של הסקאלה */}
+          {/* פסק הדין: המחוג היחיד, בענבר, בשמינית התחתונה של הסקאלה */}
           <line
             x1={mark.needle.x}
             x2={mark.needle.x}
@@ -86,9 +87,9 @@ export function Logo({
       </span>
 
       {showWordmark ? (
-        <span className="font-heading text-xl font-extrabold">מציאה</span>
+        <span className="font-heading text-xl font-extrabold">{BRAND.name}</span>
       ) : null}
-      <span className="sr-only">מציאה — דף הבית</span>
+      <span className="sr-only">{BRAND.name} — דף הבית</span>
     </span>
   );
 

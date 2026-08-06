@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 
+import { BRAND } from "@/lib/brand";
 import { prisma } from "@/lib/db";
 
 const OTP_TTL_MS = 5 * 60_000;
@@ -30,7 +31,7 @@ export async function issueOtp(
     },
   });
 
-  const body = `קוד האימות שלך למציאה: ${code}`;
+  const body = `${BRAND.name} — קוד האימות שלך: ${code}`;
   const provider = process.env.SMS_PROVIDER;
 
   if (!provider || !process.env.SMS_API_KEY) {

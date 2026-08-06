@@ -1,41 +1,17 @@
+import { BRAND } from "@/lib/brand";
+
 /**
- * כתובת הבסיס של האתר.
+ * הגדרות האתר.
  *
- * הסדר חשוב: משתנה מפורש גובר תמיד, אבל אם שכחו להגדיר אותו ב-Vercel
- * עדיין מקבלים כתובת נכונה במקום `localhost` — שהיה שולח `og:url`
- * ל-localhost בכל שיתוף בוואטסאפ ובפייסבוק.
- *
- * `VERCEL_PROJECT_PRODUCTION_URL` הוא הדומיין היציב של הפרויקט ולא של
- * הפריסה הבודדת, ולכן קישורים ששותפו לא נשברים בפריסה הבאה.
+ * שם המותג, הסלוגן והתיאור אינם יושבים כאן אלא ב-`@/lib/brand` —
+ * מקור אמת אחד לכל מחרוזת מותג בקוד. `SITE` נשאר נקודת הכניסה
+ * הקיימת ומחזיק את מה שאינו מותג: כתובת, שפה, צבע דפדפן וקבועי מוצר.
  */
-function resolveSiteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/+$/, "");
-
-  const vercel = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
-    ?? process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
-
-  return "http://localhost:3000";
-}
-
 export const SITE = {
-  /*
-   * מציאה — מה שהמשתמש בא לחפש, במילה אחת.
-   *
-   * השם אינו מתאר את הכלי אלא את **התוצאה**: אף אחד לא נכנס ללוח כדי
-   * למדוד מחירים, הוא נכנס כדי למצוא מציאה. המדידה היא הדרך, וזה מה
-   * שהמוצר עושה — אבל השם צריך להיות הסיבה.
-   *
-   * "מצאתי את זה במציאה" הוא משפט שאדם אומר בעל פה בלי להתאמץ, וזו
-   * המידה היחידה שקובעת בלוח מודעות: לוח מנצח על זיכרון של המון, לא
-   * על ייחוד משפטי.
-   */
-  name: "מציאה",
-  tagline: "יודעים איפה המחיר עומד",
-  description:
-    "לוח מודעות ישראלי שמודד — רכב, נדל\"ן, יד שנייה, דרושים ועוד. לכל מודעה סקאלה שמראה איפה המחיר יושב מול השוק, וכמה זמן ייקח למכור.",
-  url: resolveSiteUrl(),
+  name: BRAND.name,
+  tagline: BRAND.tagline,
+  description: BRAND.description,
+  url: BRAND.domain,
   locale: "he_IL",
   themeColor: "#16181B",
 } as const;
