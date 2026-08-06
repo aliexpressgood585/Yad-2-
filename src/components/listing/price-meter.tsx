@@ -42,7 +42,12 @@ export function PriceMeter({
   const note = (text: string) =>
     isColumn ? <p className={cn("text-xs text-muted-foreground", className)}>{text}</p> : null;
 
-  if (!meter) return note("אין מספיק מודעות דומות להשוואה");
+  /*
+   * בלוח חדש זה המצב הרגיל ולא החריג, ולכן הניסוח אומר גם **למה** וגם
+   * שזה זמני. "אין מספיק" נקרא כמו תקלה; "עוד אין" נקרא כמו לוח שגדל,
+   * וזו גם סיבה לחזור.
+   */
+  if (!meter) return note("עוד אין מספיק מודעות דומות להשוואה. נעדכן כשיהיו.");
 
   const below = meter.deltaPct < 0;
   const magnitude = Math.abs(meter.deltaPct);

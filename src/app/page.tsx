@@ -8,10 +8,10 @@ import { RecentlyViewed } from "@/components/home/recently-viewed";
 import { ListingGrid, ListingGridSkeleton } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
 import { getCategoryTree } from "@/lib/categories";
+import { inventory } from "@/lib/inventory";
 import { marketTicks } from "@/lib/market-ticks";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { searchListingCards } from "@/lib/listings";
-import { prisma } from "@/lib/db";
 
 /** דף הבית מתרענן כל 5 דקות (ISR) — התוכן משתנה לאט יחסית. */
 export const revalidate = 300;
@@ -35,17 +35,21 @@ const ADVANTAGES = [
 ];
 
 export default async function HomePage() {
-  const [tree, promoted, latest, stats, ticks] = await Promise.all([
+  const [tree, promoted, latest, stock, ticks] = await Promise.all([
     getCategoryTree(),
     searchListingCards({ promotedOnly: true, withImages: true, perPage: 4, sort: "date" }),
     searchListingCards({ withImages: true, perPage: 12, sort: "date" }),
-    prisma.listing.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    inventory(),
     marketTicks(),
   ]);
 
   return (
     <>
-      <HomeHero categories={tree} totalListings={stats} ticks={ticks} />
+      <HomeHero
+        categories={tree}
+        inventory={stock}
+        ticks={stock.ticks ? ticks : []}
+      />
 
       <div className="container space-y-12 py-10">
         {/* --- קטגוריות --- */}
@@ -90,7 +94,7 @@ export default async function HomePage() {
         </section>
 
         {/* --- מודעות מקודמות --- */}
-        {promoted.items.length ? (
+        {stock.promoted && promoted.items.length ? (
           <section aria-labelledby="promoted-heading">
             <div className="mb-4 flex items-end justify-between gap-3">
               <h2 id="promoted-heading" className="font-heading text-xl font-bold">
@@ -118,7 +122,7 @@ export default async function HomePage() {
          * כותרת בלי תוכן היא הבטחה שהופרה, והיא נראית כמו תקלה גם
          * כשהיא נכונה. אין מודעות שעונות לתנאי — הסקציה לא קיימת.
          */}
-        {latest.items.length ? (
+        {stock.sections && latest.items.length ? (
         <section aria-labelledby="latest-heading">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 id="latest-heading" className="font-heading text-xl font-bold">

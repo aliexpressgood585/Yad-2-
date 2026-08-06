@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import type { CategoryNode } from "@/lib/categories";
 import { formatCount } from "@/lib/format";
+import type { Inventory } from "@/lib/inventory";
 import type { MarketTick } from "@/lib/market-ticks";
 
 const POPULAR = [
@@ -32,11 +33,11 @@ const TICK_MS = 5000;
 
 export function HomeHero({
   categories,
-  totalListings,
+  inventory,
   ticks,
 }: {
   categories: CategoryNode[];
-  totalListings: number;
+  inventory: Inventory;
   ticks: MarketTick[];
 }) {
   const router = useRouter();
@@ -92,11 +93,25 @@ export function HomeHero({
             </p>
           ) : null}
 
+          {/*
+           * המונה מוצג רק כשיש מה למנות.
+           *
+           * מספר מנופח הוא השקר הראשון שמשתמש תופס, כי הוא סופר בעצמו
+           * את מה שעל המסך — ובלוח חדש "42 מודעות" עובד נגדנו גם כשהוא
+           * נכון. מתחת לסף נשארת אותה שורה בלי המספר: היא עדיין אומרת
+           * מה יש בלוח.
+           */}
           <p className="mx-auto mt-2 max-w-xl text-pretty text-sm text-muted-foreground">
-            <span className="num font-semibold text-foreground">
-              {formatCount(totalListings)}
-            </span>{" "}
-            מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — כל אחת עם הקריאה שלה מול השוק.
+            {inventory.counter ? (
+              <>
+                <span className="num font-semibold text-foreground">
+                  {formatCount(inventory.total)}
+                </span>{" "}
+                מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — כל אחת עם הקריאה שלה מול השוק.
+              </>
+            ) : (
+              <>רכב, נדל&quot;ן, יד שנייה ועוד — כל מודעה עם הקריאה שלה מול השוק.</>
+            )}
           </p>
 
           {/* נקודת הייחוס שההדר מודד מולה — ראה HeaderSearchSlot */}

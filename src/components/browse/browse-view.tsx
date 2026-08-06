@@ -209,17 +209,35 @@ async function BrowseResults({
           </div>
 
           {items.length === 0 ? (
+            /*
+             * קטגוריה ריקה בלוח חדש אינה כישלון חיפוש — היא הזדמנות.
+             * "אין תוצאות" מסיים את הביקור; הצעה לפרסם הופכת אותו
+             * למודעה הראשונה. ההבחנה בין חיפוש שנכשל לבין קטגוריה
+             * שעוד ריקה נעשית לפי `hasQuery`, כי הן שני מצבים שונים.
+             */
             <EmptyResults
-              title={hasQuery ? `לא נמצאו תוצאות עבור "${state.q}"` : "אין מודעות בקטגוריה הזו"}
+              title={
+                hasQuery
+                  ? `לא נמצאו תוצאות עבור "${state.q}"`
+                  : "עוד לא פורסמו מודעות כאן"
+              }
               body={
                 hasQuery
                   ? "בדקו את האיות, נסו מילים כלליות יותר או הסירו חלק מהפילטרים."
-                  : "נסו להסיר פילטרים או לעיין בקטגוריה אחרת."
+                  : "הקטגוריה פתוחה ומחכה. מי שמפרסם ראשון מקבל את כל תשומת הלב שלה."
               }
               action={
-                <Button asChild variant="outline">
-                  <Link href="/">חזרה לדף הבית</Link>
-                </Button>
+                hasQuery ? (
+                  <Button asChild variant="outline">
+                    <Link href="/">חזרה לדף הבית</Link>
+                  </Button>
+                ) : (
+                  <Button asChild>
+                    <Link href={category?.slug ? `/publish?category=${category.slug}` : "/publish"}>
+                      רוצה להיות הראשון?
+                    </Link>
+                  </Button>
+                )
               }
             />
           ) : (
