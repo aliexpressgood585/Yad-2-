@@ -20,6 +20,7 @@ import {
 import { UNIQUE_CITIES, neighborhoodsOf } from "../src/lib/cities";
 import { buildSearchText, contentFingerprint } from "../src/lib/listing-text";
 import { cohortFor } from "../src/lib/price-cohort";
+import { REALESTATE_PLAN, VEHICLE_PLAN } from "./seed/cohort-plan";
 import { fuzzLocation, slugify } from "../src/lib/utils";
 
 const prisma = new PrismaClient();
@@ -117,16 +118,24 @@ const DISTRIBUTION: Record<string, number> = {
    * לא הופיע אפילו פעם אחת בקטגוריה המרכזית שלו. עומק הזריעה הוא
    * תלוי-קוהורט, ולכן הוא חייב לזוז יחד איתו.
    */
-  "private-cars": 420,
+  /*
+   * רכב ונדל"ן עמוקים, כל השאר דליל — וזה מכוון.
+   *
+   * הנפח לבדו לא פתר כלום: עם צירופים אקראיים 78% מהמודעות נפלו לשלב
+   * ההרפיה הרחב. העומק כאן עובד יחד עם `seed/cohort-plan.ts`, שמצמצם
+   * את מספר הצירופים כדי שכל אחד מהם יגיע לגודל מדגם אמיתי — 25
+   * לצירוף דגם/שנה, 30 לצירוף עיר/חדרים.
+   */
+  "private-cars": 1100,
   "commercial-vehicles": 24,
-  suvs: 120,
+  suvs: 350,
   motorcycles: 10,
   scooters: 6,
   "off-road": 2,
   "trade-in": 4,
 
-  "apartments-sale": 220,
-  "apartments-rent": 200,
+  "apartments-sale": 750,
+  "apartments-rent": 650,
   roommates: 8,
   commercial: 6,
   lots: 3,
@@ -462,15 +471,28 @@ async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
   for (const leaf of leaves) {
     const count = DISTRIBUTION[leaf.slug] ?? 0;
 
+    /*
+     * תוכנית הקוהורטים, אם יש כזו לתת-הקטגוריה. מעבר במחזור ולא הגרלה:
+     * הגרלה על 40 צירופים נותנת התפלגות פואסונית שבה חלק מהצירופים
+     * נשארים מתחת לסף גם בנפח גדול, ומחזור נותן בדיוק
+     * `count / combos` לכל אחד.
+     */
+    const vehiclePlan = VEHICLE_PLAN[leaf.slug];
+    const realEstatePlan = REALESTATE_PLAN[leaf.slug];
+
     for (let i = 0; i < count; i++) {
-      const city = rng.weighted(
-        leaf.rootSlug === "realestate" ? realEstateCityWeights : cityWeights,
-      );
+      const rePin = realEstatePlan?.[i % realEstatePlan.length];
+      const pin = vehiclePlan?.[i % vehiclePlan.length] ?? rePin;
+
+      // בנדל"ן העיר היא חלק מהקוהורט, ולכן היא מגיעה מהתוכנית ולא מהמשקלים
+      const city =
+        (rePin ? UNIQUE_CITIES.find((c) => c.name === rePin.city) : undefined) ??
+        rng.weighted(leaf.rootSlug === "realestate" ? realEstateCityWeights : cityWeights);
       const hoods = neighborhoodsOf(city.name);
       const neighborhood = hoods.length && rng.bool(0.6) ? rng.pick(hoods) : null;
       const owner = pickOwner(leaf.rootSlug);
 
-      const gen = generateListing(rng, leaf.rootSlug, leaf.slug, city.name, city.region);
+      const gen = generateListing(rng, leaf.rootSlug, leaf.slug, city.name, city.region, pin);
 
       const publishedAt = new Date(Date.now() - rng.int(0, 60) * 864e5 - rng.int(0, 86_400_000));
       const isPromoted = rng.bool(0.08);

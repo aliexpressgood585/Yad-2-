@@ -13,6 +13,7 @@ import {
   VACATION_TYPES,
 } from "./categories";
 import { getCity } from "../../src/lib/cities";
+import type { RealEstatePin, VehiclePin } from "./cohort-plan";
 
 export type Rng = {
   int: (min: number, max: number) => number;
@@ -185,7 +186,7 @@ const MAKE_WEIGHT: Record<string, number> = {
   "אופל": 2,
 };
 
-function generateCar(rng: Rng, sub: string): GeneratedListing {
+function generateCar(rng: Rng, sub: string, pin?: VehiclePin): GeneratedListing {
   // רשימת הדגמים חייבת להתאים לתת-הקטגוריה, אחרת נוצר "MG 4" עם
   // משקל מטען וסוג מרכב מקרר.
   const models =
@@ -195,17 +196,20 @@ function generateCar(rng: Rng, sub: string): GeneratedListing {
         ? MOTORCYCLE_MODELS
         : CAR_MODELS;
 
-  const make = rng.weighted(
+  /*
+   * `pin` מגיע מתוכנית הקוהורטים ומקבע יצרן, דגם ושנה. בלעדיו הצירוף
+   * נבחר באקראי — וזה בדיוק מה שפיזר את הזריעה על מאות צירופים שאף
+   * אחד מהם לא הגיע לגודל מדגם. ראה `cohort-plan.ts`.
+   */
+  const make = pin?.make ?? rng.weighted(
     Object.keys(models).map((m) => [m, MAKE_WEIGHT[m] ?? 1] as const),
   );
   // הדגמים הראשונים ברשימה הם הנפוצים ביצרן, ולכן הם מקבלים משקל גבוה.
-  // בלי זה כל דגם מקבל מודעה־שתיים, ואף דגם לא מגיע לגודל מדגם שמאפשר
-  // להציג עליו מחיר — ולוח אמיתי אינו מפוזר כך.
-  const modelList = models[make]!;
-  const model = rng.weighted(
+  const modelList = models[make] ?? models[Object.keys(models)[0]!]!;
+  const model = pin?.model ?? rng.weighted(
     modelList.map((m, i) => [m, i < 2 ? 5 : 1] as const),
   );
-  const year = rng.int(2006, CURRENT_YEAR);
+  const year = pin?.year ?? rng.int(2006, CURRENT_YEAR);
   const age = CURRENT_YEAR - year;
 
   // ק"מ ויד נגזרים מהגיל, ולא נבחרים בנפרד: רכב בן שנה לא יכול להיות
@@ -416,14 +420,14 @@ const PROPERTY_SHAPE: Record<
   "מגרש": { perRoom: [1, 1], minSize: 250, floor: "ground" },
 };
 
-function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListing {
+function generateRealEstate(rng: Rng, sub: string, city: string, pin?: RealEstatePin): GeneratedListing {
   const level = priceLevelOf(city);
   // פערי השכירות בין ערים צרים מפערי המכירה — אותה עיר יקרה פי שניים
   // למכירה אינה יקרה פי שניים להשכרה.
   const rentLevel = 1 + (level - 1) * 0.6;
   // שלושה עד ארבעה חדרים הם רוב שוק הדירות בפועל; פיזור אחיד על תשעה
   // ערכים היה מותיר כל גודל דירה עם קומץ מודעות בעיר.
-  const rooms = rng.weighted([
+  const rooms = pin?.rooms ?? rng.weighted([
     [2, 5], [2.5, 6], [3, 20], [3.5, 16], [4, 20], [4.5, 10], [5, 8], [5.5, 3], [6, 2],
   ]);
   const isRent = sub === "apartments-rent";
@@ -987,14 +991,15 @@ export function generateListing(
   subSlug: string,
   city: string,
   region: string,
+  pin?: VehiclePin | RealEstatePin,
 ): GeneratedListing {
   switch (rootSlug) {
     case "vehicles":
       return ["motorcycles", "scooters", "off-road"].includes(subSlug)
         ? generateMotorcycle(rng, subSlug)
-        : generateCar(rng, subSlug);
+        : generateCar(rng, subSlug, pin as VehiclePin | undefined);
     case "realestate":
-      return generateRealEstate(rng, subSlug, city);
+      return generateRealEstate(rng, subSlug, city, pin as RealEstatePin | undefined);
     case "second-hand":
       return generateSecondHand(rng, subSlug);
     case "jobs":

@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { COHORT_TIERS, MIN_SAMPLE } from "@/lib/price-cohort";
+import { COHORT_TIERS, MAX_DISPLAY_TIER, MIN_SAMPLE } from "@/lib/price-cohort";
 
 /**
  * מד המחיר — איפה המחיר של מודעה יושב ביחס למודעות **הדומות לה באמת**.
@@ -162,12 +162,19 @@ function cohortPairs(where: Prisma.Sql): Prisma.Sql {
              count(*) FILTER (WHERE tier <= 3) AS c3
         FROM pairs WHERE tier IS NOT NULL GROUP BY target_id
     ),
-    -- עוצרים בשלב הראשון שיש בו מספיק דגימות. אין שלב כזה = אין מד.
+    /*
+     * עוצרים בשלב הראשון שיש בו מספיק דגימות, ולא מעבר לשלב התצוגה
+     * המרבי (MAX_DISPLAY_TIER). אין שלב כזה = אין מד.
+     *
+     * שלב 3 עדיין נספר ב-tier_counts בכוונה: הוא מה שמאפשר לבדיקה
+     * לדעת כמה מודעות היו מקבלות מספר בהשוואה רופפת, וזה המדד שמראה
+     * אם עומק הזריעה מספיק.
+     */
     chosen AS (
       SELECT target_id,
              CASE WHEN c1 >= ${MIN_SAMPLE} THEN 1
-                  WHEN c2 >= ${MIN_SAMPLE} THEN 2
-                  WHEN c3 >= ${MIN_SAMPLE} THEN 3
+                  WHEN c2 >= ${MIN_SAMPLE} AND ${MAX_DISPLAY_TIER} >= 2 THEN 2
+                  WHEN c3 >= ${MIN_SAMPLE} AND ${MAX_DISPLAY_TIER} >= 3 THEN 3
              END AS tier
         FROM tier_counts
     ),
