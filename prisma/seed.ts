@@ -19,7 +19,7 @@ import {
 } from "./seed/content";
 import { UNIQUE_CITIES, neighborhoodsOf } from "../src/lib/cities";
 import { buildSearchText, contentFingerprint } from "../src/lib/listing-text";
-import { comparableBandFor } from "../src/lib/price-meter";
+import { cohortFor } from "../src/lib/price-cohort";
 import { fuzzLocation, slugify } from "../src/lib/utils";
 
 const prisma = new PrismaClient();
@@ -511,7 +511,15 @@ async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
           createdAt: publishedAt,
           expiresAt: new Date(publishedAt.getTime() + 45 * 864e5),
           searchText,
-          comparableBand: comparableBandFor(leaf.rootSlug, gen.attrs),
+          ...(() => {
+            const cohort = cohortFor(leaf.rootSlug, gen.attrs, city.name);
+            return {
+              comparableBand: cohort.band,
+              comparableBand2: cohort.band2,
+              cohortKey: cohort.key,
+              cohortKeyBroad: cohort.keyBroad,
+            };
+          })(),
           contentHash: contentFingerprint({
             title: gen.title,
             description: gen.description,

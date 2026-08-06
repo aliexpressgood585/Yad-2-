@@ -179,7 +179,17 @@ function buildWhere(query: SearchQuery): Prisma.Sql {
 /** ORDER BY לפי מצב המיון שנבחר. */
 function buildOrder(query: SearchQuery, hasQuery: boolean): Prisma.Sql {
   const sort = query.sort ?? (hasQuery ? "relevance" : "date");
-  // מודעות מקודמות עולות לראש רק במיונים שאינם מיון מפורש לפי מחיר/מרחק
+  /*
+   * הקידום **אינו** מוביל את המיון יותר.
+   *
+   * `promoted DESC` כשלב ראשון פירושו שכל המקודמות עולות לפני כל
+   * השאר, ובלוח עם עשרות מהן העמוד הראשון כולו בתשלום — דף הבית הציג
+   * 13 ברצף תחת הכותרת "נוספו עכשיו", כלומר גם שיקר וגם הציף.
+   *
+   * במיון לפי תאריך "החדש ביותר" חייב להיות החדש ביותר. הקידום נשאר
+   * שובר שוויון בלבד, והחשיפה שנקנתה מסופקת דרך הרצועה הייעודית
+   * בדף הבית ודרך המכסה ב-`capPromoted` (2 מכל 10).
+   */
   const promoted = Prisma.sql`(l."isPromoted" AND l."promotedUntil" > now()) DESC`;
   const recency = Prisma.sql`COALESCE(l."bumpedAt", l."publishedAt", l."createdAt") DESC`;
 
@@ -189,19 +199,19 @@ function buildOrder(query: SearchQuery, hasQuery: boolean): Prisma.Sql {
     case "price_desc":
       return Prisma.sql`ORDER BY l."price" DESC NULLS LAST, ${recency}`;
     case "views":
-      return Prisma.sql`ORDER BY ${promoted}, l."viewCount" DESC, ${recency}`;
+      return Prisma.sql`ORDER BY l."viewCount" DESC, ${promoted}, ${recency}`;
     case "distance":
       return query.lat !== undefined && query.lng !== undefined
         ? Prisma.sql`ORDER BY distance ASC NULLS LAST, ${recency}`
-        : Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+        : Prisma.sql`ORDER BY ${recency}, ${promoted}`;
     case "relevance":
       // בחיפוש לפי רלוונטיות הקידום הוא בונוס ולא עקיפה: מודעה מקודמת
       // שאינה רלוונטית לא תעלה מעל תוצאה מתאימה באמת.
       return hasQuery
         ? Prisma.sql`ORDER BY rank DESC, ${recency}`
-        : Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+        : Prisma.sql`ORDER BY ${recency}, ${promoted}`;
     default:
-      return Prisma.sql`ORDER BY ${promoted}, ${recency}`;
+      return Prisma.sql`ORDER BY ${recency}, ${promoted}`;
   }
 }
 
@@ -418,7 +428,17 @@ const CARD_SELECT = {
   displayLng: true,
   categoryId: true,
   userId: true,
-  category: { select: { id: true, slug: true, name: true, priceLabel: true, icon: true } },
+  category: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      priceLabel: true,
+      icon: true,
+      // שורש הקטגוריה — ממנו נגזר סוג המחיר (שכר / שווי עסק / מחיר)
+      parent: { select: { slug: true } },
+    },
+  },
   user: {
     select: {
       id: true,
@@ -474,6 +494,50 @@ export async function fetchListingCards(
 }
 
 /** חיפוש + הידרציה בקריאה אחת, כולל מדי המחיר לכל הכרטיסים. */
+/**
+ * מכסת המודעות המקודמות: לכל היותר 2 בכל חלון של 10 תוצאות.
+ *
+ * המיון ב-SQL מרים מקודמות לראש, וברשימה עם הרבה מהן זה ייצר עמוד
+ * שלם של מודעות בתשלום — דף הבית הציג 13 ברצף. משתמש שרואה את זה
+ * לומד שהתוצאות הראשונות אינן התוצאות הטובות, וזה בדיוק המקום שבו
+ * לוח מפסיד את האמון שלו.
+ *
+ * המקודמות שנדחקות אינן נעלמות — הן זזות אחורה בתוך אותו עמוד.
+ */
+const PROMOTED_WINDOW = 10;
+export const PROMOTED_PER_WINDOW = 2;
+
+export function capPromoted<T>(items: T[], isPromoted: (item: T) => boolean): T[] {
+  const promoted = items.filter(isPromoted);
+  const organic = items.filter((i) => !isPromoted(i));
+  if (promoted.length <= PROMOTED_PER_WINDOW) return items;
+
+  const out: T[] = [];
+  let p = 0;
+  let o = 0;
+
+  /*
+   * חלון אחרי חלון: עד 2 מקודמות ואז אורגניות עד סוף החלון.
+   *
+   * כשהאורגניות נגמרות והמקודמות לא — העודף נשפך לזנב העמוד. אין דרך
+   * לקיים מכסה של 2 מכל 10 ברשימה שרובה מקודמת, וזנב מקודם בסוף עמוד
+   * עדיף על ראש עמוד מקודם: מי שהגיע לשם כבר ראה את התוצאות האמיתיות.
+   */
+  while (o < organic.length) {
+    for (let k = 0; k < PROMOTED_PER_WINDOW && p < promoted.length; k++) out.push(promoted[p++]);
+    for (
+      let k = PROMOTED_PER_WINDOW;
+      k < PROMOTED_WINDOW && o < organic.length;
+      k++
+    ) {
+      out.push(organic[o++]);
+    }
+  }
+  while (p < promoted.length) out.push(promoted[p++]);
+
+  return out;
+}
+
 export async function searchListingCards(query: SearchQuery) {
   const result = await searchListings(query);
   // שאילתה אחת למד המחיר של כל העמוד, לא אחת לכרטיס
@@ -481,7 +545,20 @@ export async function searchListingCards(query: SearchQuery) {
     fetchListingCards(result.ids, result.distances),
     priceMetersFor(result.ids),
   ]);
-  return { ...result, items, meters };
+
+  /*
+   * הרשימה שביקשה מקודמות בלבד היא הרצועה הייעודית שלהן, ושם המכסה
+   * לא חלה — היא מסומנת ככזו למשתמש.
+   */
+  const now = Date.now();
+  const capped = query.promotedOnly
+    ? items
+    : capPromoted(
+        items,
+        (l) => Boolean(l.isPromoted && l.promotedUntil && l.promotedUntil.getTime() > now),
+      );
+
+  return { ...result, items: capped, meters };
 }
 
 // פורמט ערכי השדות הדינמיים נמצא ב-@/lib/format.

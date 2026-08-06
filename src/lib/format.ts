@@ -120,8 +120,15 @@ export type AttributeEntry = {
   key: string;
   label: string;
   value: string;
-  /** האם הערך עומד בפני עצמו — "יד שנייה" מובן בלי התווית "יד". */
-  selfEvident: boolean;
+  /**
+   * הערך כפי שמותר להציגו **בלי תווית**, או `null` אם אי אפשר.
+   *
+   * זה מה שמונע את הבאג שהיה כאן: מודעת דרושים הציגה בכרטיס "אין"
+   * ומודעת דירה הציגה "· יש · אין" — ערכים אמיתיים לגמרי שאינם אומרים
+   * דבר בלי שם השדה. שדה שאין לו צורה עצמאית פשוט לא נכנס לכרטיס;
+   * מקומו בטבלת המפרט בדף המודעה, שם יש לו תווית.
+   */
+  standalone: string | null;
 };
 
 /**
@@ -165,12 +172,23 @@ export function formatAttributeEntry(attr: AttributeShape): AttributeEntry | nul
   if (!value) return null;
 
   const key = attr.attribute.key;
+  const label = attr.attribute.label;
+
+  /*
+   * בוליאני: הצורה העצמאית היא **שם השדה עצמו**, ורק כשהתשובה חיובית.
+   * "יש" ו-"אין" הם ערכים תקינים שאינם נושאים שום מידע בלי התווית, ו-
+   * "בלי ${label}" נשבר על תוויות שהן כבר משפט ("מותר בעלי חיים").
+   * שלילה נשארת בטבלת המפרט, שם היא כתובה במלואה.
+   */
+  if (attr.valueBool !== null) {
+    return { key, label, value, standalone: attr.valueBool ? label : null };
+  }
+
   // ערך מספרי עם יחידה קוראת ("84,000 ק"מ") מסביר את עצמו; בלי יחידה
   // הוא מספר עירום וחייב תווית.
   const selfEvident =
     SELF_EVIDENT_KEYS.has(key) ||
-    attr.valueBool !== null ||
     (attr.valueNumber !== null && Boolean(attr.attribute.unit) && attr.attribute.unit !== "₪");
 
-  return { key, label: attr.attribute.label, value, selfEvident };
+  return { key, label, value, standalone: selfEvident ? value : null };
 }

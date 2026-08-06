@@ -65,7 +65,7 @@ export function PriceMeter({
       <div
         className="price-scale w-full"
         role="img"
-        aria-label={`המחיר ${below ? "נמוך" : "גבוה"} ב-${magnitude} אחוז מחציון ${meter.sample} מודעות דומות`}
+        aria-label={`המחיר ${below ? "נמוך" : "גבוה"} ב-${magnitude} אחוז מחציון של ${meter.sample} מודעות דומות`}
       >
         <span className="price-scale-needle" style={{ insetInlineStart: `${position}%` }} />
       </div>
@@ -75,8 +75,20 @@ export function PriceMeter({
        * שניהם צבעי קריאה ולא צבעי פעולה — לאף אחד מהם אין כפתור מלא
        * בשום מסך, וזה מה שמשאיר את הענבר כצבע הפעולה היחיד.
        */}
+      {/*
+       * גודל המדגם צמוד למספר, תמיד.
+       *
+       * "38% מתחת לחציון" בלי לומר מול כמה מודעות הוא מספר שאי אפשר
+       * לבדוק — וזה בדיוק מה שהסתיר כאן קוהורט שגוי במשך זמן. עכשיו
+       * משתמש שרואה "מול 9 מודעות" יודע כמה משקל לתת לזה, ומפתח
+       * שרואה מספר מוזר רואה מיד גם את הסיבה.
+       */}
       <p className={cn("text-xs", below ? "text-info" : "text-accent")}>
         <span className="num">{magnitude}%</span> {below ? "מתחת לחציון" : "מעל החציון"}
+        <span className="text-muted-foreground">
+          {" · "}
+          <span className="num">{meter.sample}</span> מודעות דומות
+        </span>
       </p>
     </div>
   );

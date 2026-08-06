@@ -344,10 +344,17 @@ model Listing {
   contentHash String?
   fraudScore  Int     @default(0)
 
-  /// ערך ההשוואה של המודעה (שנת ייצור ברכב, מספר חדרים בנדל"ן).
+  /// ערך ההשוואה הראשי (שנת ייצור ברכב, מספר חדרים בנדל"ן).
   /// מנורמל מהשדות הדינמיים כדי ש"מד המחיר" יוכל לאתר מודעות דומות
   /// באינדקס אחד במקום ב-join אל טבלת השדות בכל שאילתה.
   comparableBand Float?
+  /// ערך ההשוואה המשני, זה שנמדד באחוזים (ק"מ ברכב, מ"ר בנדל"ן).
+  comparableBand2 Float?
+  /// מפתח הקוהורט ההדוק: יצרן|דגם ברכב, עיר בנדל"ן, מצב הפריט ביד שנייה.
+  /// ריק פירושו שאין מספיק מידע כדי להשוות בכנות — ואז אין מד מחיר.
+  cohortKey      String?
+  /// מפתח הקוהורט המורחב, לשלב ההרפיה: יצרן ברכב, אזור בנדל"ן.
+  cohortKeyBroad String?
 
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   category      Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -370,8 +377,9 @@ model Listing {
   @@index([city, status])
   @@index([price])
   @@index([isPromoted, promotedUntil])
-  /// מד המחיר: אחוזון מחיר בתוך קטגוריה + טווח השוואה
-  @@index([categoryId, status, comparableBand, price])
+  /// מד המחיר: הקוהורט ההדוק ואחריו המורחב
+  @@index([categoryId, status, cohortKey, comparableBand, price])
+  @@index([categoryId, status, cohortKeyBroad, comparableBand, price])
   @@index([contentHash])
   @@index([expiresAt])
 }

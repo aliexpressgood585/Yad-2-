@@ -1,6 +1,6 @@
 import { Prisma, prisma } from "@/lib/db";
 import { getAttributesForCategory, getCategoryPath } from "@/lib/categories";
-import { comparableBandFor } from "@/lib/price-meter";
+import { cohortFor } from "@/lib/price-cohort";
 import { buildSearchText, contentFingerprint } from "@/lib/listing-text";
 import { detectFraud, persistFraudFlags } from "@/lib/fraud";
 import { getCity } from "@/lib/cities";
@@ -123,7 +123,15 @@ export async function deriveListingFields(
       price: input.price,
       categoryId: input.categoryId,
     }),
-    comparableBand: comparableBandFor(path[0]?.slug, attributeValues),
+    ...(() => {
+      const cohort = cohortFor(path[0]?.slug, attributeValues, input.city);
+      return {
+        comparableBand: cohort.band,
+        comparableBand2: cohort.band2,
+        cohortKey: cohort.key,
+        cohortKeyBroad: cohort.keyBroad,
+      };
+    })(),
   };
 }
 

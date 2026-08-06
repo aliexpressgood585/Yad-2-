@@ -36,7 +36,7 @@ const ADVANTAGES = [
 export default async function HomePage() {
   const [tree, promoted, latest, stats] = await Promise.all([
     getCategoryTree(),
-    searchListingCards({ promotedOnly: true, withImages: true, perPage: 8, sort: "date" }),
+    searchListingCards({ promotedOnly: true, withImages: true, perPage: 4, sort: "date" }),
     searchListingCards({ withImages: true, perPage: 12, sort: "date" }),
     prisma.listing.count({ where: { status: "ACTIVE", deletedAt: null } }),
   ]);
@@ -103,7 +103,13 @@ export default async function HomePage() {
           <RecentlyViewed />
         </Suspense>
 
-        {/* --- מודעות אחרונות --- */}
+        {/*
+         * --- מודעות אחרונות ---
+         *
+         * כותרת בלי תוכן היא הבטחה שהופרה, והיא נראית כמו תקלה גם
+         * כשהיא נכונה. אין מודעות שעונות לתנאי — הסקציה לא קיימת.
+         */}
+        {latest.items.length ? (
         <section aria-labelledby="latest-heading">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 id="latest-heading" className="font-heading text-xl font-bold">
@@ -120,6 +126,7 @@ export default async function HomePage() {
             <ListingGrid listings={toListingCardDtos(latest.items, latest.meters)} priorityCount={0} />
           </Suspense>
         </section>
+        ) : null}
 
         {/* --- יתרונות --- */}
         <section aria-labelledby="advantages-heading" className="rounded-2xl bg-muted/40 p-6 sm:p-8">

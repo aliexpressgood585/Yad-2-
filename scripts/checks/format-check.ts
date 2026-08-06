@@ -31,7 +31,7 @@ for (const c of CASES) {
     value: null,
     attribute: { key: c.key, label: c.label, unit: c.unit ?? null },
   });
-  const shown = entry === null ? "" : entry.selfEvident ? entry.value : `${entry.label} ${entry.value}`;
+  const shown = entry === null ? "" : (entry.standalone ?? `${entry.label} ${entry.value}`);
   const ok = shown === c.expect;
   if (!ok) failed++;
   console.log(`${ok ? "✓" : "✗"} ${c.key.padEnd(16)} ${shown}${ok ? "" : `   (ציפינו: ${c.expect})`}`);

@@ -9,6 +9,7 @@ import { PriceMeter } from "@/components/listing/price-meter";
 import { listingImageTransition } from "@/lib/view-transitions";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { formatPrice } from "@/lib/format";
+import { priceLabel, priceSuffix } from "@/lib/price-kind";
 import type { Density } from "@/stores/density";
 import { cn, timeAgo } from "@/lib/utils";
 
@@ -34,6 +35,15 @@ type Props = {
  */
 export function ListingCard({ listing, density = "grid", priority = false, className }: Props) {
   const isList = density === "list";
+
+  /*
+   * שער יחיד לשורת המפרט: רק שדות שיש להם צורה עצמאית עוברים אותו.
+   * מקור הנתונים כבר מסנן, וזו השכבה שמבטיחה שגם אם יפסיק — הכרטיס
+   * לא יציג "אין" בלי לומר של מה.
+   */
+  const standalone = listing.highlights
+    .filter((h) => h.standalone !== null)
+    .map((h) => ({ key: h.key, text: h.standalone as string }));
 
   return (
     <article
@@ -96,8 +106,31 @@ export function ListingCard({ listing, density = "grid", priority = false, class
          * ובשורת קריאה רחבה הם נראו כשני טורים שונים. הבידוד נדרש למספר
          * בלבד — לא לשורה שמכילה אותו.
          */}
-        <p className="listing-card-price text-lg font-medium leading-none text-foreground">
-          <span className="num">{formatPrice(listing.price, { currency: listing.currency })}</span>
+        {/*
+         * המספר נקרא אחרת לפי מה שהוא. שכר ושווי עסק מקבלים תווית
+         * מעליהם ומשקל קל יותר — הם אינם מחיר של מוצר, והצגתם באותה
+         * טיפוגרפיה בדיוק היא מה שגרם ל-₪16,854 על משרה להיראות כמו
+         * מחיר של אופנוע.
+         */}
+        <p className="listing-card-price leading-none text-foreground">
+          {priceLabel(listing.priceKind) ? (
+            <span className="me-1.5 align-middle text-[0.6875rem] font-medium uppercase text-muted-foreground">
+              {priceLabel(listing.priceKind)}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "num align-middle",
+              priceLabel(listing.priceKind) ? "text-base font-medium" : "text-lg font-medium",
+            )}
+          >
+            {formatPrice(listing.price, { currency: listing.currency })}
+          </span>
+          {priceSuffix(listing.priceKind) ? (
+            <span className="ms-1 align-middle text-xs font-normal text-muted-foreground">
+              {priceSuffix(listing.priceKind)}
+            </span>
+          ) : null}
         </p>
 
         {/*
@@ -126,19 +159,25 @@ export function ListingCard({ listing, density = "grid", priority = false, class
          * שנראה תקין לחלוטין. כמה שדות מוצגים נקבע ברוחב המכל
          * (`globals.css`), והפריטים עצמם לעולם לא מתכווצים.
          */}
-        {listing.highlights.length ? (
+        {/*
+         * אכיפה, לא סינון נקודתי: הכרטיס מרנדר **רק** ערכים שיש להם
+         * צורה עצמאית. שדה בלי תווית שמשמעותו תלויה בתווית ("יש",
+         * "אין", "₪120,000") לא יגיע לכאן גם אם מישהו יוסיף אותו
+         * למקור הנתונים בעתיד.
+         */}
+        {standalone.length ? (
           <ul className="listing-card-specs flex items-center gap-x-1.5 overflow-hidden text-xs text-muted-foreground">
-            {listing.highlights.map((h, i) => (
+            {standalone.map((h, i) => (
               <li
                 key={h.key}
                 className={cn(
                   "flex items-center gap-1.5",
                   // ערך עם ספרות לעולם אינו מתכווץ; טקסט מתקצר במקומו
-                  /\d/.test(h.value) ? "shrink-0" : "min-w-0 truncate",
+                  /\d/.test(h.text) ? "shrink-0" : "min-w-0 truncate",
                 )}
               >
                 {i > 0 ? <span aria-hidden>·</span> : null}
-                <span className="num">{h.value}</span>
+                <span className="num">{h.text}</span>
               </li>
             ))}
           </ul>

@@ -1,5 +1,6 @@
 import { blurDataUrl } from "@/lib/blur";
 import { formatAttributeEntry, type AttributeEntry } from "@/lib/format";
+import { comparableKind, priceKindFor, type PriceKind } from "@/lib/price-kind";
 import type { PriceMeter } from "@/lib/price-meter";
 import type { ListingCard } from "@/lib/listings";
 
@@ -26,6 +27,8 @@ export type ListingCardDto = {
   categoryIcon: string;
   /** מיקום המחיר ביחס למודעות דומות. null = אין מספיק בסיס להשוואה. */
   priceMeter: PriceMeter | null;
+  /** מה המספר הזה: מחיר, שכירות חודשית, שכר או שווי עסק. */
+  priceKind: PriceKind;
   imageCount: number;
   /**
    * שלושת השדות הדינמיים הבולטים, כל אחד עם התווית שלו.
@@ -65,10 +68,10 @@ function pickHighlights(listing: ListingCard): AttributeEntry[] {
   const title = listing.title;
 
   // בכרטיס מוצגים ערכים בלבד, בלי תוויות — שורה אחת שנסרקת במבט.
-  // לכן שדה שערכו חסר משמעות בלי התווית ("₪120,000") יורד מהכרטיס
-  // כולו במקום להופיע כמספר עירום; מקומו בטבלת המפרט בדף המודעה.
-  const usable = all.filter((e) => e.selfEvident);
-  const fresh = usable.filter((e) => !title.includes(e.value));
+  // לכן שדה שאין לו צורה עצמאית ("₪120,000", "אין") יורד מהכרטיס כולו
+  // במקום להופיע כערך עירום; מקומו בטבלת המפרט בדף המודעה.
+  const usable = all.filter((e) => e.standalone !== null);
+  const fresh = usable.filter((e) => !title.includes(e.standalone as string));
 
   return (fresh.length >= 2 ? fresh : usable).slice(0, 3);
 }
@@ -79,6 +82,7 @@ export function toListingCardDto(
 ): ListingCardDto {
   const image = listing.images[0];
   const now = Date.now();
+  const priceKind = priceKindFor(listing.category?.parent?.slug, listing.category?.slug);
 
   return {
     id: listing.id,
@@ -96,7 +100,13 @@ export function toListingCardDto(
     viewCount: listing.viewCount,
     imageUrl: image ? (image.thumbUrl ?? image.url) : null,
     categoryIcon: listing.category?.icon ?? "Package",
-    priceMeter,
+    priceKind,
+    /*
+     * שכר ושווי עסק לא נכנסים למד המחיר גם אם התגלגל לכאן אחד כזה.
+     * הקוהורט כבר לא מייצר אותם, וזו השכבה שמוודאת שגם אם ייצר —
+     * המספר לא יוצג כ"12% מתחת לחציון" של משהו אחר לגמרי.
+     */
+    priceMeter: comparableKind(priceKind) ? priceMeter : null,
     blurDataURL: image?.blurhash ? blurDataUrl(image.blurhash) : null,
     imageCount: listing.images.length,
     highlights: pickHighlights(listing),
