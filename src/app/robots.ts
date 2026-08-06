@@ -26,7 +26,11 @@ export default function robots(): MetadataRoute.Robots {
         disallow: "/",
       },
     ],
-    sitemap: `${SITE.url}/sitemap.xml`,
+    /*
+     * מפת האתר מפוצלת לפי קטגוריית שורש (`sitemap/0.xml` ואילך).
+     * `sitemap/0.xml` הוא האינדקס הכללי; גוגל עוקב משם לשאר.
+     */
+    sitemap: `${SITE.url}/sitemap/0.xml`,
     host: SITE.url,
   };
 }

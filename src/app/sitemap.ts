@@ -7,12 +7,38 @@ import { SITE } from "@/lib/site";
 import { slugify } from "@/lib/utils";
 import { cityTargets, guideTargets } from "@/lib/valuation";
 
-/** מספר המודעות המרבי במפת האתר — Google מגביל ל-50,000 כתובות לקובץ. */
+/** מספר המודעות המרבי בקובץ אחד — Google מגביל ל-50,000 כתובות. */
 const MAX_LISTINGS = 20_000;
 
 export const revalidate = 3600;
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+/**
+ * מפת האתר מפוצלת לפי קטגוריית שורש.
+ *
+ * לא בגלל המגבלה של 50,000 — היא רחוקה — אלא בגלל האבחון: כש-Search
+ * Console מדווח על כתובות שלא נאספו, מפה אחת ענקית אומרת "משהו לא
+ * נאסף" ומפה לכל קטגוריה אומרת **איזו**. זה ההבדל בין דיווח לבין
+ * ממצא.
+ *
+ * מודעות הדגמה אינן נכנסות: בפרודקשן הן מסוננות מכל שאילתה בשכבת
+ * ה-Prisma, ולכן `findMany` כאן אינו רואה אותן מלכתחילה.
+ */
+export async function generateSitemaps() {
+  const roots = (await getFlatCategories()).filter((c) => !c.parentId);
+  // 0 הוא המפה הכללית: דפים סטטיים, קטגוריות ודפי מחירון
+  return [{ id: 0 }, ...roots.map((_, i) => ({ id: i + 1 }))];
+}
+
+export default async function sitemap({
+  id,
+}: {
+  id: number;
+}): Promise<MetadataRoute.Sitemap> {
+  /*
+   * `id` מגיע כמחרוזת בפועל למרות החתימה, ולכן השוואה ל-0 נכשלה
+   * בשקט והמפה הכללית יצאה ריקה. המרה מפורשת ולא `==`.
+   */
+  const index = Number(id);
   const base = SITE.url;
   const now = new Date();
 
@@ -47,7 +73,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/accessibility`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  const categories = await getFlatCategories();
+  const flat = await getFlatCategories();
+  const categories = flat;
   const byId = new Map(categories.map((c) => [c.id, c]));
 
   const categoryPages: MetadataRoute.Sitemap = categories.map((c) => {
@@ -94,18 +121,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  /*
+   * המפה הכללית (id=0) אינה מכילה מודעות כלל, וכל מפת קטגוריה מכילה
+   * רק את המודעות שתחתיה. כך אין כתובת שמופיעה בשתי מפות.
+   */
+  const roots = flat.filter((c) => !c.parentId);
+  const root = index === 0 ? null : roots[index - 1];
+  const rootIds = root
+    ? [root.id, ...flat.filter((c) => c.parentId === root.id).map((c) => c.id)]
+    : [];
+
   const [listings, businesses] = await Promise.all([
-    prisma.listing.findMany({
-      where: { status: "ACTIVE", deletedAt: null },
-      select: { slug: true, updatedAt: true },
-      orderBy: { publishedAt: "desc" },
-      take: MAX_LISTINGS,
-    }),
-    prisma.user.findMany({
-      where: { businessSlug: { not: null }, deletedAt: null, isBlocked: false },
-      select: { businessSlug: true, updatedAt: true },
-      take: 2000,
-    }),
+    root
+      ? prisma.listing.findMany({
+          where: { status: "ACTIVE", deletedAt: null, categoryId: { in: rootIds } },
+          select: { slug: true, updatedAt: true },
+          orderBy: { publishedAt: "desc" },
+          take: MAX_LISTINGS,
+        })
+      : Promise.resolve([]),
+    index === 0
+      ? prisma.user.findMany({
+          where: { businessSlug: { not: null }, deletedAt: null, isBlocked: false },
+          select: { businessSlug: true, updatedAt: true },
+          take: 2000,
+        })
+      : Promise.resolve([]),
   ]);
 
   const listingPages: MetadataRoute.Sitemap = listings.map((l) => ({
@@ -121,6 +162,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.5,
   }));
+
+  /*
+   * דפי המסגרת נמצאים **רק** במפה הכללית. אילו הופיעו גם במפות
+   * הקטגוריות, אותה כתובת הייתה מוגשת מכמה מפות — וזה מבטל את כל
+   * הסיבה לפצל, כי כבר אי אפשר לדעת איזו מפה אחראית למה.
+   */
+  if (index !== 0) return listingPages;
 
   return [
     ...staticPages,

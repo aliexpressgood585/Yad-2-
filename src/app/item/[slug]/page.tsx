@@ -19,6 +19,7 @@ import { ListingMapLazy } from "@/components/map/listing-map-lazy";
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { ListingGridSkeleton } from "@/components/listing/listing-grid";
 import { auth } from "@/lib/auth";
 import { getCategoryPath } from "@/lib/categories";
@@ -225,6 +226,21 @@ export default async function ListingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/*
+       * פירורי לחם מובנים בנוסף לוויזואליים. `Product` לבדו אומר
+       * לגוגל מה הדף מוכר אבל לא איפה הוא יושב באתר, וזה מה שמייצר
+       * את שורת הניווט בתוצאת החיפוש.
+       */}
+      <BreadcrumbJsonLd
+        items={[
+          ...path.map((node, i) => ({
+            name: node.name,
+            path: `/${path.slice(0, i + 1).map((p) => p.slug).join("/")}`,
+          })),
+          { name: listing.title, path: `/item/${listing.slug}` },
+        ]}
+      />
+
       <TrackView listingId={listing.id} />
 
       <Breadcrumbs path={path} />
