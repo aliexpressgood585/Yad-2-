@@ -61,7 +61,7 @@ export const useDensityStore = create<DensityState>()(
         }),
     }),
     {
-      name: "metzia-density",
+      name: "kedai-density",
       version: 2,
       /**
        * גרסה 1 שמרה `density` בלבד. שדרוג בלי migrate היה מחזיר

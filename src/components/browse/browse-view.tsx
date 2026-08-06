@@ -170,6 +170,12 @@ async function BrowseResults({
         </aside>
 
         <div className="min-w-0 flex-1">
+          {/*
+           * כותרת לאזור התוצאות. כותרות המודעות הן h3, ובלי h2 ביניהן
+           * לבין ה-h1 של הדף נוצרת קפיצת דרג — קורא מסך שמדלג בין
+           * כותרות מאבד את הגבול בין הסינון לבין הרשימה.
+           */}
+          <h2 className="sr-only">תוצאות</h2>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
               <span className="num font-semibold text-foreground">

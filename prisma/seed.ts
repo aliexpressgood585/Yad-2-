@@ -109,9 +109,17 @@ const BUSINESS_TRADES = [
  * לסף. לוח אמיתי גם הוא אינו אחיד — רכב ונדל"ן הם רוב התנועה.
  */
 const DISTRIBUTION: Record<string, number> = {
-  "private-cars": 150,
-  "commercial-vehicles": 12,
-  suvs: 45,
+  /*
+   * הרכב הועמק מ-150 ל-420.
+   *
+   * הקוהורט של מד המחיר הודק (יצרן+דגם+שנה, ואחריו יצרן+שנה), ובנפח
+   * הקודם אף צירוף לא הגיע ל-8 דגימות — כלומר הפיצ'ר המרכזי של הלוח
+   * לא הופיע אפילו פעם אחת בקטגוריה המרכזית שלו. עומק הזריעה הוא
+   * תלוי-קוהורט, ולכן הוא חייב לזוז יחד איתו.
+   */
+  "private-cars": 420,
+  "commercial-vehicles": 24,
+  suvs: 120,
   motorcycles: 10,
   scooters: 6,
   "off-road": 2,
@@ -284,7 +292,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const admin = await prisma.user.create({
     data: {
-      email: "admin@metzia.co.il",
+      email: "admin@kedai.co.il",
       phone: "0500000000",
       name: "מנהל המערכת",
       passwordHash,
@@ -296,7 +304,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const demo = await prisma.user.create({
     data: {
-      email: "demo@metzia.co.il",
+      email: "demo@kedai.co.il",
       phone: "0501111111",
       name: "יעל דמו",
       passwordHash,
@@ -784,7 +792,7 @@ async function seedEngagement(
   await prisma.report.createMany({ data: reportRows });
 
   // התראות למשתמש הדמו
-  const demo = await prisma.user.findUnique({ where: { email: "demo@metzia.co.il" } });
+  const demo = await prisma.user.findUnique({ where: { email: "demo@kedai.co.il" } });
   if (demo) {
     await prisma.notification.createMany({
       data: [
@@ -908,8 +916,8 @@ async function main() {
   await syncAggregates();
 
   console.log(`\n✅ הזריעה הסתיימה תוך ${((Date.now() - started) / 1000).toFixed(1)} שניות`);
-  console.log("   מנהל:  admin@metzia.co.il / Password123!");
-  console.log("   דמו:   demo@metzia.co.il  / Password123!");
+  console.log("   מנהל:  admin@kedai.co.il / Password123!");
+  console.log("   דמו:   demo@kedai.co.il  / Password123!");
 }
 
 main()

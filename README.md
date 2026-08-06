@@ -10,8 +10,8 @@
 
 | תפקיד | דוא"ל | סיסמה |
 | --- | --- | --- |
-| מנהל | `admin@metzia.co.il` | `Password123!` |
-| משתמש | `demo@metzia.co.il` | `Password123!` |
+| מנהל | `admin@kedai.co.il` | `Password123!` |
+| משתמש | `demo@kedai.co.il` | `Password123!` |
 
 ---
 
@@ -64,8 +64,8 @@ npm run dev
 
 | תפקיד | אימייל | סיסמה |
 | --- | --- | --- |
-| מנהל | `admin@metzia.co.il` | `Password123!` |
-| משתמש | `demo@metzia.co.il` | `Password123!` |
+| מנהל | `admin@kedai.co.il` | `Password123!` |
+| משתמש | `demo@kedai.co.il` | `Password123!` |
 
 בסביבת פיתוח אין ספק SMS מוגדר, ולכן קוד ה-OTP מוצג בהודעת toast ונכתב ללוג
 השרת — אפשר להתחבר ולאמת טלפון בלי הגדרות נוספות.

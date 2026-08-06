@@ -8,6 +8,7 @@ import { RecentlyViewed } from "@/components/home/recently-viewed";
 import { ListingGrid, ListingGridSkeleton } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
 import { getCategoryTree } from "@/lib/categories";
+import { marketTicks } from "@/lib/market-ticks";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import { searchListingCards } from "@/lib/listings";
 import { prisma } from "@/lib/db";
@@ -34,16 +35,17 @@ const ADVANTAGES = [
 ];
 
 export default async function HomePage() {
-  const [tree, promoted, latest, stats] = await Promise.all([
+  const [tree, promoted, latest, stats, ticks] = await Promise.all([
     getCategoryTree(),
     searchListingCards({ promotedOnly: true, withImages: true, perPage: 4, sort: "date" }),
     searchListingCards({ withImages: true, perPage: 12, sort: "date" }),
     prisma.listing.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    marketTicks(),
   ]);
 
   return (
     <>
-      <HomeHero categories={tree} totalListings={stats} />
+      <HomeHero categories={tree} totalListings={stats} ticks={ticks} />
 
       <div className="container space-y-12 py-10">
         {/* --- קטגוריות --- */}

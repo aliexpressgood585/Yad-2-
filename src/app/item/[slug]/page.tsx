@@ -258,9 +258,17 @@ export default async function ListingPage({ params }: Props) {
         </aside>
       ) : null}
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      {/*
+       * בדסקטופ עמודת ההחלטה יושבת בצד שממנו מתחילים לקרוא.
+       *
+       * ב-RTL העמודה הראשונה בגריד היא הימנית, ולכן `360px` ראשון
+       * ממקם שם את המחיר, המד וכפתור יצירת הקשר — שלושת הדברים
+       * שבגללם המשתמש פתח את הדף. סדר ה-DOM נשאר תוכן-לפני-פעולה,
+       * כך שבנייד ובקורא מסך הגלריה והתיאור עדיין ראשונים.
+       */}
+      <div className="mt-4 grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         {/* --- עמודה ראשית --- */}
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-6 lg:col-start-2 lg:row-start-1">
           <div className={accent ? "relative isolate accent-halo" : undefined}>
             <Gallery
               images={images}
@@ -387,7 +395,12 @@ export default async function ListingPage({ params }: Props) {
             <h2 id="description-heading" className="mb-2 font-heading text-lg font-bold">
               תיאור המודעה
             </h2>
-            <p className="whitespace-pre-line text-pretty leading-relaxed">
+            {/*
+             * `max-w-[68ch]` — שורה ארוכה מזה מאבדת את העין בחזרה
+             * לתחילת השורה הבאה. בעברית זה חמור יותר: אין אותיות
+             * גבוהות ונמוכות שייצרו מקצב שעוזר לעקוב.
+             */}
+            <p className="max-w-[68ch] whitespace-pre-line text-pretty leading-relaxed">
               {listing.description}
             </p>
           </section>
@@ -421,7 +434,7 @@ export default async function ListingPage({ params }: Props) {
         </div>
 
         {/* --- עמודה צדדית --- */}
-        <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+        <aside className="space-y-4 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-32 lg:self-start">
           <ContactPanel
             listingId={listing.id}
             slug={listing.slug}

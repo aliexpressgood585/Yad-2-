@@ -8,9 +8,9 @@
  */
 
 const VERSION = "v2";
-const SHELL_CACHE = `metzia-shell-${VERSION}`;
-const ASSET_CACHE = `metzia-assets-${VERSION}`;
-const DATA_CACHE = `metzia-data-${VERSION}`;
+const SHELL_CACHE = `kedai-shell-${VERSION}`;
+const ASSET_CACHE = `kedai-assets-${VERSION}`;
+const DATA_CACHE = `kedai-data-${VERSION}`;
 
 const SHELL_URLS = ["/", "/offline", "/manifest.webmanifest"];
 

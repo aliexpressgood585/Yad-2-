@@ -29,6 +29,15 @@ export const PALETTE = {
   alarm: "#B33A12",
   /** טקסט משני — --muted-foreground בבהיר */
   muted: "#5F5C54",
+  /*
+   * קבועי הסקאלה — זהים ל-`--scale-plate` / `--scale-hair` / `--needle`
+   * ב-globals.css ול-`MARK_COLORS` בסימן. הם אינם תלויים בחוגה: לוחית
+   * המכשיר נראית אותו דבר בבהיר ובכהה, וזה מה שהופך אותה לאובייקט אחד
+   * ולא לרכיב שמשנה זהות לפי הרקע.
+   */
+  plate: "#17191C",
+  scaleHair: "#3C4148",
+  needle: "#FFAE00",
 } as const;
 
 /** חוגה כהה — הערכה הקנונית של הכיוון. */

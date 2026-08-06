@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import type { CategoryNode } from "@/lib/categories";
 import { formatCount } from "@/lib/format";
+import type { MarketTick } from "@/lib/market-ticks";
 
 const POPULAR = [
   "דירה 3 חדרים",
@@ -26,16 +27,34 @@ const POPULAR = [
   "עגלת תינוק",
 ];
 
+/** כמה זמן כל קריאה נשארת על המסך. */
+const TICK_MS = 5000;
+
 export function HomeHero({
   categories,
   totalListings,
+  ticks,
 }: {
   categories: CategoryNode[];
   totalListings: number;
+  ticks: MarketTick[];
 }) {
   const router = useRouter();
   const [q, setQ] = React.useState("");
   const [category, setCategory] = React.useState("all");
+  const [tick, setTick] = React.useState(0);
+
+  /*
+   * ההחלפה נעצרת כשהמשתמש ביקש פחות תנועה. קריאה שמתחלפת לבדה היא
+   * בדיוק הדפוס ש-`prefers-reduced-motion` נועד לעצור, ואז נשארת
+   * הראשונה — היא לא פחות נכונה מהאחרות.
+   */
+  React.useEffect(() => {
+    if (ticks.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setTick((t) => (t + 1) % ticks.length), TICK_MS);
+    return () => clearInterval(id);
+  }, [ticks.length]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,13 +69,34 @@ export function HomeHero({
       <div className="container py-10 sm:py-14">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-5xl">
-            כל מה שצריך, במקום אחד נקי
+            עכשיו אתה יודע
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-pretty text-muted-foreground">
+
+          {/*
+           * קריאות אמיתיות מהמודעות הפעילות ברגע זה, לא סלוגן.
+           *
+           * `aria-live="off"` בכוונה: זו תצוגה מתחלפת ולא עדכון שדורש
+           * הכרזה, והכרזה כל חמש שניות הופכת את הדף לבלתי שמיש בקורא
+           * מסך. הגובה קבוע כדי שהחלפה לא תזיז את תיבת החיפוש.
+           */}
+          {ticks.length ? (
+            <p
+              aria-live="off"
+              className="mx-auto mt-4 flex min-h-[3.25rem] max-w-xl flex-col items-center justify-center gap-0.5 text-pretty sm:min-h-[2.5rem] sm:flex-row sm:gap-2"
+            >
+              <span className="text-sm text-muted-foreground">{ticks[tick]!.subject}</span>
+              <span className="num text-lg font-semibold text-foreground">
+                {ticks[tick]!.value}
+              </span>
+              <span className="text-xs text-muted-foreground">{ticks[tick]!.note}</span>
+            </p>
+          ) : null}
+
+          <p className="mx-auto mt-2 max-w-xl text-pretty text-sm text-muted-foreground">
             <span className="num font-semibold text-foreground">
               {formatCount(totalListings)}
             </span>{" "}
-            מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — בלי באנרים מהבהבים ובלי לחכות לטעינה.
+            מודעות פעילות ברכב, נדל&quot;ן, יד שנייה ועוד — כל אחת עם הקריאה שלה מול השוק.
           </p>
 
           {/* נקודת הייחוס שההדר מודד מולה — ראה HeaderSearchSlot */}

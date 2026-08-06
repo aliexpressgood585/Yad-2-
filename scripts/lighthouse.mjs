@@ -20,6 +20,14 @@ const BASE = process.argv[2] ?? "http://127.0.0.1:3000";
 const PAGES = [
   { path: "/", name: "דף הבית" },
   { path: "/vehicles", name: "דף קטגוריה" },
+  /*
+   * דף מודעה — הדף שאליו מגיעים מגוגל ומשיתוף, כלומר הדף שנמדד בפועל.
+   * הנתיב נלקח מ-`E2E_ITEM_SLUG` אם הוגדר; אחרת נדלג עליו במקום להיכשל
+   * על מודעה שלא קיימת במסד הזה.
+   */
+  ...(process.env.LH_ITEM_SLUG
+    ? [{ path: `/item/${process.env.LH_ITEM_SLUG}`, name: "דף מודעה" }]
+    : []),
 ];
 
 /**

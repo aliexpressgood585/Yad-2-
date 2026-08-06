@@ -91,5 +91,5 @@ jobs:
             echo ""
             echo "**${{ steps.deploy.outputs.url }}**"
             echo ""
-            echo "התחברות כמנהל: \`admin@metzia.co.il\` / \`Password123!\`"
+            echo "התחברות כמנהל: \`admin@kedai.co.il\` / \`Password123!\`"
           } >> "$GITHUB_STEP_SUMMARY"

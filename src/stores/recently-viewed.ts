@@ -22,6 +22,6 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
       },
       clear: () => set({ ids: [] }),
     }),
-    { name: "metzia-recent", version: 1 },
+    { name: "kedai-recent", version: 1 },
   ),
 );

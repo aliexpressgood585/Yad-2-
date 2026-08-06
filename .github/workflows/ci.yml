@@ -38,7 +38,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: metzia
+          POSTGRES_DB: kedai
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
@@ -47,8 +47,8 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metzia?schema=public
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/metzia?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/kedai?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/kedai?schema=public
       AUTH_SECRET: ci-secret-not-used-in-production-0000000000
       AUTH_URL: http://localhost:3000
       AUTH_TRUST_HOST: "true"
