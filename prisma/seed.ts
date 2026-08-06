@@ -20,6 +20,7 @@ import {
 import { UNIQUE_CITIES, neighborhoodsOf } from "../src/lib/cities";
 import { buildSearchText, contentFingerprint } from "../src/lib/listing-text";
 import { cohortFor } from "../src/lib/price-cohort";
+import { assertSeedTarget } from "../scripts/demo-guard";
 import { REALESTATE_PLAN, VEHICLE_PLAN } from "./seed/cohort-plan";
 import { fuzzLocation, slugify } from "../src/lib/utils";
 
@@ -301,6 +302,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const admin = await prisma.user.create({
     data: {
+      isDemo: true,
       email: "admin@kedai.co.il",
       phone: "0500000000",
       name: "מנהל המערכת",
@@ -313,6 +315,7 @@ async function seedUsers(): Promise<SeedUser[]> {
 
   const demo = await prisma.user.create({
     data: {
+      isDemo: true,
       email: "demo@kedai.co.il",
       phone: "0501111111",
       name: "יעל דמו",
@@ -346,6 +349,7 @@ async function seedUsers(): Promise<SeedUser[]> {
     const ratingCount = rng.int(0, 60);
     const created = await prisma.user.create({
       data: {
+        isDemo: true,
           email: `user${i + 1}@example.com`,
           phone: `05${rng.int(0, 8)}${String(rng.int(1_000_000, 9_999_999))}`.slice(0, 10),
           name,
@@ -519,6 +523,8 @@ async function seedListings(users: SeedUser[], leaves: LeafInfo[]) {
 
       const listing = await prisma.listing.create({
         data: {
+          /* כל מה שהזריעה יוצרת הוא הדגמה, בלי יוצא מן הכלל. */
+          isDemo: true,
           slug,
           userId: owner.id,
           categoryId: leaf.id,
@@ -917,6 +923,12 @@ async function syncAggregates() {
 }
 
 async function main() {
+  /*
+   * לפני הכול: לוודא שהמסד שאליו מכוונים אינו פרודקשן. הזריעה מוחקת
+   * את כל התוכן, ואין ממנה חזרה.
+   */
+  assertSeedTarget();
+
   const started = Date.now();
   await reset();
 

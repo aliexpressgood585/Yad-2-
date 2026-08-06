@@ -92,6 +92,11 @@ enum BoostKind {
 // ---------------------------------------------------------------------------
 
 model User {
+  /// נתוני הדגמה. מסומן על ידי הזריעה בלבד.
+  /// בפרודקשן שורות כאלה מסוננות מכל שאילתה (ראה `src/lib/db.ts`),
+  /// כי מודעת דמו שמגיעה למשתמש אמיתי שולחת אותו להתקשר למוכר שלא קיים.
+  isDemo         Boolean   @default(false)
+
   id            String    @id @default(cuid())
   phone         String?   @unique
   email         String?   @unique
@@ -289,6 +294,11 @@ model ListingAttribute {
 // ---------------------------------------------------------------------------
 
 model Listing {
+  /// נתוני הדגמה. מסומן על ידי הזריעה בלבד.
+  /// בפרודקשן שורות כאלה מסוננות מכל שאילתה (ראה `src/lib/db.ts`),
+  /// כי מודעת דמו שמגיעה למשתמש אמיתי שולחת אותו להתקשר למוכר שלא קיים.
+  isDemo         Boolean   @default(false)
+
   id                  String        @id @default(cuid())
   slug                String        @unique
   userId              String
@@ -377,6 +387,9 @@ model Listing {
   @@index([city, status])
   @@index([price])
   @@index([isPromoted, promotedUntil])
+  /// סינון נתוני ההדגמה בפרודקשן
+  @@index([isDemo, status, deletedAt])
+
   /// מד המחיר: הקוהורט ההדוק ואחריו המורחב
   @@index([categoryId, status, cohortKey, comparableBand, price])
   @@index([categoryId, status, cohortKeyBroad, comparableBand, price])
