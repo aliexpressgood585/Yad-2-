@@ -164,7 +164,7 @@ ${BOLD}${GREEN}האתר באוויר${RESET}
 
   ${BOLD}${DEPLOY_URL}${RESET}
 
-  התחברות כמנהל:  admin@luach.co.il / Password123!
+  התחברות כמנהל:  admin@metzia.co.il / Password123!
   פאנל הניהול:    ${DEPLOY_URL}/admin
 
 ${DIM}  מומלץ להוסיף בהמשך (Vercel → Settings → Environment Variables):

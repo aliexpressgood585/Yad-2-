@@ -28,19 +28,19 @@ const COOKIES = [
     type: "העדפה",
   },
   {
-    name: "shnatot-compare",
+    name: "metzia-compare",
     purpose: "רשימת המודעות שבחרתם להשוואה (אחסון מקומי, לא נשלח לשרת).",
     duration: "עד לניקוי ידני",
     type: "העדפה",
   },
   {
-    name: "shnatot-recent",
+    name: "metzia-recent",
     purpose: 'מזהי המודעות שנצפו לאחרונה, לרצועת "נצפו לאחרונה" (אחסון מקומי).',
     duration: "עד לניקוי ידני",
     type: "העדפה",
   },
   {
-    name: "shnatot-publish-draft",
+    name: "metzia-publish-draft",
     purpose: "טיוטת המודעה שאתם כותבים, כדי שלא תאבד ברענון (אחסון מקומי).",
     duration: "עד לפרסום או לניקוי",
     type: "פונקציונלית",

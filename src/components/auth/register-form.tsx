@@ -58,7 +58,7 @@ export function RegisterForm() {
       router.push("/auth/login");
       return;
     }
-    toast.success("ברוכים הבאים לשנתות!");
+    toast.success("ברוכים הבאים למציאה!");
     router.push(callbackUrl);
     router.refresh();
   });

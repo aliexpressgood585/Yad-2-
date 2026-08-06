@@ -41,7 +41,7 @@ function upstashLimiter(key: RateLimitKey): Ratelimit | null {
     limiter = new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(cfg.limit, `${cfg.windowSec} s`),
-      prefix: `shnatot:rl:${key}`,
+      prefix: `metzia:rl:${key}`,
       analytics: false,
     });
     limiters.set(key, limiter);

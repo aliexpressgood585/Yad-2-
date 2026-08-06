@@ -48,6 +48,6 @@ export const useCompare = create<CompareState>()(
       remove: (id) => set({ items: get().items.filter((i) => i.id !== id) }),
       clear: () => set({ items: [] }),
     }),
-    { name: "shnatot-compare", version: 1 },
+    { name: "metzia-compare", version: 1 },
   ),
 );

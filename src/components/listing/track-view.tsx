@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { useRecentlyViewed } from "@/stores/recently-viewed";
 
-const SESSION_KEY = "shnatot-viewed";
+const SESSION_KEY = "metzia-viewed";
 
 /**
  * רושם צפייה במודעה פעם אחת לכל סשן דפדפן,

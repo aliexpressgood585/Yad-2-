@@ -34,7 +34,7 @@ export type PublishFormState = {
 
 const STEPS = ["קטגוריה", "פרטי המודעה", "תמונות", "תצוגה מקדימה"] as const;
 
-const DRAFT_KEY = "shnatot-publish-draft";
+const DRAFT_KEY = "metzia-publish-draft";
 const AUTOSAVE_MS = 1500;
 
 function emptyState(defaults: { phone: string; name: string }): PublishFormState {

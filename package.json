@@ -1,8 +1,8 @@
 {
-  "name": "shnatot",
+  "name": "metzia",
   "version": "1.0.0",
   "private": true,
-  "description": "לוח — פלטפורמת לוח מודעות ישראלית",
+  "description": "מציאה — לוח מודעות ישראלי שמודד מחירים",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -30,6 +30,7 @@
     "check:import": "tsx scripts/checks/import-check.ts",
     "test:ui": "playwright test",
     "lighthouse": "node scripts/lighthouse.mjs",
+    "icons": "tsx scripts/generate-icons.ts",
     "check:speed": "tsx scripts/checks/speed-check.ts",
     "check:availability": "tsx scripts/checks/availability-check.ts",
     "check:safe-deal": "tsx scripts/checks/safe-deal-check.ts",

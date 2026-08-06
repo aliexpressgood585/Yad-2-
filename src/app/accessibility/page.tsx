@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "הצהרת נגישות",
   description:
-    "הצהרת הנגישות של שנתות — עמידה בתקן ישראלי 5568 ובהנחיות WCAG 2.1 ברמה AA.",
+    "הצהרת הנגישות של מציאה — עמידה בתקן ישראלי 5568 ובהנחיות WCAG 2.1 ברמה AA.",
   alternates: { canonical: "/accessibility" },
 };
 

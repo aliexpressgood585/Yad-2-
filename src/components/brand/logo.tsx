@@ -1,19 +1,23 @@
 import Link from "next/link";
 
+import { markGeometry, MARK_VIEWBOX } from "@/lib/brand-mark";
 import { cn } from "@/lib/utils";
 
 /**
- * הלוגו הוא הסקאלה.
+ * הלוגו הוא הקריאה של המכשיר.
  *
  * **סימן המותג ורכיב החתימה של המוצר הם אותו אובייקט**: שורת שנתות עם
  * מחוג ענבר אחד — בדיוק מה שמופיע על כל מודעה כדי להראות איפה המחיר
  * יושב מול השוק.
  *
- * זה גם מה שהופך את השם לניתן להגנה: מתחרה שיאמץ אותו יצטרך לאמץ גם
- * את המנגנון שמאחוריו.
+ * ההבדל בין סימן טוב לסימן נכון הוא היכן עומד המחוג. מחוג במרכז מצייר
+ * *מכשיר*; מחוג עמוק בקצה הזול מצייר **מציאה**. שבירה אחת בלבד במקצב
+ * האפור, והיא בצבע הפעולה היחיד של המערכת — זה כל הסימן.
  *
- * ה-SVG נכתב ידנית ולא כקובץ: הוא שמונה קווים, והוא צריך לרשת את צבעי
- * הטוקנים — קובץ חיצוני היה מקבע את הצבע ונשבר במעבר בין החוגות.
+ * הגאומטריה מיובאת מ-`@/lib/brand-mark` ולא כתובה כאן, מפני שאותה צורה
+ * בדיוק צריכה לצאת גם כקובצי PNG לפאביקון ול-PWA. הצבעים לעומת זאת
+ * נשארים כאן כטוקנים חיים: הלוחית משתנה בין החוגה הבהירה לכהה, וקובץ
+ * SVG חיצוני עם צבע קפוא היה נשבר במעבר.
  */
 export function Logo({
   className,
@@ -24,6 +28,14 @@ export function Logo({
   showWordmark?: boolean;
   href?: string | null;
 }) {
+  /*
+   * צפיפות מצומצמת ולא מלאה: הסימן כאן הוא 24 פיקסלים, ובגודל הזה
+   * רווח של 3 יחידות בין שנתות הוא פחות משלושה פיקסלים ומתמזג לכתם.
+   * שנתות המשנה יורדות, הרווח האפור מוכפל, והמחוג נשאר במקומו —
+   * הוא נבדל בצבע ולא ברווח.
+   */
+  const mark = markGeometry("compact");
+
   const content = (
     <span className={cn("group inline-flex items-center gap-2", className)}>
       <span
@@ -33,36 +45,50 @@ export function Logo({
           "transition-transform duration-150 group-hover:-translate-y-0.5",
         )}
       >
-        <svg viewBox="0 0 28 20" className="w-6" role="presentation">
-          {/* שנתות: ארוכה־קצרה־קצרה לסירוגין, כמו על סרגל */}
-          {[2, 6, 10, 14, 18, 22, 26].map((x, i) => (
+        <svg
+          viewBox={`0 0 ${MARK_VIEWBOX.width} ${MARK_VIEWBOX.height}`}
+          className="w-6"
+          role="presentation"
+        >
+          {/* השוק: מקצב סדיר לגמרי, ראשית־משנה לסירוגין */}
+          {mark.ticks.map((tick) => (
             <line
-              key={x}
-              x1={x}
-              x2={x}
-              y1={i % 3 === 0 ? 8 : 12}
-              y2={17}
+              key={tick.x}
+              x1={tick.x}
+              x2={tick.x}
+              y1={tick.y1}
+              y2={tick.y2}
               stroke="hsl(var(--scale-hair))"
-              strokeWidth="1.5"
+              strokeWidth="1.1"
+              strokeLinecap="butt"
             />
           ))}
-          {/* המחוג — יחיד, ובצבע היחיד שמותר לו */}
+
+          {/* המציאה: המחוג היחיד, בענבר, בשמינית התחתונה של הסקאלה */}
           <line
-            x1="14"
-            x2="14"
-            y1="3"
-            y2="17"
+            x1={mark.needle.x}
+            x2={mark.needle.x}
+            y1={mark.needle.y1}
+            y2={mark.needle.y2}
             stroke="hsl(var(--needle))"
-            strokeWidth="2"
+            strokeWidth="1.6"
+            strokeLinecap="butt"
           />
-          <path d="M14 1.5 L16.2 4 L11.8 4 Z" fill="hsl(var(--needle))" />
+          <rect
+            x={mark.head.x - mark.head.size / 2}
+            y={mark.head.y - mark.head.size / 2}
+            width={mark.head.size}
+            height={mark.head.size}
+            fill="hsl(var(--needle))"
+            transform={`rotate(45 ${mark.head.x} ${mark.head.y})`}
+          />
         </svg>
       </span>
 
       {showWordmark ? (
-        <span className="font-heading text-xl font-extrabold">שנתות</span>
+        <span className="font-heading text-xl font-extrabold">מציאה</span>
       ) : null}
-      <span className="sr-only">שנתות — דף הבית</span>
+      <span className="sr-only">מציאה — דף הבית</span>
     </span>
   );
 

@@ -10,7 +10,7 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "shnatot-install-dismissed";
+const DISMISS_KEY = "metzia-install-dismissed";
 
 /**
  * רושם את ה-Service Worker ומציג הצעת התקנה של האפליקציה.

@@ -1,5 +1,5 @@
 /**
- * Service Worker של לוח.
+ * Service Worker של מציאה.
  *
  * אסטרטגיות:
  * - ניווטים: network-first עם נפילה למטמון ואז לעמוד /offline
@@ -7,10 +7,10 @@
  * - בקשות API: לא נשמרות במטמון, פרט למועדפים שזמינים גם אופליין
  */
 
-const VERSION = "v1";
-const SHELL_CACHE = `luach-shell-${VERSION}`;
-const ASSET_CACHE = `luach-assets-${VERSION}`;
-const DATA_CACHE = `luach-data-${VERSION}`;
+const VERSION = "v2";
+const SHELL_CACHE = `metzia-shell-${VERSION}`;
+const ASSET_CACHE = `metzia-assets-${VERSION}`;
+const DATA_CACHE = `metzia-data-${VERSION}`;
 
 const SHELL_URLS = ["/", "/offline", "/manifest.webmanifest"];
 

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
   title: "התחברות",
-  description: "התחברות לחשבון שלך בשנתות — באימייל וסיסמה או בקוד ב-SMS.",
+  description: "התחברות לחשבון שלך במציאה — באימייל וסיסמה או בקוד ב-SMS.",
   robots: { index: false, follow: false },
 };
 
