@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { authConfig } from "@/lib/auth.config";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { consumeOtp } from "@/lib/otp";
 import { normalizePhone } from "@/lib/utils";
 
@@ -36,6 +37,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(raw) {
         const parsed = passwordSchema.safeParse(raw);
         if (!parsed.success) return null;
+
+        /*
+         * הגבלת קצב על ניחוש סיסמאות, לפי כתובת המייל.
+         * המגבלה הוגדרה מזמן אבל מעולם לא נאכפה כאן — כלומר דף
+         * ההתחברות היה פתוח לניסיונות בלתי מוגבלים. המפתח הוא המייל
+         * ולא ה-IP, כי תוקף מחליף IP בקלות ולא את היעד.
+         */
+        const email = parsed.data.email.toLowerCase();
+        const gate = await rateLimit("login", `pw:${email}`);
+        if (!gate.success) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email.toLowerCase() },
@@ -70,6 +81,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const phone = normalizePhone(parsed.data.phone);
+
+        // אותו שיקול, על ניחוש קוד בן שש ספרות
+        const gate = await rateLimit("login", `otp:${phone}`);
+        if (!gate.success) return null;
+
         const ok = await consumeOtp(phone, parsed.data.code, "login");
         if (!ok) return null;
 

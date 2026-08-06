@@ -28,7 +28,8 @@ const csp = [
   `img-src 'self' blob: data: https://${remoteHosts.join(" https://")} https://*.basemaps.cartocdn.com https://tile.openstreetmap.org`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
-  "connect-src 'self' https://*.basemaps.cartocdn.com https://demotiles.maplibre.org https://tile.openstreetmap.org https://api.maptiler.com ws: wss:",
+  // Sentry שולח דוחות ל-ingest שלו; בלי ההיתר הזה כל דיווח נחסם
+  "connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://*.basemaps.cartocdn.com https://demotiles.maplibre.org https://tile.openstreetmap.org https://api.maptiler.com ws: wss:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { ApiError, handleError, ok, parseBody, requireSession } from "@/lib/api";
+import { ApiError, enforceRateLimit, handleError, ok, parseBody, requireSession } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { checkoutUrl, newReference, paymentsConfigured } from "@/lib/payments";
 import { BOOST_PACKAGES } from "@/lib/site";
@@ -26,6 +26,7 @@ const schema = z.object({
 export async function POST(req: Request) {
   try {
     const session = await requireSession();
+    await enforceRateLimit("publish", session.user.id);
     const { listingId, kind } = await parseBody(req, schema);
 
     const pkg = BOOST_PACKAGES.find((p) => p.kind === kind);
