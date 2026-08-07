@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Assistant, Noto_Sans_Hebrew, Rubik } from "next/font/google";
 
 import { CookieConsent } from "@/components/cookie-consent";
+import { NeedleSettle } from "@/components/listing/needle-settle";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -117,6 +118,7 @@ export default function RootLayout({
           <MobileTabBar />
           <PwaRegister />
         </Providers>
+        <NeedleSettle />
         <CookieConsent />
       </body>
     </html>

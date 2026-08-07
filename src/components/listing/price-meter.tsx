@@ -1,3 +1,5 @@
+import * as React from "react";
+
 import type { PriceMeter as PriceMeterData } from "@/lib/price-meter";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +74,15 @@ export function PriceMeter({
         role="img"
         aria-label={`המחיר ${below ? "נמוך" : "גבוה"} ב-${magnitude} אחוז מחציון של ${meter.sample} מודעות דומות`}
       >
-        <span className="price-scale-needle" style={{ insetInlineStart: `${position}%` }} />
+        {/*
+         * `--needle-target` ולא `inset-inline-start` ישיר: האנימציה
+         * צריכה לדעת לאן להגיע, וערך סופי שנכתב על הסגנון היה גובר
+         * עליה. המיקום הסופי זהה — הוא פשוט מגיע דרך האנימציה.
+         */}
+        <span
+          className="price-scale-needle"
+          style={{ "--needle-target": `${position}%` } as React.CSSProperties}
+        />
       </div>
 
       {/*

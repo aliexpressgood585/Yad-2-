@@ -120,7 +120,11 @@ export function ContactPanel({
   );
 
   return (
-    <Card>
+    /*
+     * לא מודפס: כפתור "הצגת מספר" על נייר הוא כפתור שאי אפשר ללחוץ
+     * עליו, והמספר עצמו ממילא אינו במטען לפני חשיפה.
+     */
+    <Card data-print-hide>
       <CardContent className="space-y-3 p-4">
         <p className="text-sm">
           יצירת קשר עם <span className="font-semibold">{contactName}</span>

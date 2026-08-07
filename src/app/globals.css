@@ -531,6 +531,51 @@
     box-shadow: 0 0 6px hsl(var(--needle) / 0.65);
   }
 
+  /*
+   * המחוג מתייצב, לא מופיע.
+   *
+   * מחוג של מכשיר פיזי לא קופץ למקום — הוא נזרק מעבר לקריאה, חוזר,
+   * ונח. התנועה הזאת היא מה שאומר לעין "זה נמדד" ולא "זה צויר",
+   * וזה הרגע היחיד בממשק שבו מותר לתנועה למשוך תשומת לב.
+   *
+   * מתחיל מהחציון (50%) כי זו נקודת האפס של המכשיר, ולא מהקצה:
+   * מחוג שיוצא משוליים אינו מחוג אלא סרגל טעינה.
+   *
+   * ה-easing עם ה-overshoot הוא היחיד בפרויקט שחורג מ-easing היחיד
+   * של המערכת. החריגה מכוונת ומוגבלת לאלמנט הזה בלבד.
+   */
+  @keyframes needle-settle {
+    0% {
+      inset-inline-start: 50%;
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    100% {
+      inset-inline-start: var(--needle-target);
+      opacity: 1;
+    }
+  }
+
+  .price-scale-needle {
+    animation: needle-settle 620ms cubic-bezier(0.2, 1.5, 0.35, 1) both;
+  }
+
+  /*
+   * מכל שנמצא מחוץ למסך אינו מנפיש. אחרת כל 24 המחוגים בעמוד רצים
+   * יחד בטעינה, וזה הופך אלמנט קריאה לרעש.
+   */
+  .price-scale:not([data-settled]) .price-scale-needle {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .price-scale-needle {
+      animation: none;
+    }
+  }
+
   /* ראש המחוג — מעוין קטן שמבליט את הקריאה בלי להגדיל את הרכיב */
   .price-scale-needle::after {
     content: "";
@@ -586,4 +631,164 @@
 .maplibregl-popup-tip {
   border-top-color: hsl(var(--card)) !important;
   border-bottom-color: hsl(var(--card)) !important;
+}
+
+/* --- כרומו: בחירה, גלילה, מיקוד -------------------------------------------
+   שלושה פרטים שאף אחד לא מבקש ושכולם רואים. ברירת המחדל של הדפדפן
+   בכל אחד מהם היא כחול מערכת — הצבע היחיד שאינו קיים בפלטה הזאת,
+   ולכן הוא מסגיר בכל פעם שהעיצוב נגמר.
+   ------------------------------------------------------------------------ */
+
+::selection {
+  /* ענבר על גרפיט הוא צמד הצבעים של המכשיר; הבחירה ממשיכה אותו */
+  background: hsl(var(--needle) / 0.28);
+  color: hsl(var(--foreground));
+}
+
+/*
+   פס גלילה דק בצבעי החוגה. `scrollbar-gutter: stable` מונע את הקפיצה
+   האופקית של כל הדף כשעוברים מדף קצר לדף ארוך — תזוזה של 15 פיקסלים
+   שמורגשת בדיוק ברגע המעבר.
+*/
+html {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--hair)) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--hair));
+  border: 3px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/*
+   מיקוד מקלדת: טבעת בצבע הפעולה עם היסט, ולא קו כחול צמוד.
+   `:focus-visible` בלבד — טבעת שמופיעה בלחיצת עכבר מלמדת להתעלם
+   ממנה, ואז היא כבר לא עוזרת למי שבאמת מנווט במקלדת.
+*/
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--needle));
+  outline-offset: 2px;
+}
+
+/* --- הדפסה ----------------------------------------------------------------
+   מודעת דירה ומודעת רכב מודפסות. אנשים לוקחים אותן לסיור, מסמנים
+   עליהן ומשווים ביניהן על שולחן — וזה בדיוק הרגע שבו הלוח מתחרה
+   בהדפסה של מתחרה.
+
+   הדף המודפס אינו צילום מסך: הניווט, הכפתורים והמפה יורדים, והמידע
+   נפרס לגיליון מפרט. הסקאלה נשארת — היא הסיבה שהעמוד הזה שווה יותר
+   מהתחרות גם על נייר.
+   ------------------------------------------------------------------------ */
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /*
+     דיו על נייר, בלי תלות בחוגה שהמשתמש בחר. כל הטוקנים מוחלפים ולא
+     רק חלקם — טוקן אחד ששרד צובע רקע שלם והופך את הדף לכתם.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --muted: 0 0% 100%;
+    --muted-foreground: 0 0% 32%;
+    --border: 0 0% 78%;
+    --card: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 0 0% 0%;
+    --info: 0 0% 0%;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* כל מה שאינו תוכן המודעה */
+  header,
+  footer,
+  nav,
+  [data-print-hide],
+  /* פקדי גלריה, שמירה ושיתוף — כפתורים שאי אפשר ללחוץ עליהם על נייר */
+  button,
+  [role="tablist"],
+  .maplibregl-map,
+  [role="dialog"],
+  [role="region"][aria-label="הודעת עוגיות"] {
+    display: none !important;
+  }
+
+  /* צל ומסגרת מבזבזים טונר ולא מוסיפים דבר על נייר */
+  * {
+    box-shadow: none !important;
+  }
+
+  /*
+     הסקאלה מודפסת. רקע גרפיט מלא הוא כתם שחור על נייר, ולכן
+     הלוחית הופכת למסגרת והמחוג לקו שחור מלא — אותה קריאה בדיוק,
+     בשפה של דיו.
+  */
+  .price-scale {
+    background: #fff !important;
+    border: 1px solid #000;
+    height: 8mm;
+  }
+  .price-scale-needle {
+    background: #000 !important;
+    box-shadow: none !important;
+    width: 1.2mm;
+    animation: none !important;
+    inset-inline-start: var(--needle-target) !important;
+  }
+  .price-scale-needle::after {
+    background: #000 !important;
+  }
+
+  /* כתובת המקור, כדי שדף מודפס יוביל חזרה */
+  main a[href^="/"]::after {
+    content: "";
+  }
+
+  /*
+     הגלריה על נייר היא תמונה אחת קטנה ולא חצי עמוד. יחס 4:3 שנקבע
+     למסך הופך בהדפסה למלבן ריק שדוחף את המפרט לעמוד השני — והמפרט
+     הוא כל הסיבה שמדפיסים.
+  */
+  [class*="aspect-"] {
+    aspect-ratio: auto !important;
+    height: 55mm !important;
+  }
+
+  img {
+    max-height: 55mm;
+    object-fit: contain;
+  }
+
+  /* כותרת לא נשארת לבד בתחתית עמוד */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid-page;
+  }
+  article,
+  section {
+    break-inside: avoid-page;
+  }
 }

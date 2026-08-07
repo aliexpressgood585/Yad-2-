@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Home, Search } from "lucide-react";
 
+import { FaultPlate } from "@/components/fault-plate";
 import { Button } from "@/components/ui/button";
 import { getRootCategories } from "@/lib/categories";
 
@@ -9,7 +10,12 @@ export default async function NotFound() {
 
   return (
     <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-5 py-12 text-center">
-      <p className="font-heading text-6xl font-extrabold text-primary num">404</p>
+      {/*
+       * אותה לוחית, אותו מחוג — אבל הוא נפל מעבר לקצה. דף שגיאה
+       * שנראה כמו המשך של המוצר אומר "המכשיר לא מודד עכשיו" במקום
+       * "משהו התפוצץ".
+       */}
+      <FaultPlate code="404" />
 
       <div>
         <h1 className="font-heading text-2xl font-extrabold">הדף לא נמצא</h1>
