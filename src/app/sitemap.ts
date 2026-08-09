@@ -10,7 +10,34 @@ import { cityTargets, guideTargets } from "@/lib/valuation";
 /** מספר המודעות המרבי בקובץ אחד — Google מגביל ל-50,000 כתובות. */
 const MAX_LISTINGS = 20_000;
 
+/**
+ * כמה מפות להצהיר עליהן כשהמסד אינו זמין בזמן הבנייה.
+ *
+ * המספר מכסה את קטגוריות השורש בפועל. מפה שמזהה שלה חורג ממספר
+ * הקטגוריות תצא ריקה, וזה מחיר זניח לעומת החלופה — פריסה שנופלת.
+ */
+const FALLBACK_SHARDS = 8;
+
 export const revalidate = 3600;
+
+/**
+ * כל קריאה למסד כאן עטופה בנפילה רכה.
+ *
+ * **מפת אתר אינה שווה פריסה שנכשלת.** היא נבנית מראש בזמן הבנייה,
+ * ולכן מסד שאינו זמין באותו רגע — משתנה סביבה חסר ב-Vercel, מסד
+ * שישן, חלון תחזוקה — הפיל את כל הדפלוי ולא רק את ה-XML. זה בדיוק
+ * מה שקרה בפרודקשן: שמונה מפות נפלו ולקחו איתן אתר שלם שנבנה כהלכה.
+ *
+ * עכשיו מפה חסרת נתונים יוצאת חלקית, ו-ISR ממלא אותה תוך שעה.
+ */
+async function safe<T>(promise: Promise<T[]>, what: string): Promise<T[]> {
+  try {
+    return await promise;
+  } catch (error) {
+    console.error(`[sitemap] ${what} לא נשלף — המפה תצא חלקית`, error);
+    return [];
+  }
+}
 
 /**
  * מפת האתר מפוצלת לפי קטגוריית שורש.
@@ -24,9 +51,17 @@ export const revalidate = 3600;
  * ה-Prisma, ולכן `findMany` כאן אינו רואה אותן מלכתחילה.
  */
 export async function generateSitemaps() {
-  const roots = (await getFlatCategories()).filter((c) => !c.parentId);
-  // 0 הוא המפה הכללית: דפים סטטיים, קטגוריות ודפי מחירון
-  return [{ id: 0 }, ...roots.map((_, i) => ({ id: i + 1 }))];
+  try {
+    const roots = (await getFlatCategories()).filter((c) => !c.parentId);
+    // 0 הוא המפה הכללית: דפים סטטיים, קטגוריות ודפי מחירון
+    return [{ id: 0 }, ...roots.map((_, i) => ({ id: i + 1 }))];
+  } catch (error) {
+    console.error(
+      "[sitemap] המסד אינו זמין בזמן הבנייה — נוצרות מפות גיבוי במקום להפיל את הפריסה",
+      error,
+    );
+    return Array.from({ length: FALLBACK_SHARDS }, (_, id) => ({ id }));
+  }
 }
 
 export default async function sitemap({
@@ -73,7 +108,7 @@ export default async function sitemap({
     { url: `${base}/accessibility`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  const flat = await getFlatCategories();
+  const flat = await safe(getFlatCategories(), "הקטגוריות");
   const categories = flat;
   const byId = new Map(categories.map((c) => [c.id, c]));
 
@@ -94,7 +129,10 @@ export default async function sitemap({
    * מספר. כתובת שתגיע מהסיטמאפ אל דף שאומר "אין נתונים" היא בדיוק סוג
    * הדף הדל שגורם לאתר להיראות ממולא אוטומטית.
    */
-  const [guides, cities] = await Promise.all([guideTargets(), cityTargets()]);
+  const [guides, cities] = await Promise.all([
+    safe(guideTargets(), "יעדי המחירון"),
+    safe(cityTargets(), "יעדי המחירים לפי עיר"),
+  ]);
 
   const guidePages: MetadataRoute.Sitemap = [
     ...new Set(guides.map((g) => g.manufacturer)),
@@ -133,19 +171,25 @@ export default async function sitemap({
 
   const [listings, businesses] = await Promise.all([
     root
-      ? prisma.listing.findMany({
-          where: { status: "ACTIVE", deletedAt: null, categoryId: { in: rootIds } },
-          select: { slug: true, updatedAt: true },
-          orderBy: { publishedAt: "desc" },
-          take: MAX_LISTINGS,
-        })
+      ? safe(
+          prisma.listing.findMany({
+            where: { status: "ACTIVE", deletedAt: null, categoryId: { in: rootIds } },
+            select: { slug: true, updatedAt: true },
+            orderBy: { publishedAt: "desc" },
+            take: MAX_LISTINGS,
+          }),
+          "המודעות",
+        )
       : Promise.resolve([]),
     index === 0
-      ? prisma.user.findMany({
-          where: { businessSlug: { not: null }, deletedAt: null, isBlocked: false },
-          select: { businessSlug: true, updatedAt: true },
-          take: 2000,
-        })
+      ? safe(
+          prisma.user.findMany({
+            where: { businessSlug: { not: null }, deletedAt: null, isBlocked: false },
+            select: { businessSlug: true, updatedAt: true },
+            take: 2000,
+          }),
+          "בתי העסק",
+        )
       : Promise.resolve([]),
   ]);
 
