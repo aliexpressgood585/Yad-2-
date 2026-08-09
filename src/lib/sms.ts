@@ -136,6 +136,23 @@ export async function sendSms(phone: string, body: string): Promise<SmsResult> {
       console.error(
         `[sms] אין ספק SMS מוגדר (SMS_PROVIDER). ההודעה אל ${phone} לא נשלחה.`,
       );
+
+      /*
+       * `SMS_ECHO_TO_LOG` הוא שסתום ל-CI בלבד.
+       *
+       * בדיקת הקבלה מריצה שרת פרודקשן אמיתי וקוראת את קוד האימות מלוג
+       * השרת — זו הדרך היחידה לבדוק הרשמה מקצה לקצה בלי חשבון SMS.
+       * בלי הדגל הקוד אינו נכתב, וזה הנכון: קוד אימות בלוג של שרת
+       * פרודקשן הוא קוד שכל מי שקורא לוגים יכול להתחזות איתו.
+       *
+       * ברירת המחדל היא כבוי, וההפעלה מפורשת — בדיוק כמו
+       * `ALLOW_DEMO_DATA`.
+       */
+      if (process.env.SMS_ECHO_TO_LOG === "true") {
+        console.info(`[SMS→${phone}] ${body}`);
+        return { sent: true, provider: "console" };
+      }
+
       return { sent: false, provider: "none", error: "SMS_PROVIDER חסר" };
     }
     console.info(`[SMS→${phone}] ${body}`);

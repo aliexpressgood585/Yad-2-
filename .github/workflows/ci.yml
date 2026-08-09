@@ -67,6 +67,9 @@ jobs:
       # ------------------------------------------------------------------
       ALLOW_DEMO_DATA: "true"
 
+      # בדיקת הקבלה קוראת את קוד האימות מלוג השרת — ראה src/lib/sms.ts
+      SMS_ECHO_TO_LOG: "true"
+
     steps:
       - uses: actions/checkout@v4
 
