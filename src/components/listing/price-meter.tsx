@@ -79,9 +79,19 @@ export function PriceMeter({
          * צריכה לדעת לאן להגיע, וערך סופי שנכתב על הסגנון היה גובר
          * עליה. המיקום הסופי זהה — הוא פשוט מגיע דרך האנימציה.
          */}
+        {/*
+         * צבע המחוג הוא הקריאה עצמה: ירוק מתחת לחציון, כתום מעליו.
+         * זה מה שהופך את הכתום מצבע מותג לסימן — מי שרואה אותו למד
+         * משהו על המחיר ולא על מי בנה את האתר.
+         */}
         <span
           className="price-scale-needle"
-          style={{ "--needle-target": `${position}%` } as React.CSSProperties}
+          style={
+            {
+              "--needle-target": `${position}%`,
+              "--needle": below ? "var(--needle-under)" : "var(--needle-over)",
+            } as React.CSSProperties
+          }
         />
       </div>
 

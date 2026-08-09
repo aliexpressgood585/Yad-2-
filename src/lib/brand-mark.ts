@@ -115,9 +115,14 @@ export function markGeometry(density: MarkDensity = "full"): MarkGeometry {
 
 /** צבעי הסימן. שווים בערכם לטוקנים `--scale-plate/--scale-hair/--needle`. */
 export const MARK_COLORS = {
-  plate: "#17191c",
-  hair: "#3c4148",
-  needle: "#ffae00",
+  plate: "#1c1f23",
+  hair: "#474d54",
+  /*
+   * ירוק ולא כתום. המחוג בסימן יושב בקצה הזול, ולפי הסמנטיקה החדשה
+   * זה בדיוק מה שירוק אומר — מחיר מתחת לחציון. הסימן והקריאה מדברים
+   * עכשיו באותה שפה, וזה מה שהופך אותו לסימן ולא לקישוט.
+   */
+  needle: "#2fb87a",
 } as const;
 
 /**

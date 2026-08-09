@@ -28,7 +28,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          /*
+           * בהיר הוא ברירת המחדל, לא `system`.
+           *
+           * רוב המשתמשים בלוח מודעות ישראלי הם בנייד באור יום, ושם
+           * חוגה כהה היא מסך שקשה לקרוא. `enableSystem` נשאר דלוק
+           * ולכן מי שהגדיר העדפה כהה במכשיר עדיין מקבל אותה בביקור
+           * הראשון — ההבדל הוא במה שקורה כשאין העדפה.
+           */
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

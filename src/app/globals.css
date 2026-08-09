@@ -25,147 +25,168 @@
 
      שני הצבעים האלה אינם צבעי ממשק. אסור להשתמש בהם מחוץ לסקאלה.
      ------------------------------------------------------------------ */
+  /*
+   * קבועי הסקאלה — אינם תלויים בחוגה. לוחית המכשיר נראית אותו דבר
+   * בבהיר ובכהה, וזה מה שהופך אותה לאובייקט אחד ולא לרכיב שמשנה
+   * זהות לפי הרקע.
+   *
+   * **שני מחוגים ולא אחד.** זו הסמנטיקה החדשה: המחוג ירוק כשהמחיר
+   * מתחת לחציון וכתום כשהוא מעליו. הצבע מלמד משהו על המחיר במקום
+   * להיות צבע המותג, וזו ההצדקה היחידה להשאיר כתום רווי במערכת.
+   */
   :root {
-    --scale-plate: 216 10% 10%;
-    --scale-hair: 216 9% 26%;
-    --needle: 41 100% 50%;
+    --scale-plate: 210 12% 12%;
+    --scale-hair: 210 8% 30%;
+    --needle-under: 156 62% 46%;
+    --needle-over: 24 95% 55%;
+    /* ברירת מחדל לרכיבים שאין להם קריאה — הסימן והאייקונים */
+    --needle: var(--needle-under);
   }
 
   :root {
-    /* --- הפלטה הגולמית — חוגה בהירה -------------------------------------
-       ink    #16181B   bone   #E6E2D6   amber  #8A5200
-       verdict #10606E  hair   #C9C3B4   alarm  #B33A12              */
-    --ink: 216 10% 10%;
-    --bone: 45 24% 87%;
-    --amber: 36 100% 27%;
-    --verdict: 189 75% 25%;
-    --hair: 43 16% 75%;
-    --alarm: 16 82% 39%;
+    /* --- הפלטה הגולמית — שילוט ישראלי ------------------------------------
+       ink    #14171A   paper  #F7F5F0   sign   #005F3C
+       route  #0B4A8F   stone  #DDD8CE   signal #C2410C
+
+       המקור הוא שילוט הדרכים הישראלי: ירוק בין-עירוני הוא צבע הפעולה,
+       כחול עירוני הוא צבע המידע, וחול ירושלמי הוא הנייר.
+
+       **למה לא ענבר על גרפיט.** הכיוון הקודם היה כתום רווי על שחור,
+       וזו שפת הימורים וקריפטו — היא עובדת נגד מוצר שכל מה שהוא מוכר
+       הוא אמון במספר. בנוסף רוב המשתמשים בנייד באור יום, ושם חוגה
+       כהה היא מסך שקשה לקרוא ולא החלטה עיצובית.
+       -------------------------------------------------------------------- */
+    --ink: 210 12% 9%;
+    --paper: 40 24% 96%;
+    --sign: 158 100% 19%;
+    --route: 211 86% 30%;
+    --stone: 39 20% 84%;
+    --signal: 20 91% 40%;
 
     /* --- תפקידים --------------------------------------------------------- */
-    --background: var(--bone);
+    --background: var(--paper);
     --foreground: var(--ink);
 
-    /* המשטח בהיר מהחוגה — הפרדה בגוון, אף פעם לא בקו כבד */
-    --card: 44 28% 92%;
+    /* הכרטיס לבן על נייר החול — ההפרדה נעשית בגוון, לא בקו כבד */
+    --card: 0 0% 100%;
     --card-foreground: var(--ink);
 
-    --popover: 44 30% 94%;
+    --popover: 0 0% 100%;
     --popover-foreground: var(--ink);
 
-    /*
-     * צבע הפעולה היחיד.
-     * בחוגה בהירה הענבר מעומק לברונזה: #FFB000 מול עצם נותן יחס 1.4,
-     * כלומר כפתור שאי אפשר לקרוא. הענבר הזוהר נשאר בסקאלה בלבד.
-     */
-    --primary: var(--amber);
-    --primary-foreground: 45 30% 94%;
-    --primary-soft: 42 34% 82%;
+    /* צבע הפעולה היחיד באפליקציה */
+    --primary: var(--sign);
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 158 34% 93%;
 
-    --secondary: 44 20% 83%;
+    --secondary: 40 18% 92%;
     --secondary-foreground: var(--ink);
 
-    /* פסק דין — קריאה, לא פעולה. אין לו כפתור מלא בשום מסך. */
-    --info: var(--verdict);
-    --info-foreground: 45 30% 94%;
-
-    /* אזהרות וירידות מחיר בלבד */
-    --accent: var(--alarm);
-    --accent-foreground: 45 30% 94%;
-
-    --muted: 44 20% 85%;
-    --muted-foreground: 45 6% 35%;
-
-    --destructive: 6 74% 38%;
-    --destructive-foreground: 45 30% 94%;
-
-    --success: var(--verdict);
-    --success-foreground: 45 30% 94%;
-
-    --warning: var(--alarm);
-    --warning-foreground: 45 30% 94%;
-
-    --border: var(--hair);
-    --input: 43 14% 68%;
-    --ring: var(--amber);
-
-    --shadow-color: 216 10% 10%;
+    /* מידע וקישורים — לא פעולה. אין לו כפתור מלא בשום מסך. */
+    --info: var(--route);
+    --info-foreground: 0 0% 100%;
 
     /*
-     * שכבת הצבע הנדגם.
+     * `--accent` הוא **הקריאה של מד המחיר בלבד**, ולא צבע מותג.
      *
-     * `--listing-accent` מוזרק בדף המודעה כ-"H S%" בלבד, והבהירות
-     * מגיעה מכאן — ראה `src/lib/listing-accent.ts`. על חוגה בהירה
-     * ההדגשה חייבת להיות כהה מהרקע כדי להיראות בכלל.
+     * זה כל ההבדל בין כתום שעובד בשביל המוצר לכתום שעובד נגדו: הוא
+     * מסמן מחיר מעל החציון, וירוק מסמן מתחת. מי שרואה כתום בלוח הזה
+     * למד משהו על המחיר, ולא על מי בנה את האתר.
      */
-    --accent-hs: 43 16%;
-    --accent-l: 44%;
+    --accent: var(--signal);
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 40 18% 93%;
+    --muted-foreground: 213 8% 38%;
+
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: var(--sign);
+    --success-foreground: 0 0% 100%;
+
+    --warning: var(--signal);
+    --warning-foreground: 0 0% 100%;
+
+    --border: var(--stone);
+    --input: 39 18% 78%;
+    --ring: var(--sign);
+
+    --shadow-color: 210 12% 9%;
 
     /*
-     * אפס עיגול. מכשיר מדידה אינו מעוגל, והפינה החדה היא מה שמבדיל
-     * את הלוח מכל כרטיס `rounded-lg` באינטרנט. הצ'יפים היחידים שנשארו
-     * עגולים משתמשים ב-`rounded-full` שאינו נגזר מהטוקן הזה.
+     * שכבת הצבע הנדגם. `--listing-accent` מוזרק בדף המודעה כ-"H S%"
+     * בלבד, והבהירות מגיעה מכאן — ראה `src/lib/listing-accent.ts`.
      */
-    --radius: 0rem;
+    --accent-hs: 39 20%;
+    --accent-l: 46%;
+
+    /*
+     * 10px בכרטיסים. הכפתורים נגזרים ל-8px והצ'יפים ל-999px.
+     *
+     * הכיוון הקודם קבע אפס עיגול ("מכשיר מדידה אינו מעוגל"), וזה היה
+     * טיעון על מטאפורה ולא על שימוש: פינה חדה בכרטיס נגיעה בנייד
+     * נקראת כשגיאת רינדור, לא כדיוק.
+     */
+    --radius: 0.625rem;
   }
 
   /*
-   * חוגה כהה — זו הערכה הקנונית של הכיוון.
-   * היא אינה היפוך של הבהירה: הענבר חוזר כאן לזוהר המלא שלו (#FFB000)
-   * מפני שעל גרפיט הוא נותן יחס 9.7, והציאן מתבהר מ-#10606E ל-#58C6D8
-   * מאותה סיבה בדיוק.
+   * מצב לילה נבנה מחדש ואינו היפוך.
+   * היפוך היה מכהה את ירוק השילוט ומאבד ניגודיות; כאן הוא מתבהר
+   * ל-#2FA875 כדי לשמור על AA מול הרקע.
    */
   .dark {
-    --ink: 45 24% 87%;
-    --bone: 216 10% 10%;
-    --amber: 41 100% 50%;
-    --verdict: 188 62% 60%;
-    --hair: 216 9% 22%;
-    --alarm: 16 76% 60%;
+    --ink: 40 20% 94%;
+    --paper: 210 8% 10%;
+    --sign: 156 57% 42%;
+    --route: 211 70% 62%;
+    --stone: 210 7% 24%;
+    --signal: 20 85% 58%;
 
-    --background: var(--bone);
+    --background: var(--paper);
     --foreground: var(--ink);
 
-    --card: 217 12% 13%;
+    --card: 210 8% 13%;
     --card-foreground: var(--ink);
 
-    --popover: 217 12% 15%;
+    --popover: 210 8% 14%;
     --popover-foreground: var(--ink);
 
-    --primary: var(--amber);
-    --primary-foreground: 36 100% 8%;
-    --primary-soft: 40 30% 17%;
+    --primary: var(--sign);
+    --primary-foreground: 158 60% 7%;
+    --primary-soft: 158 26% 18%;
 
-    --secondary: 217 10% 18%;
+    --secondary: 210 7% 18%;
     --secondary-foreground: var(--ink);
 
-    --info: var(--verdict);
-    --info-foreground: 189 70% 8%;
+    --info: var(--route);
+    --info-foreground: 211 60% 8%;
 
-    --accent: var(--alarm);
-    --accent-foreground: 16 60% 9%;
+    --accent: var(--signal);
+    --accent-foreground: 20 60% 8%;
 
-    --muted: 217 10% 17%;
-    --muted-foreground: 210 5% 62%;
+    --muted: 210 7% 17%;
+    --muted-foreground: 210 8% 65%;
 
-    --destructive: 6 66% 58%;
-    --destructive-foreground: 6 60% 8%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: var(--verdict);
-    --success-foreground: 189 70% 8%;
+    --success: var(--sign);
+    --success-foreground: 158 60% 7%;
 
-    --warning: var(--alarm);
-    --warning-foreground: 16 60% 9%;
+    --warning: var(--signal);
+    --warning-foreground: 20 60% 8%;
 
-    --border: var(--hair);
-    --input: 217 10% 28%;
-    --ring: var(--amber);
+    --border: var(--stone);
+    --input: 210 7% 28%;
+    --ring: var(--sign);
 
     --shadow-color: 0 0% 0%;
 
-    /* על גרפיט ההדגשה חייבת להיות בהירה מהרקע — אותו צבע, כיוון הפוך */
-    --accent-hs: 216 9%;
-    --accent-l: 64%;
+    /* על רקע כהה ההדגשה חייבת להיות בהירה מהרקע — אותו גוון, כיוון הפוך */
+    --accent-hs: 39 14%;
+    --accent-l: 68%;
   }
 
   * {

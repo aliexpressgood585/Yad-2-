@@ -13,7 +13,7 @@ export const SITE = {
   description: BRAND.description,
   url: BRAND.domain,
   locale: "he_IL",
-  themeColor: "#16181B",
+  themeColor: "#F7F5F0",
 } as const;
 
 /**
