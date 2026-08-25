@@ -28,6 +28,8 @@ type Props = {
   priceLabel?: string;
   valueFacets?: ValueFacets;
   className?: string;
+  /** מסתיר את הכותרת חזותית — לשימוש בגיליון שכבר יש בו `DialogTitle`. */
+  headingHidden?: boolean;
 };
 
 /** ספירת תוצאות ליד תווית פילטר. חסרה ספירה — לא מוצג כלום. */
@@ -49,6 +51,7 @@ export function FilterPanel({
   priceLabel = "מחיר",
   valueFacets = {},
   className,
+  headingHidden = false,
 }: Props) {
   const { state, setParam, setAttrValues, setAttrRange, setAttrBool, clearAll, push } =
     useFilterParams();
@@ -70,7 +73,14 @@ export function FilterPanel({
   return (
     <div className={cn("space-y-1", className)}>
       <div className="flex items-center justify-between pb-1">
-        <h2 className="font-heading text-base font-bold">סינון</h2>
+        {/*
+          * בגיליון הנייד הכותרת כבר קיימת כ-`DialogTitle`, ולכן היא
+          * מוסתרת חזותית ולא נמחקת: קורא מסך עדיין צריך את המבנה,
+          * והעין לא צריכה לקרוא "סינון תוצאות" ומיד מתחתיה "סינון".
+          */}
+        <h2 className={cn("font-heading text-base font-bold", headingHidden && "sr-only")}>
+          סינון
+        </h2>
         {activeCount > 0 ? (
           <Button variant="ghost" size="sm" onClick={clearAll}>
             <RotateCcw aria-hidden />

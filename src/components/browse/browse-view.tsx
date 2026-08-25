@@ -228,9 +228,24 @@ async function BrowseResults({
               }
               action={
                 hasQuery ? (
-                  <Button asChild variant="outline">
-                    <Link href="/">חזרה לדף הבית</Link>
-                  </Button>
+                  /*
+                   * חיפוש ללא תוצאות הוא ביקוש שהלוח עוד לא יודע
+                   * לספק. "חזרה לדף הבית" מסיים את הביקור; שמירת
+                   * החיפוש הופכת אותו להתראה, כלומר לסיבה לחזור —
+                   * ובדרך גם אומרת לנו איזה היצע חסר.
+                   */
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <SaveSearchButton
+                      defaultName={state.q || title}
+                      variant="default"
+                      className="inline-flex"
+                      showWhenAnonymous
+                      label="נודיע לי כשתתפרסם מודעה מתאימה"
+                    />
+                    <Button asChild variant="outline">
+                      <Link href="/">חזרה לדף הבית</Link>
+                    </Button>
+                  </div>
                 ) : (
                   <Button asChild>
                     <Link href={category?.slug ? `/publish?category=${category.slug}` : "/publish"}>

@@ -103,6 +103,7 @@ export function MobileFilterSheet({
 
         <div className="-mx-1 flex-1 overflow-y-auto px-1">
           <FilterPanel
+            headingHidden
             attributes={attributes}
             cityFacets={cityFacets}
             priceRange={priceRange}

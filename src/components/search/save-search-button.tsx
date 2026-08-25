@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { BellPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +29,27 @@ const FREQUENCIES = [
 ];
 
 /** שומר את החיפוש הנוכחי (כולל כל הפילטרים שב-URL) עם הגדרת תדירות התראה. */
-export function SaveSearchButton({ defaultName }: { defaultName: string }) {
+export function SaveSearchButton({
+  defaultName,
+  className,
+  variant = "outline",
+  label = "שמירת חיפוש",
+  showWhenAnonymous = false,
+}: {
+  defaultName: string;
+  /** ברירת המחדל מסתירה בנייד — ראה ההערה ליד הכפתור. */
+  className?: string;
+  variant?: "outline" | "default";
+  label?: string;
+  /**
+   * מציג את הכפתור גם לאורח, ומפנה אותו להתחברות עם חזרה לחיפוש.
+   *
+   * בסרגל זה מיותר — אורח שרק מדפדף לא צריך עוד כפתור. במצב "לא
+   * נמצאו תוצאות" זה הפוך: מי שחיפש ולא מצא הוא בדיוק מי שיש לו
+   * סיבה להירשם, וההסתרה הפכה את הרגע הזה למבוי סתום.
+   */
+  showWhenAnonymous?: boolean;
+}) {
   const { status } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -65,13 +87,41 @@ export function SaveSearchButton({ defaultName }: { defaultName: string }) {
     }
   }
 
-  if (status !== "authenticated") return null;
+  if (status !== "authenticated") {
+    if (!showWhenAnonymous) return null;
+
+    const query = searchParams.toString();
+    const back = `${pathname}${query ? `?${query}` : ""}`;
+    return (
+      <Button asChild variant={variant} className={cn("hidden sm:inline-flex", className)}>
+        <Link href={`/auth/login?callbackUrl=${encodeURIComponent(back)}`}>
+          <BellPlus aria-hidden />
+          {label}
+        </Link>
+      </Button>
+    );
+  }
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)} className="hidden sm:inline-flex">
+      {/*
+        * בסרגל הכפתור מוסתר בנייד מחוסר מקום — שם כבר יושבים סינון,
+        * מיון וצפיפות. זה היה בסדר עד שהתברר שאין שום מקום אחר בנייד
+        * לשמור חיפוש, כלומר מנגנון החזרה של הלוח לא היה קיים במכשיר
+        * שבו רוב התנועה.
+        *
+        * `className` מאפשר למי שקורא להחליט. מצב "לא נמצאו תוצאות"
+        * מציג אותו בכל רוחב, כי שם זו הפעולה הנכונה ביותר: חיפוש
+        * שנכשל הוא בקשה שהלוח עוד לא יודע לספק, ושמירה הופכת אותו
+        * לסיבה לחזור.
+        */}
+      <Button
+        variant={variant}
+        onClick={() => setOpen(true)}
+        className={cn("hidden sm:inline-flex", className)}
+      >
         <BellPlus aria-hidden />
-        שמירת חיפוש
+        {label}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
