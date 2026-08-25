@@ -44,23 +44,43 @@ async function load(): Promise<MarketTick[]> {
    * הפופולרי" באופן כללי — קריאה בלי שנה היא קריאה על שוק ולא על פריט,
    * ובדיוק זה מה שמייחד את הלוח.
    */
+  /*
+   * הדגם נשלף מ-`AttributeValue.label` ולא מ-`cohortKey`.
+   *
+   * הערך ב-`cohortKey` הוא המפתח, והוא משורשר ליצרן במכוון —
+   * "טויוטה-קורולה" — כדי שדגם "3" של מאזדה לא יתנגש ב-"3" של
+   * ב.מ.וו באותה קבוצת השוואה. אבל הצגה שלו כמו שהוא נותנת
+   * "קיה קיה-ספורטג'", והיצרן מופיע פעמיים בשורה הראשונה שמשתמש
+   * רואה בדף הבית. התווית היא מה שנועד להיקרא.
+   */
   const [car] = await prisma.$queryRaw<ModelRow[]>`
     SELECT split_part(l."cohortKey", '|', 1) AS make,
-           split_part(l."cohortKey", '|', 2) AS model,
-           l."comparableBand"::int           AS year,
+           COALESCE(max(m.label), split_part(l."cohortKey", '|', 2)) AS model,
+           l."comparableBand"::int AS year,
            percentile_cont(0.5) WITHIN GROUP (ORDER BY l.price)::int AS median,
            count(*) AS n
       FROM "Listing" l
       JOIN "Category" c ON c.id = l."categoryId"
       LEFT JOIN "Category" p ON p.id = c."parentId"
+      LEFT JOIN LATERAL (
+        SELECT v.label
+          FROM "ListingAttribute" la
+          JOIN "Attribute" a ON a.id = la."attributeId" AND a.key = 'model'
+          JOIN "AttributeValue" v ON v.id = la."valueId"
+         WHERE la."listingId" = l.id
+         LIMIT 1
+      ) m ON true
      WHERE p.slug = 'vehicles'
        AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
        AND l.price > 0 AND l."cohortKey" IS NOT NULL AND l."comparableBand" IS NOT NULL
-     GROUP BY 1, 2, 3
+     GROUP BY split_part(l."cohortKey", '|', 1),
+              split_part(l."cohortKey", '|', 2),
+              l."comparableBand"
     HAVING count(*) >= ${MIN_SAMPLE}
      ORDER BY count(*) DESC
      LIMIT 1
   `;
+
   if (car) {
     ticks.push({
       subject: `${car.make} ${car.model} ${car.year}`,
