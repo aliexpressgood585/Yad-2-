@@ -43,6 +43,18 @@ export function Logo({
         aria-hidden
         className={cn(
           "grid size-9 shrink-0 place-items-center bg-[hsl(var(--scale-plate))]",
+          /*
+           * קו-שיער בכהה בלבד.
+           *
+           * הלוחית גרפיט בשתי הערכות במכוון — היא אובייקט אחד ולא
+           * רכיב שמשנה זהות לפי הרקע. אבל בכותרת הכהה הרקע קרוב
+           * מדי לגרפיט, והלוחית נעלמת: נשארים שנתות ומחוג מרחפים
+           * בלי הצורה שמחזיקה אותם.
+           *
+           * הקצה מצויר בצבע השנתות עצמן ולא בצבע גבול כללי — כלומר
+           * הוא חלק מהמכשיר, לא מסגרת שהודבקה עליו. הצבע לא זז.
+           */
+          "dark:ring-1 dark:ring-[hsl(var(--scale-hair))]",
           "transition-transform duration-150 group-hover:-translate-y-0.5",
         )}
       >

@@ -516,10 +516,17 @@
 
      הלוחית גרפיט גם בערכה הבהירה — ראה הנימוק ב-`:root` למעלה.
      ------------------------------------------------------------------ */
+  .dark .price-scale {
+    box-shadow: 0 0 0 1px hsl(var(--scale-hair) / 0.55);
+  }
+
   .price-scale {
     position: relative;
     height: 1.125rem;
     background-color: hsl(var(--scale-plate));
+    /* אותה סיבה כמו בסימן: בכהה הכרטיס קרוב לגרפיט, והלוחית מאבדת
+       את הקצה שלה. הקו מצויר בצבע השנתות ולא בצבע גבול כללי. */
+    box-shadow: 0 0 0 1px transparent;
     background-image:
       /* קו ראשי כל רבע — גובה מלא */
       repeating-linear-gradient(
