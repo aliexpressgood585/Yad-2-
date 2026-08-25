@@ -11,8 +11,13 @@ import { priceDistributionFor } from "@/lib/price-meter";
  * מד המחיר בכרטיס עונה על "זול או יקר"; כאן נפתחת התשובה המלאה — כמה
  * מודעות השתתפו, איפה יושב החציון, ואיפה בתוך ההתפלגות נמצא המחיר הזה.
  *
- * `null` (פחות מ-MIN_SAMPLE מודעות להשוואה) → הרכיב לא מוצג כלל, כמו
- * הפס בכרטיס. אותו כלל, אותה סיבה.
+ * **כשאין מספיק השוואות הרכיב אינו נעלם.** בכרטיס ברשימה היעדר הפס
+ * הוא בסדר — יש עוד עשרים כרטיסים לידו, ואף אחד מהם לא הבטיח כלום.
+ * בדף המודעה זה מסך ההחלטה, והשאלה היחידה שהביאה לכאן היא "המחיר
+ * הזה הגיוני?". שתיקה שם אינה ניטרלית: היא נקראת כאילו ללוח אין את
+ * הפיצ'ר, בדיוק בדף שבו הוא הבידול היחיד.
+ *
+ * לכן מוצגת אמירה מפורשת — מה חסר, למה, ולאן להמשיך.
  */
 export async function PriceDistribution({
   listingId,
@@ -24,7 +29,41 @@ export async function PriceDistribution({
   currency?: string;
 }) {
   const dist = await priceDistributionFor(listingId);
-  if (!dist || price === null) return null;
+
+  // מודעה בלי מחיר (מבקש הצעה) — אין שאלה שאפשר לענות עליה
+  if (price === null) return null;
+
+  if (!dist) {
+    return (
+      <section
+        aria-labelledby="price-distribution-heading"
+        className="rounded-lg border border-border bg-card p-5"
+      >
+        <h2 id="price-distribution-heading" className="font-heading text-lg font-bold">
+          המחיר ביחס למודעות דומות
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          עוד אין מספיק מודעות דומות פעילות כדי לתת קריאה שאפשר לסמוך עליה.
+          עדיף בלי מספר מאשר מספר שיטעה.
+        </p>
+        <p className="mt-3 text-sm">
+          <Link
+            href={pricePaths.valuation}
+            className="text-info underline underline-offset-2"
+          >
+            להערכת שווי לפי מאפיינים
+          </Link>
+          <span className="text-muted-foreground"> · </span>
+          <Link
+            href={pricePaths.guideIndex}
+            className="text-info underline underline-offset-2"
+          >
+            למחירון
+          </Link>
+        </p>
+      </section>
+    );
+  }
 
   const below = dist.deltaPct < 0;
   const magnitude = Math.abs(dist.deltaPct);
