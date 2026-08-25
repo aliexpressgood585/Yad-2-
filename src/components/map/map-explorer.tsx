@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type GeoJSONSource, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 import { useTheme } from "next-themes";
 import { Loader2, LocateFixed } from "lucide-react";

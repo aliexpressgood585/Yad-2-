@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { useTheme } from "next-themes";
 

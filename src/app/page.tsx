@@ -61,14 +61,20 @@ export default async function HomePage() {
             {tree.map((category) => (
               <li key={category.id}>
                 {/*
-                 * `aria-label` מפורש: בלי זה שם הקטגוריה ורשימת התתי
-                 * נדבקים בשם הנגיש לכלל אחד ("רכברכב פרטי · ג'יפים").
-                 * רשימת התתי היא תצוגה מקדימה חזותית — כל אחת מהן
-                 * נגישה בדף הקטגוריה עצמו — ולכן היא מוסתרת מהקורא.
+                 * רשימת התתי-קטגוריות היא תצוגה מקדימה חזותית — כל אחת
+                 * מהן נגישה בדף הקטגוריה עצמו — ולכן היא `aria-hidden`,
+                 * והשם הנגיש של הקישור יוצא "רכב" מהתוכן עצמו.
+                 *
+                 * **אין כאן `aria-label`, וזה מכוון.** הוא היה מיותר —
+                 * הכתובית כבר מוסתרת מהקורא — ובמקביל הוא הפעיל את
+                 * כלל `label-content-name-mismatch`: שם נגיש שנקבע
+                 * ידנית ואינו מכיל את הטקסט הנראה. המשמעות המעשית היא
+                 * שמשתמש בשליטה קולית שאומר את מה שכתוב על הכרטיס לא
+                 * מפעיל אותו (WCAG 2.5.3). בלי התכונה השם נגזר מהתוכן,
+                 * והבעיה לא קיימת מלכתחילה.
                  */}
                 <Link
                   href={`/${category.slug}`}
-                  aria-label={category.name}
                   className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-lifted"
                 >
                   {/*

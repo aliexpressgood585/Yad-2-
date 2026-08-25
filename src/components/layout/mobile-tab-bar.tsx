@@ -6,12 +6,22 @@ import { Heart, Home, MessageCircle, PlusCircle, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * `authed` מסמן מסך שדורש התחברות.
+ *
+ * מסך כזה אינו נמשך מראש: אורח שאינו מחובר מקבל הפניה, ומשיכה מוקדמת
+ * של הפניה נכשלת ומדפיסה `Failed to fetch RSC payload` לקונסולה בכל
+ * טעינת דף. זה גם רעש בקונסולה של כל משתמש וגם בקשה שנזרקת לפח.
+ *
+ * הדגל מפורש ולא נגזר מהנתיב: הגרסה הקודמת בדקה `startsWith("/my")`,
+ * וכך `/publish` — שגם הוא מאחורי התחברות — נשאר נמשך מראש ונכשל.
+ */
 const TABS = [
   { href: "/", label: "בית", icon: Home, exact: true },
   { href: "/search", label: "חיפוש", icon: Search },
-  { href: "/publish", label: "פרסום", icon: PlusCircle, highlight: true },
-  { href: "/my/favorites", label: "מועדפים", icon: Heart },
-  { href: "/my/messages", label: "הודעות", icon: MessageCircle },
+  { href: "/publish", label: "פרסום", icon: PlusCircle, highlight: true, authed: true },
+  { href: "/my/favorites", label: "מועדפים", icon: Heart, authed: true },
+  { href: "/my/messages", label: "הודעות", icon: MessageCircle, authed: true },
 ];
 
 /** סרגל ניווט תחתון — מובייל בלבד. */
@@ -38,8 +48,7 @@ export function MobileTabBar() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
-                /* מסכים מאחורי התחברות — ראה ההערה ב-header-user-menu */
-                prefetch={tab.href.startsWith("/my") ? false : undefined}
+                prefetch={tab.authed ? false : undefined}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
