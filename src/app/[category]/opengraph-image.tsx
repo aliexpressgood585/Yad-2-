@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
 import { getCategoryBySlug, getCategoryIdsWithDescendants } from "@/lib/categories";
-import { OG, OG_CONTENT_TYPE, OG_SIZE, OgShell } from "@/lib/og";
+import { bidi, OG, OG_CONTENT_TYPE, OG_SIZE, ogOptions, OgShell } from "@/lib/og";
 import { SITE } from "@/lib/site";
 import { decodeSlugParam } from "@/lib/slug";
 
@@ -25,11 +25,11 @@ export default async function OpengraphImage({
       (
         <OgShell>
           <div style={{ display: "flex", fontSize: 76, fontWeight: 700, color: OG.ink }}>
-            {SITE.name}
+            {bidi(SITE.name)}
           </div>
         </OgShell>
       ),
-      size,
+      await ogOptions(),
     );
   }
 
@@ -58,19 +58,19 @@ export default async function OpengraphImage({
               lineHeight: 1.1,
             }}
           >
-            {category.namePlural ?? category.name}
+            {bidi(category.namePlural ?? category.name)}
           </div>
 
           {count > 0 ? (
             <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
               <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: OG.amber }}>
-                {count.toLocaleString("en-US")} מודעות
+                {bidi(`${count.toLocaleString("en-US")} מודעות`)}
               </div>
               {min !== null ? (
                 <>
                   <div style={{ display: "flex", fontSize: 34, color: OG.hair }}>·</div>
                   <div style={{ display: "flex", fontSize: 34, color: OG.muted }}>
-                    {`החל מ-₪${min.toLocaleString("en-US")}`}
+                    {bidi(`החל מ-₪${min.toLocaleString("en-US")}`)}
                   </div>
                 </>
               ) : null}
@@ -79,6 +79,6 @@ export default async function OpengraphImage({
         </div>
       </OgShell>
     ),
-    size,
+    await ogOptions(),
   );
 }

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
-import { OG, OG_CONTENT_TYPE, OG_SIZE, OgWordmark } from "@/lib/og";
+import { bidi, bidiLines, OG, OG_CONTENT_TYPE, OG_SIZE, ogImage, ogOptions, OgWordmark } from "@/lib/og";
 import { SITE, absoluteUrl } from "@/lib/site";
 import { decodeSlugParam } from "@/lib/slug";
 import { formatPrice } from "@/lib/format";
@@ -51,14 +51,16 @@ export default async function OpengraphImage({
             fontWeight: 700,
           }}
         >
-          {SITE.name}
+          {bidi(SITE.name)}
         </div>
       ),
-      size,
+      await ogOptions(),
     );
   }
 
-  const image = listing.images[0]?.url ? absoluteUrl(listing.images[0].url) : undefined;
+  const image = await ogImage(
+    listing.images[0]?.url ? absoluteUrl(listing.images[0].url) : undefined,
+  );
 
   /*
    * מד המחיר נוסע עם השיתוף.
@@ -112,14 +114,21 @@ export default async function OpengraphImage({
 
             <div
               style={{
+                display: "flex",
+                flexDirection: "column",
                 fontSize: 52,
                 fontWeight: 700,
                 color: OG.ink,
                 lineHeight: 1.15,
-                display: "flex",
               }}
             >
-              {listing.title.slice(0, 70)}
+              {bidiLines(listing.title.slice(0, 70), 24)
+                .slice(0, 3)
+                .map((line, i) => (
+                  <div key={i} style={{ display: "flex" }}>
+                    {line}
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -167,20 +176,21 @@ export default async function OpengraphImage({
                   />
                 </div>
                 <div style={{ fontSize: 26, color: OG.muted, display: "flex" }}>
-                  {Math.abs(meter.deltaPct)}% {meter.deltaPct < 0 ? "מתחת לחציון" : "מעל החציון"} ·{" "}
-                  {meter.sample} מודעות דומות
+                  {bidi(
+                    `${Math.abs(meter.deltaPct)}% ${meter.deltaPct < 0 ? "מתחת לחציון" : "מעל החציון"} · ${meter.sample} מודעות דומות`,
+                  )}
                 </div>
               </div>
             ) : null}
             <div style={{ fontSize: 30, color: OG.muted, display: "flex" }}>
-              {listing.city}
-              {listing.neighborhood ? `, ${listing.neighborhood}` : ""} ·{" "}
-              {listing.category.name}
+              {bidi(
+                `${listing.city}${listing.neighborhood ? `, ${listing.neighborhood}` : ""} · ${listing.category.name}`,
+              )}
             </div>
           </div>
         </div>
       </div>
     ),
-    size,
+    await ogOptions(),
   );
 }

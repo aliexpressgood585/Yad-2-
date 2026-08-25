@@ -67,6 +67,16 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ["sharp", "web-push"],
 
+  /*
+   * הגופן של תמונות השיתוף נקרא מהדיסק בזמן ריצה, ולכן הוא חייב
+   * להיארז לפונקציה. `process.cwd()` אינו ניתן לניתוח סטטי, ובלי
+   * ההצהרה הזאת Vercel לא מצרף את הקבצים — והתמונה נופלת בפרודקשן
+   * בלבד, בדיוק במקום שאי אפשר לבדוק מקומית.
+   */
+  outputFileTracingIncludes: {
+    "/**": ["./src/assets/fonts/**"],
+  },
+
   async headers() {
     return [
       {

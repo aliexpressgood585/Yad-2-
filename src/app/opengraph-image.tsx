@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
-import { OG, OG_CONTENT_TYPE, OG_SIZE, OgShell } from "@/lib/og";
+import { bidi, bidiLines, OG, OG_CONTENT_TYPE, OG_SIZE, ogOptions, OgShell } from "@/lib/og";
 import { SITE } from "@/lib/site";
 
 export const alt = `${SITE.name} — ${SITE.tagline}`;
@@ -19,27 +19,38 @@ export default async function OpengraphImage() {
 
   return new ImageResponse(
     (
-      <OgShell footer={SITE.tagline}>
+      <OgShell footer={'לוח מודעות שמודד — רכב, נדל"ן, יד שנייה ועוד'}>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/*
+            * הכותרת היא הסלוגן החי מ-`lib/brand` ולא מחרוזת מודבקת.
+            * הגרסה הקודמת נשאה את "כל מה שצריך, במקום אחד נקי" —
+            * משפט שהוחלף באתר עצמו לפני שלוש החלפות שם, ושרד רק כאן.
+            * זו בדיוק הסיבה שהמותג חי בקובץ אחד.
+            */}
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               fontSize: 76,
               fontWeight: 700,
               color: OG.ink,
               lineHeight: 1.1,
             }}
           >
-            כל מה שצריך, במקום אחד נקי
+            {bidiLines(SITE.tagline, 20).map((line, i) => (
+              <div key={i} style={{ display: "flex" }}>
+                {line}
+              </div>
+            ))}
           </div>
           {count > 0 ? (
             <div style={{ display: "flex", fontSize: 34, color: OG.amber, fontWeight: 700 }}>
-              {count.toLocaleString("en-US")} מודעות פעילות
+              {bidi(`${count.toLocaleString("en-US")} מודעות פעילות`)}
             </div>
           ) : null}
         </div>
       </OgShell>
     ),
-    size,
+    await ogOptions(),
   );
 }
