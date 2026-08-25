@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { notDemo, prisma } from "@/lib/db";
 
 /**
  * זמן למכירה — כמה זמן ייקח למכור, ומה המחיר עושה למספר הזה.
@@ -84,6 +84,7 @@ export async function speedCurveFor(categoryId: string): Promise<TimeToSale | nu
         AND "soldAt" > "publishedAt"
         AND "soldAt" >= ${since}
         AND "deletedAt" IS NULL
+        ${notDemo()}
         AND price IS NOT NULL
     ),
     banded AS (

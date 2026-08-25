@@ -1,4 +1,4 @@
-import { Prisma, prisma } from "@/lib/db";
+import { Prisma, notDemo, prisma } from "@/lib/db";
 import { getAttributesForCategory, getCategoryPath } from "@/lib/categories";
 import { cohortFor } from "@/lib/price-cohort";
 import { buildSearchText, contentFingerprint } from "@/lib/listing-text";
@@ -216,7 +216,7 @@ export async function findPossibleDuplicates(input: {
     FROM "Listing"
     WHERE "userId" = ${input.userId}
       AND "categoryId" = ${input.categoryId}
-      AND "deletedAt" IS NULL
+      AND "deletedAt" IS NULL ${notDemo()}
       AND "status" IN ('ACTIVE', 'DRAFT', 'PENDING')
       ${input.excludeId ? Prisma.sql`AND id <> ${input.excludeId}` : Prisma.empty}
       AND similarity("title", ${input.title}) > 0.55
@@ -245,7 +245,7 @@ export async function suggestPrice(
       COUNT(*)::bigint AS n
     FROM "Listing"
     WHERE "categoryId" = ${categoryId}
-      AND "deletedAt" IS NULL
+      AND "deletedAt" IS NULL ${notDemo()}
       AND "price" IS NOT NULL AND "price" > 0
       AND "createdAt" > now() - interval '180 days'
   `;

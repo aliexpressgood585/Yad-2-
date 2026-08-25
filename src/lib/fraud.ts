@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { notDemo, prisma } from "@/lib/db";
 import { normalizeHebrew } from "@/lib/listing-text";
 import { computeRiskScore, RISK_WEIGHTS, type RiskCode } from "@/lib/risk";
 
@@ -73,7 +73,7 @@ export async function detectFraud(input: FraudInput): Promise<FraudFlagResult[]>
              COUNT(*)::bigint AS n
       FROM "Listing"
       WHERE "categoryId" = ${input.categoryId}
-        AND "status" = 'ACTIVE' AND "deletedAt" IS NULL
+        AND "status" = 'ACTIVE' AND "deletedAt" IS NULL ${notDemo()}
         AND "price" IS NOT NULL AND "price" > 0
         AND "id" <> ${input.listingId}
     `;

@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/db";
+import { notDemo, prisma } from "@/lib/db";
 import { formatNumber } from "@/lib/format";
 import { MIN_SAMPLE } from "@/lib/price-meter";
 
@@ -363,7 +363,7 @@ export async function loadVehicleComparables(
       LEFT JOIN "AttributeValue" v ON v.id = la."valueId"
      WHERE COALESCE(root.slug, c.slug) = 'vehicles'
        AND l.status = 'ACTIVE'
-       AND l."deletedAt" IS NULL
+       AND l."deletedAt" IS NULL ${notDemo("l")}
        AND l.price IS NOT NULL AND l.price > 0
      GROUP BY l.id
      ORDER BY l."publishedAt" DESC NULLS LAST
@@ -551,7 +551,7 @@ export async function loadRealEstateComparables(
      WHERE c.slug = ${DEAL_CATEGORY[deal]}
        AND l.city = ${city}
        AND l.status = 'ACTIVE'
-       AND l."deletedAt" IS NULL
+       AND l."deletedAt" IS NULL ${notDemo("l")}
        AND l.price IS NOT NULL AND l.price > 0
      GROUP BY l.id
      ORDER BY l."publishedAt" DESC NULLS LAST
@@ -662,7 +662,7 @@ async function monthlyMedians(where: Prisma.Sql): Promise<TrendPoint[]> {
       LEFT JOIN "Listing" l
         ON l."publishedAt" < months.m + interval '1 month'
        AND (l."expiresAt" IS NULL OR l."expiresAt" >= months.m)
-       AND l."deletedAt" IS NULL
+       AND l."deletedAt" IS NULL ${notDemo("l")}
        AND l.status IN ('ACTIVE', 'SOLD', 'EXPIRED')
        AND l.price IS NOT NULL AND l.price > 0
        AND l.id IN (${where})
@@ -738,7 +738,7 @@ export async function vehicleMakeOptions(): Promise<MakeOption[]> {
             ON a.id = la."attributeId" AND a.key IN ('manufacturer', 'model')
           JOIN "AttributeValue" v ON v.id = la."valueId"
          WHERE COALESCE(root.slug, c.slug) = 'vehicles'
-           AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+           AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
            AND l.price IS NOT NULL AND l.price > 0
          GROUP BY l.id
       ) t
@@ -833,7 +833,7 @@ export async function guideTargets(): Promise<GuideTarget[]> {
             ON a.id = la."attributeId" AND a.key IN ('manufacturer', 'model')
           JOIN "AttributeValue" v ON v.id = la."valueId"
          WHERE COALESCE(root.slug, c.slug) = 'vehicles'
-           AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+           AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
            AND l.price IS NOT NULL AND l.price > 0
          GROUP BY l.id
       ) t
@@ -865,7 +865,7 @@ export async function realEstateCityOptions(): Promise<CityOption[]> {
       FROM "Listing" l
       JOIN "Category" c ON c.id = l."categoryId"
      WHERE c.slug IN (${DEAL_CATEGORY.sale}, ${DEAL_CATEGORY.rent})
-       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
        AND l.price IS NOT NULL AND l.price > 0
      GROUP BY l.city, c.slug
   `;
@@ -899,7 +899,7 @@ export async function neighborhoodMap(): Promise<Record<DealKind, Record<string,
         FROM "Listing" l
         JOIN "Category" c ON c.id = l."categoryId"
        WHERE c.slug IN (${DEAL_CATEGORY.sale}, ${DEAL_CATEGORY.rent})
-         AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+         AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
          AND l.price IS NOT NULL AND l.price > 0
        GROUP BY c.slug, l.city
       HAVING count(*) >= ${MIN_SAMPLE}
@@ -909,7 +909,7 @@ export async function neighborhoodMap(): Promise<Record<DealKind, Record<string,
       JOIN "Category" c ON c.id = l."categoryId"
       JOIN dense ON dense.slug = c.slug AND dense.city = l.city
      WHERE l.neighborhood IS NOT NULL
-       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
      GROUP BY c.slug, l.city, l.neighborhood
      ORDER BY l.neighborhood
   `;
@@ -931,7 +931,7 @@ export async function neighborhoodOptions(deal: DealKind, city: string): Promise
      WHERE c.slug = ${DEAL_CATEGORY[deal]}
        AND l.city = ${city}
        AND l.neighborhood IS NOT NULL
-       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL ${notDemo("l")}
      GROUP BY l.neighborhood
      ORDER BY count DESC, l.neighborhood
   `;

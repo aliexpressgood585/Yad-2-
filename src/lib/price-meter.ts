@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/db";
+import { notDemo, prisma } from "@/lib/db";
 import { COHORT_TIERS, MAX_DISPLAY_TIER, MIN_SAMPLE } from "@/lib/price-cohort";
 
 /**
@@ -135,6 +135,7 @@ function cohortPairs(where: Prisma.Sql): Prisma.Sql {
        WHERE ${where}
          AND l.price IS NOT NULL AND l.price > 0
          AND l."cohortKey" IS NOT NULL
+         ${notDemo("l")}
     ),
     pairs AS (
       SELECT t.id AS target_id,
@@ -152,6 +153,7 @@ function cohortPairs(where: Prisma.Sql): Prisma.Sql {
          AND peer.id <> t.id
          AND peer.status = 'ACTIVE'
          AND peer."deletedAt" IS NULL
+         ${notDemo("peer")}
          AND peer.price IS NOT NULL AND peer.price > 0
          AND (peer."cohortKey" = t.key OR peer."cohortKeyBroad" = t.key_broad)
     ),

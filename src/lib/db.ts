@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 /**
  * מופע יחיד של Prisma. ב-dev, Next מרענן מודולים ולכן שומרים את המופע
@@ -30,6 +30,30 @@ const DEMO_MODELS = ["listing", "user"] as const;
 export function demoDataAllowed(): boolean {
   if (process.env.NODE_ENV !== "production") return true;
   return process.env.ALLOW_DEMO_DATA === "true";
+}
+
+/**
+ * תנאי סינון שורות הדגמה **לשאילתות SQL גולמיות**.
+ *
+ * ההרחבה של Prisma למטה מסננת כל `findMany`, `count` ו-`aggregate` —
+ * אבל היא **אינה חלה על `$queryRaw`**, כי שם Prisma אינו מפרש את
+ * השאילתה אלא מעביר אותה כמו שהיא. זה היה חור אמיתי ולא תיאורטי:
+ * במסד ריק ממודעות אמיתיות `prisma.listing.count()` החזיר 0 בזמן
+ * שאותה ספירה ב-SQL גולמי החזירה 3,076.
+ *
+ * המשמעות בפועל, ביום הראשון של לוח אמיתי: דף הבית מכריז על אלפי
+ * מודעות שאיש אינו רואה, וקריאות השוק — חציונים, מד המחיר, זמן עד
+ * מכירה — מחושבות מנתוני הדגמה ומוצגות על מודעות אמיתיות. כלומר
+ * המספר שהמוצר כולו נשען עליו היה מומצא.
+ *
+ * הכינוי מגיע תמיד מקוד שלנו ולעולם לא מקלט משתמש, ולכן `Prisma.raw`
+ * כאן בטוח. `scripts/checks/demo-isolation-check.ts` מוודא שאף
+ * שאילתה גולמית על `Listing` לא נשארת בלי התנאי.
+ */
+export function notDemo(alias = ""): Prisma.Sql {
+  if (demoDataAllowed()) return Prisma.empty;
+  const column = alias ? `${alias}."isDemo"` : `"isDemo"`;
+  return Prisma.sql`AND ${Prisma.raw(column)} = false`;
 }
 
 /**

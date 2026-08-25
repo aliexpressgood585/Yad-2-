@@ -1,4 +1,4 @@
-import { Prisma, prisma } from "@/lib/db";
+import { Prisma, demoDataAllowed, prisma } from "@/lib/db";
 import { priceMetersFor } from "@/lib/price-meter";
 import { expandSynonyms, normalizeHebrew, tokenizeQuery } from "@/lib/listing-text";
 
@@ -93,6 +93,12 @@ function buildWhere(query: SearchQuery): Prisma.Sql {
     Prisma.sql`l."status" = 'ACTIVE'`,
     Prisma.sql`l."deletedAt" IS NULL`,
   ];
+
+  /*
+   * סינון שורות הדגמה. כל השאילתות בקובץ — תוצאות, ספירה, פאסטות
+   * וטווח מחירים — נשענות על התנאי הזה, ולכן זו נקודה אחת ולא שש.
+   */
+  if (!demoDataAllowed()) conditions.push(Prisma.sql`l."isDemo" = false`);
 
   const q = query.q ? normalizeHebrew(query.q) : "";
   const ts = q.length >= 2 ? buildTsQueries(q) : null;

@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/db";
+import { notDemo, prisma } from "@/lib/db";
 
 /**
  * קריאות שוק לדף הבית — במקום סלוגן.
@@ -72,6 +72,7 @@ async function load(): Promise<MarketTick[]> {
       ) m ON true
      WHERE p.slug = 'vehicles'
        AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       ${notDemo("l")}
        AND l.price > 0 AND l."cohortKey" IS NOT NULL AND l."comparableBand" IS NOT NULL
      GROUP BY split_part(l."cohortKey", '|', 1),
               split_part(l."cohortKey", '|', 2),
@@ -98,6 +99,7 @@ async function load(): Promise<MarketTick[]> {
       JOIN "Category" c ON c.id = l."categoryId"
      WHERE c.slug = 'apartments-rent'
        AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       ${notDemo("l")}
        AND l.price > 0 AND l."comparableBand" BETWEEN 3 AND 3.5
      GROUP BY 1
     HAVING count(*) >= ${MIN_SAMPLE}
@@ -121,6 +123,7 @@ async function load(): Promise<MarketTick[]> {
       JOIN "Category" c ON c.id = l."categoryId"
      WHERE c.slug = 'apartments-sale'
        AND l.status = 'ACTIVE' AND l."deletedAt" IS NULL
+       ${notDemo("l")}
        AND l.price > 0 AND l."comparableBand" BETWEEN 4 AND 4.5
      GROUP BY 1
     HAVING count(*) >= ${MIN_SAMPLE}
@@ -150,6 +153,7 @@ async function load(): Promise<MarketTick[]> {
       LEFT JOIN "Category" p ON p.id = c."parentId"
      WHERE l."soldAt" IS NOT NULL AND l."publishedAt" IS NOT NULL
        AND l."soldAt" > l."publishedAt"
+       ${notDemo("l")}
      GROUP BY 1
     HAVING count(*) >= ${MIN_SAMPLE}
      ORDER BY count(*) DESC
