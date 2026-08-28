@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { activeMembership } from "@/lib/business";
+import { entitlementFor } from "@/lib/entitlements";
 import { notifyPriceDrop } from "@/lib/notification-triggers";
 import {
   buildAttributeRows,
@@ -207,6 +208,23 @@ export async function POST(req: Request) {
     const membership = body.asBusiness
       ? await activeMembership(session.user.id).catch(() => null)
       : null;
+
+    /*
+     * מכסת המנוי נאכפת כאן, על פרסום ולא על שמירת טיוטה.
+     *
+     * ההודעה אומרת את המספר ואת מה שאפשר לעשות איתו, כי "חרגת מהמכסה"
+     * בלי מספר הוא מסך שאי אפשר לפעול לפיו.
+     */
+    if (publishing && membership) {
+      const entitlement = await entitlementFor(membership.businessId);
+      if (!entitlement.canPublish) {
+        throw new ApiError(
+          402,
+          `החנות הגיעה למכסה של ${entitlement.quota} מודעות פעילות. אפשר לשדרג את החבילה או לסגור מודעה קיימת.`,
+          "QUOTA_EXCEEDED",
+        );
+      }
+    }
 
     const listing = await prisma.listing.create({
       data: {

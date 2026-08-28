@@ -132,6 +132,8 @@ model User {
   accounts           Account[]
   notificationJobs   NotificationJob[]
   businessListings   Listing[]         @relation("BusinessListings")
+  orders             Order[]
+  subscription       Subscription?
   teamMembers        BusinessMember[]  @relation("BusinessTeam")
   memberships        BusinessMember[]  @relation("TeamMemberships")
   feeds              ListingFeed[]
@@ -813,4 +815,126 @@ model ListingFeed {
 
   @@index([businessId])
   @@index([isActive, lastRunAt])
+}
+
+// ---------------------------------------------------------------------------
+// Revenue
+// ---------------------------------------------------------------------------
+
+enum OrderKind {
+  BOOST
+  SUBSCRIPTION
+}
+
+enum OrderStatus {
+  /// נוצרה, טרם שולמה
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+/// הזמנה — כל תשלום באתר עובר דרכה.
+///
+/// **סכומים באגורות ולא בשקלים.** כסף בנקודה צפה הוא באג שמתגלה
+/// בחשבונית: 0.1 + 0.2 אינו 0.3, וסכום מע"מ שמחושב מ-float יוצא
+/// אגורה מהחשבון פעם באלף.
+///
+/// ההזמנה נשמרת לפני הפנייה לספק הסליקה ולא אחריה: תשובה שהולכת
+/// לאיבוד בדרך חזרה משאירה הזמנה `PENDING` שאפשר לברר עליה, ולא תשלום
+/// שאיש לא יודע עליו.
+model Order {
+  id     String      @id @default(cuid())
+  /// מספר רץ להצגה ולחשבונית
+  number Int         @unique @default(autoincrement())
+  userId String
+  kind   OrderKind
+  status OrderStatus @default(PENDING)
+
+  /// הסכום לתשלום, כולל מע"מ, באגורות
+  amountAgorot Int
+  /// רכיב המע"מ מתוך הסכום, באגורות
+  vatAgorot    Int
+  /// שיעור המע"מ שנקבע ברגע ההזמנה. חשבונית אינה משתנה כשהשיעור משתנה.
+  vatRate      Float
+  currency     String @default("ILS")
+  description  String
+
+  /// מה נקנה
+  listingId String?
+  boostKind BoostKind?
+  planId    String?
+
+  /// ספק הסליקה שטיפל בהזמנה, ומזהה העסקה אצלו
+  provider      String
+  providerRef   String?
+  paidAt        DateTime?
+  failureReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice Invoice?
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+/// חשבונית.
+///
+/// פרטי הלקוח מועתקים לכאן ברגע ההנפקה ואינם נקראים מ-`User` בזמן
+/// ההצגה: חשבונית היא מסמך של רגע מסוים, ושינוי שם או כתובת אינו
+/// אמור לשנות מסמך שכבר הונפק.
+model Invoice {
+  id      String @id @default(cuid())
+  orderId String @unique
+  /// מספר חשבונית — שנה ומספר ההזמנה, ייחודי לכל החיים
+  number  String @unique
+
+  issuedAt DateTime @default(now())
+
+  customerName  String
+  customerEmail String?
+  /// ח.פ. או ע.מ. של הלקוח, כשנמסר
+  customerTaxId String?
+
+  amountAgorot Int
+  vatAgorot    Int
+  vatRate      Float
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  /// התקופה נגמרה והחידוש לא שולם
+  PAST_DUE
+  /// בוטל, פעיל עד סוף התקופה ששולמה
+  CANCELLED
+  EXPIRED
+}
+
+/// מנוי סוחר.
+///
+/// שייך לחשבון העסק (`businessId`) ולא לאדם: המנוי הוא של החנות,
+/// והמכסה שהוא נותן חלה על כל המלאי שלה — כולל מודעות שסוכנים פרסמו.
+model Subscription {
+  id         String             @id @default(cuid())
+  businessId String             @unique
+  planId     String
+  status     SubscriptionStatus @default(ACTIVE)
+
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime
+  /// המנוי לא יחודש בסוף התקופה
+  cancelAtPeriodEnd  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business User @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([status, currentPeriodEnd])
 }

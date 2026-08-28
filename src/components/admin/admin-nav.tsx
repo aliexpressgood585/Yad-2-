@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 export function AdminNav({
   openReports,
   flagged,
+  pendingOrders,
 }: {
   openReports: number;
   flagged: number;
+  pendingOrders: number;
 }) {
   const pathname = usePathname();
 
@@ -19,6 +21,7 @@ export function AdminNav({
     { href: "/admin/analytics", label: "מדידה", badge: 0 },
     { href: "/admin/moderation", label: "תור מודרציה", badge: openReports + flagged },
     { href: "/admin/listings", label: "מודעות", badge: 0 },
+    { href: "/admin/orders", label: "הזמנות", badge: pendingOrders },
     { href: "/admin/users", label: "משתמשים", badge: 0 },
     { href: "/admin/logs", label: "יומן פעולות", badge: 0 },
   ];

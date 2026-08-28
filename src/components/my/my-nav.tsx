@@ -7,6 +7,7 @@ import {
   Heart,
   LayoutDashboard,
   MessageCircle,
+  Receipt,
   Search,
   Store,
   UserRound,
@@ -21,6 +22,7 @@ const ICONS: Record<string, LucideIcon> = {
   Heart,
   Search,
   Bell,
+  Receipt,
   Store,
   UserRound,
 };

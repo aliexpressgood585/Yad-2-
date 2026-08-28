@@ -11,9 +11,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session?.user) redirect("/auth/login?callbackUrl=/admin");
   if (session.user.role !== "ADMIN") redirect("/");
 
-  const [openReports, flagged] = await Promise.all([
+  const [openReports, flagged, pendingOrders] = await Promise.all([
     prisma.report.count({ where: { status: "OPEN" } }),
     prisma.listing.count({ where: { fraudScore: { gte: 30 }, status: "ACTIVE", deletedAt: null } }),
+    prisma.order.count({ where: { status: "PENDING" } }),
   ]);
 
   return (
@@ -30,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <AdminNav openReports={openReports} flagged={flagged} />
+      <AdminNav openReports={openReports} flagged={flagged} pendingOrders={pendingOrders} />
 
       <div className="mt-5">{children}</div>
     </div>

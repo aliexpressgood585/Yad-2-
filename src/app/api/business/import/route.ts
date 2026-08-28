@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiError, enforceRateLimit, handleError, ok, parseBody, requireSession } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { requireBusiness } from "@/lib/business";
+import { entitlementFor } from "@/lib/entitlements";
 import { guessMapping, mapRows, parseFeed, type FeedMapping } from "@/lib/feed";
 import { attributeSpecsFor, importRows } from "@/lib/feed-import";
 
@@ -87,6 +88,21 @@ export async function POST(req: Request) {
     }
 
     await enforceRateLimit("publish", session.user.id);
+
+    /*
+     * ייבוא שמפרסם מייד נבדק מול המכסה **לפני** הכתיבה, ובכמות: קובץ
+     * של 300 מודעות אינו אמור לעבור 299 פעמים ולהיכשל באחרונה.
+     */
+    if (body.publish) {
+      const entitlement = await entitlementFor(business.businessId);
+      if (entitlement.quota !== null && entitlement.used + rows.length > entitlement.quota) {
+        throw new ApiError(
+          402,
+          `הייבוא יעבור את מכסת החנות (${entitlement.quota} מודעות פעילות; כרגע ${entitlement.used}). אפשר לייבא כטיוטות או לשדרג את החבילה.`,
+          "QUOTA_EXCEEDED",
+        );
+      }
+    }
 
     const result = await importRows(rows, {
       businessId: business.businessId,

@@ -19,6 +19,7 @@ export function BusinessTabs({
     { href: "/my/business/import", label: "העלאה מרוכזת", show: canImport },
     { href: "/my/business/feeds", label: "פידים", show: canImport },
     { href: "/my/business/team", label: "צוות", show: canManageTeam },
+    { href: "/my/business/plan", label: "החבילה שלי", show: canManageTeam },
   ].filter((t) => t.show);
 
   return (

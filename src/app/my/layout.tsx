@@ -39,6 +39,7 @@ export default async function MyLayout({ children }: { children: React.ReactNode
     ...(memberships.length
       ? [{ href: "/my/business", label: "כלים לעסק", icon: "Store", count: 0 }]
       : []),
+    { href: "/my/orders", label: "הזמנות", icon: "Receipt", count: 0 },
     { href: "/my/profile", label: "הפרופיל שלי", icon: "UserRound", count: 0 },
   ];
 

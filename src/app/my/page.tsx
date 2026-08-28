@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyResults } from "@/components/listing/listing-grid";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { paymentsEnabled } from "@/lib/payments";
 import { cn } from "@/lib/utils";
 import { formatCompact } from "@/lib/format";
 
@@ -32,6 +33,8 @@ export default async function MyListingsPage({
   const userId = session!.user.id;
   const { tab } = await searchParams;
   const active = TABS.find((t) => t.key === tab) ?? TABS[0]!;
+
+  const canPay = paymentsEnabled();
 
   const [listings, counts, totals] = await Promise.all([
     prisma.listing.findMany({
@@ -179,6 +182,7 @@ export default async function MyListingsPage({
                   expiresAt: listing.expiresAt?.toISOString() ?? null,
                   createdAt: listing.createdAt.toISOString(),
                 }}
+                paymentsEnabled={canPay}
               />
             </li>
           ))}

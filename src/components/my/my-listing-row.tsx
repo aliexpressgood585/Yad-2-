@@ -59,7 +59,14 @@ const STATUS_BADGE: Record<string, { label: string; variant: "success" | "muted"
   BANNED: { label: "הוסרה", variant: "destructive" },
 };
 
-export function MyListingRow({ listing }: { listing: MyListing }) {
+export function MyListingRow({
+  listing,
+  paymentsEnabled = false,
+}: {
+  listing: MyListing;
+  /** האם יש ספק סליקה מוגדר. בלעדיו לא מוצע קידום. */
+  paymentsEnabled?: boolean;
+}) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const [boostOpen, setBoostOpen] = React.useState(false);
@@ -250,6 +257,7 @@ export function MyListingRow({ listing }: { listing: MyListing }) {
         listingTitle={listing.title}
         open={boostOpen}
         onOpenChange={setBoostOpen}
+        paymentsEnabled={paymentsEnabled}
       />
     </>
   );
