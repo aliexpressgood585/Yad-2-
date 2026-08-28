@@ -402,7 +402,10 @@ function generateRealEstate(rng: Rng, sub: string, city: string): GeneratedListi
   ]);
   const size = Math.round(rooms * rng.int(20, 30));
   const floor = rng.int(0, 12);
-  const totalFloors = Math.max(floor, rng.int(floor, floor + 8));
+  // בניין אינו יכול להיות בן אפס קומות. `floor` מתחיל ב-0 (קומת קרקע),
+  // ולכן `max(floor, …)` לבדו הפיק דירת קרקע בבניין בן 0 קומות — ערך
+  // שנפסל מול `min: 1` של השדה, ושהיה נראה שבור גם בדף המודעה.
+  const totalFloors = Math.max(1, floor, rng.int(floor, floor + 8));
   const isRent = sub === "apartments-rent";
   const isRoommate = sub === "roommates";
   const isVacation = sub === "vacation";
