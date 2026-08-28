@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   MessageCircle,
   Search,
+  Store,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const ICONS: Record<string, LucideIcon> = {
   Heart,
   Search,
   Bell,
+  Store,
   UserRound,
 };
 

@@ -2,6 +2,7 @@ import { handleError, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { notifyListingExpiring, notifySavedSearchMatch } from "@/lib/notification-triggers";
 import { drainQueue } from "@/lib/notification-queue";
+import { runActiveFeeds } from "@/lib/feed-runner";
 import { sendMonthlyPriceReports } from "@/lib/monthly-report";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { getAttributesForCategory, getCategoryBySlug, getCategoryIdsWithDescendants } from "@/lib/categories";
@@ -43,6 +44,9 @@ export async function GET(req: Request) {
     }
     if (job === "all" || job === "saved-searches") {
       results.savedSearches = await runSavedSearchAlerts();
+    }
+    if (job === "all" || job === "feeds") {
+      results.feeds = await runActiveFeeds();
     }
     if (job === "all" || job === "monthly-report") {
       results.monthlyReport = await sendMonthlyPriceReports(new Date());

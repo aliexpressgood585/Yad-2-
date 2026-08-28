@@ -32,7 +32,23 @@ async function getBusiness(rawSlug: string) {
       businessAbout: true,
       businessLogo: true,
       businessCity: true,
-      _count: { select: { listings: { where: { status: "ACTIVE" } } } },
+    },
+  });
+}
+
+/**
+ * כמה מודעות פעילות יש בחנות.
+ *
+ * מודעה של הבעלים נושאת גם `userId` וגם `businessId` שמצביעים עליו,
+ * ולכן ספירה של שתי העמודות בנפרד הייתה סופרת אותה פעמיים. התנאי כאן
+ * מקביל בדיוק לזה של `searchListingCards`.
+ */
+function activeListingCount(businessId: string) {
+  return prisma.listing.count({
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      OR: [{ businessId }, { userId: businessId }],
     },
   });
 }
@@ -43,11 +59,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!business) return { title: "העסק לא נמצא" };
 
   const name = business.businessName ?? business.name;
+  const count = await activeListingCount(business.id);
   return {
     title: name,
     description:
       business.businessAbout?.slice(0, 155) ??
-      `${name} — ${business._count.listings} מודעות פעילות ב${SITE.name}.`,
+      `${name} — ${count} מודעות פעילות ב${SITE.name}.`,
     alternates: { canonical: `/business/${business.businessSlug}` },
     openGraph: { title: name, url: `/business/${business.businessSlug}` },
   };
@@ -58,11 +75,15 @@ export default async function BusinessPage({ params }: Props) {
   const business = await getBusiness(slug);
   if (!business) notFound();
 
-  const listings = await searchListingCards({
-    sellerId: business.id,
-    perPage: 24,
-    sort: "date",
-  });
+  /*
+   * `businessId` ולא `sellerId`: עמוד העסק מציג את כל המלאי של החנות,
+   * כולל מודעות שסוכנים פרסמו בשמה. `sellerId` היה מציג רק את מה
+   * שהבעלים עצמו פרסם, וסוכנות עם חמישה סוכנים הייתה נראית ריקה.
+   */
+  const [listings, activeCount] = await Promise.all([
+    searchListingCards({ businessId: business.id, perPage: 24, sort: "date" }),
+    activeListingCount(business.id),
+  ]);
 
   const name = business.businessName ?? business.name;
 
@@ -115,7 +136,7 @@ export default async function BusinessPage({ params }: Props) {
                   {business.businessCity}
                 </span>
               ) : null}
-              <span className="num">{business._count.listings} מודעות פעילות</span>
+              <span className="num">{activeCount} מודעות פעילות</span>
               {business.ratingCount > 0 ? (
                 <span className="flex items-center gap-0.5">
                   <Star className="size-3.5 fill-warning text-warning" aria-hidden />

@@ -60,18 +60,26 @@ export function PublishWizard({
   phoneVerified,
   defaultPhone,
   defaultName,
+  businessName = null,
   initial,
 }: {
   tree: CategoryNode[];
   phoneVerified: boolean;
   defaultPhone: string;
   defaultName: string;
+  /** שם העסק שהמפרסם חבר בו, כשיש כזה. `null` למשתמש פרטי. */
+  businessName?: string | null;
   initial?: PublishFormState;
 }) {
   const router = useRouter();
   const isEdit = Boolean(initial?.id);
 
   const [step, setStep] = React.useState(isEdit ? 1 : 0);
+  /*
+   * מודעה של חבר צוות נכנסת למלאי העסק כברירת מחדל — זו הסיבה שהוא
+   * חבר. הבחירה מוצגת בכל זאת, כי אותו אדם מוכר גם דברים פרטיים.
+   */
+  const [asBusiness, setAsBusiness] = React.useState(true);
   const [form, setForm] = React.useState<PublishFormState>(
     initial ?? emptyState({ phone: defaultPhone, name: defaultName }),
   );
@@ -211,6 +219,7 @@ export function PublishWizard({
         body: JSON.stringify({
           mode,
           listingId: form.id,
+          asBusiness: Boolean(businessName) && asBusiness,
           data: {
             categoryId: form.categoryId,
             title: form.title,
@@ -321,7 +330,27 @@ export function PublishWizard({
         ) : null}
 
         {step === 3 ? (
-          <StepPreview form={form} attributes={attributes} tree={tree} />
+          <>
+            <StepPreview form={form} attributes={attributes} tree={tree} />
+
+            {businessName ? (
+              <label className="mt-4 flex items-start gap-2 border border-border bg-card p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={asBusiness}
+                  onChange={(e) => setAsBusiness(e.target.checked)}
+                  className="mt-0.5 size-4 border border-input"
+                />
+                <span>
+                  פרסום בשם {businessName}
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    המודעה תיכנס למלאי של העסק ותופיע בדשבורד שלו. בלי סימון היא
+                    נשארת מודעה פרטית שלך.
+                  </span>
+                </span>
+              </label>
+            ) : null}
+          </>
         ) : null}
       </div>
 

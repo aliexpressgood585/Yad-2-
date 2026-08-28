@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { MyNav } from "@/components/my/my-nav";
+import { membershipsFor } from "@/lib/business";
 
 export default async function MyLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -11,7 +12,7 @@ export default async function MyLayout({ children }: { children: React.ReactNode
   const userId = session.user.id;
 
   // ספירות לתגיות שליד פריטי הניווט
-  const [listings, favorites, searches, unreadMessages, unreadNotifications] =
+  const [listings, favorites, searches, unreadMessages, unreadNotifications, memberships] =
     await Promise.all([
       prisma.listing.count({ where: { userId, deletedAt: null } }),
       prisma.favorite.count({ where: { userId } }),
@@ -25,6 +26,7 @@ export default async function MyLayout({ children }: { children: React.ReactNode
         },
       }),
       prisma.notification.count({ where: { userId, readAt: null } }),
+      membershipsFor(userId),
     ]);
 
   const items = [
@@ -33,6 +35,10 @@ export default async function MyLayout({ children }: { children: React.ReactNode
     { href: "/my/favorites", label: "מועדפים", icon: "Heart", count: favorites },
     { href: "/my/searches", label: "חיפושים שמורים", icon: "Search", count: searches },
     { href: "/my/notifications", label: "התראות", icon: "Bell", count: unreadNotifications },
+    // מוצג רק למי שיש לו עסק או שצורף לצוות של אחד
+    ...(memberships.length
+      ? [{ href: "/my/business", label: "כלים לעסק", icon: "Store", count: 0 }]
+      : []),
     { href: "/my/profile", label: "הפרופיל שלי", icon: "UserRound", count: 0 },
   ];
 

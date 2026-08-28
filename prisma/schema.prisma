@@ -131,6 +131,10 @@ model User {
 
   accounts           Account[]
   notificationJobs   NotificationJob[]
+  businessListings   Listing[]         @relation("BusinessListings")
+  teamMembers        BusinessMember[]  @relation("BusinessTeam")
+  memberships        BusinessMember[]  @relation("TeamMemberships")
+  feeds              ListingFeed[]
   sessions           Session[]
   listings           Listing[]
   favorites          Favorite[]
@@ -227,6 +231,7 @@ model Category {
   children   Category[]  @relation("CategoryTree")
   attributes Attribute[]
   listings   Listing[]
+  feeds      ListingFeed[]
 
   @@index([parentId, order])
 }
@@ -338,12 +343,30 @@ model Listing {
   contentHash  String?
   fraudScore   Int    @default(0)
 
+  /// חשבון העסק שהמודעה שייכת לו, כשהיא פורסמה בשם עסק.
+  ///
+  /// `userId` נשאר מי שפרסם בפועל — סוכן, מנהל או הבעלים — ו-`businessId`
+  /// הוא העסק. ההפרדה היא מה שמאפשר לסוכן לראות רק את המלאי שלו
+  /// ולמנהל לראות את הכול, בלי שהמודעות יעברו בעלות בין אנשים.
+  businessId   String?
+  /// מזהה המודעה במערכת של הסוחר, כשהיא הגיעה מפיד או מהעלאה מרוכזת.
+  /// זה מה שהופך ייבוא חוזר לעדכון במקום לכפילות.
+  externalId   String?
+  /// הפיד שיצר את המודעה, כשהיא הגיעה מפיד.
+  ///
+  /// זה מה שמגביל את "סימון כנמכר למה שנעלם" לפיד שממנו הוא הגיע.
+  /// בלי זה פיד אחד היה מוחק את המלאי של פיד אחר באותו עסק, ואת כל מה
+  /// שהועלה ידנית בהעלאה מרוכזת — כי לכולם יש `externalId`.
+  feedId       String?
+
   /// ערך ההשוואה של המודעה (שנת ייצור ברכב, מספר חדרים בנדל"ן).
   /// מנורמל מהשדות הדינמיים כדי ש"מד המחיר" יוכל לאתר מודעות דומות
   /// באינדקס אחד במקום ב-join אל טבלת השדות בכל שאילתה.
   comparableBand Float?
 
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business     User?              @relation("BusinessListings", fields: [businessId], references: [id], onDelete: SetNull)
+  feed         ListingFeed?       @relation(fields: [feedId], references: [id], onDelete: SetNull)
   category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   images       ListingImage[]
   attributes   ListingAttribute[]
@@ -357,9 +380,13 @@ model Listing {
   phoneReveals PhoneReveal[]
   dailyStats   ListingDailyStat[]
 
+  /// ייבוא חוזר של אותו מזהה חיצוני מעדכן ואינו יוצר כפילות
+  @@unique([businessId, externalId])
   @@index([status, publishedAt])
   @@index([categoryId, status, publishedAt])
   @@index([userId, status])
+  @@index([businessId, status])
+  @@index([feedId])
   @@index([city, status])
   @@index([price])
   @@index([isPromoted, promotedUntil])
@@ -702,4 +729,88 @@ model NotificationJob {
 
   @@index([status, scheduledFor])
   @@index([userId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Business tools
+// ---------------------------------------------------------------------------
+
+/// תפקידים בצוות של עסק.
+///
+/// שלושה ולא חמישה: כל תפקיד נוסף הוא שאלה שמישהו צריך לענות עליה בכל
+/// פעם שהוא מוסיף עובד, וההבחנה המעשית בסוכנות היא בין מי שמנהל את
+/// המלאי כולו לבין מי שאחראי על המודעות שהוא פרסם.
+enum BusinessRole {
+  /// בעל העסק. הוא אינו שורה בטבלה — הוא ה-`businessId` עצמו.
+  OWNER
+  /// כל המלאי, העלאה מרוכזת, פידים ודשבורד. לא ניהול צוות.
+  MANAGER
+  /// רק המודעות שהוא עצמו פרסם.
+  AGENT
+}
+
+model BusinessMember {
+  id         String       @id @default(cuid())
+  /// חשבון העסק
+  businessId String
+  /// המשתמש שצורף
+  userId     String
+  role       BusinessRole @default(AGENT)
+  createdAt  DateTime     @default(now())
+
+  business User @relation("BusinessTeam", fields: [businessId], references: [id], onDelete: Cascade)
+  user     User @relation("TeamMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, userId])
+  @@index([userId])
+}
+
+enum FeedFormat {
+  CSV
+  XML
+}
+
+enum FeedRunStatus {
+  OK
+  PARTIAL
+  FAILED
+}
+
+/// פיד מלאי של סוחר.
+///
+/// הפיד הוא אותו מנגנון בדיוק כמו ההעלאה המרוכזת, רק שהמקור הוא כתובת
+/// שנמשכת שוב ושוב במקום קובץ שהועלה פעם אחת. לכן שניהם חולקים את
+/// אותו קוד מיפוי ואימות (`src/lib/feed.ts`).
+model ListingFeed {
+  id         String     @id @default(cuid())
+  businessId String
+  name       String
+  url        String
+  format     FeedFormat @default(CSV)
+  /// הקטגוריה שאליה נכנסות כל המודעות בפיד
+  categoryId String
+
+  /// מיפוי מעמודות הפיד לשדות הלוח, כולל שדות דינמיים.
+  mapping Json
+
+  isActive Boolean @default(true)
+  /// מודעה שנעלמה מהפיד מסומנת כנמכרה. כבוי כברירת מחדל, כי פיד
+  /// שנקטע באמצע היה מוחק מלאי שלם.
+  removeMissing Boolean @default(false)
+
+  lastRunAt   DateTime?
+  lastStatus  FeedRunStatus?
+  lastMessage String?
+  lastCreated Int            @default(0)
+  lastUpdated Int            @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business User      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  listings Listing[]
+
+  @@index([businessId])
+  @@index([isActive, lastRunAt])
 }

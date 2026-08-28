@@ -56,6 +56,14 @@ export type SearchQuery = {
   radiusKm?: number;
   attributes?: AttributeFilter[];
   sellerId?: string;
+  /**
+   * כל המלאי של עסק — כולל מודעות שסוכנים פרסמו בשמו.
+   *
+   * נפרד מ-`sellerId` בכוונה: `sellerId` הוא "מה האדם הזה פרסם",
+   * ו-`businessId` הוא "מה יש בחנות". בסוכנות עם חמישה סוכנים אלה שתי
+   * שאלות שונות, ושתיהן נשאלות באתר.
+   */
+  businessId?: string;
   promotedOnly?: boolean;
   withImages?: boolean;
   excludeIds?: string[];
@@ -117,6 +125,12 @@ function buildWhere(query: SearchQuery): Prisma.Sql {
   if (query.priceMax !== undefined) {
     conditions.push(Prisma.sql`l."price" <= ${query.priceMax}`);
   }
+  if (query.businessId) {
+    conditions.push(
+      Prisma.sql`(l."businessId" = ${query.businessId} OR l."userId" = ${query.businessId})`,
+    );
+  }
+
   if (query.sellerId) {
     conditions.push(Prisma.sql`l."userId" = ${query.sellerId}`);
   }

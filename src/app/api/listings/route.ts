@@ -8,6 +8,7 @@ import {
   requireSession,
 } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { activeMembership } from "@/lib/business";
 import { notifyPriceDrop } from "@/lib/notification-triggers";
 import {
   buildAttributeRows,
@@ -25,6 +26,14 @@ const createSchema = z.object({
   /** `draft` שומר בלי אימות מלא, `publish` מפרסם באוויר */
   mode: z.enum(["draft", "publish"]).default("publish"),
   listingId: z.string().optional(),
+  /**
+   * לשייך את המודעה לעסק שהמפרסם חבר בו.
+   *
+   * ברירת המחדל היא `true` — מי שחבר בצוות של עסק מפרסם בשמו — אבל
+   * הדגל מפורש ונשלט מהאשף, כי אותו אדם יכול גם למכור ספה פרטית,
+   * ומודעה פרטית שנכנסת למלאי של הסוכנות היא באג שקשה לתקן בדיעבד.
+   */
+  asBusiness: z.boolean().default(true),
   data: z.unknown(),
 });
 
@@ -194,10 +203,16 @@ export async function POST(req: Request) {
     );
     const now = new Date();
 
+    // שיוך לעסק, כשהמפרסם חבר באחד וביקש זאת
+    const membership = body.asBusiness
+      ? await activeMembership(session.user.id).catch(() => null)
+      : null;
+
     const listing = await prisma.listing.create({
       data: {
         slug,
         userId: session.user.id,
+        businessId: membership?.businessId ?? null,
         categoryId: input.categoryId,
         title,
         description,
