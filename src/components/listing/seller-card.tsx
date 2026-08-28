@@ -18,11 +18,17 @@ type Seller = {
   activeListings: number;
 };
 
+/*
+ * תגית רמת האמון מסומנת בקו ובטקסט, לא במילוי.
+ *
+ * תגית ענבר מלאה בדף מודעה מתחרה ב"הצגת מספר הטלפון" שהוא הפעולה
+ * היחידה של המסך, והעין קופצת לשתיהן. הציון הוא מידע ולא פעולה.
+ */
 const LEVEL_STYLES: Record<TrustScore["level"], string> = {
-  excellent: "bg-success text-success-foreground",
-  good: "bg-primary text-primary-foreground",
-  fair: "bg-warning text-warning-foreground",
-  new: "bg-muted text-muted-foreground",
+  excellent: "border border-info text-info",
+  good: "border border-primary text-primary",
+  fair: "border border-warning text-warning",
+  new: "border border-border text-muted-foreground",
 };
 
 /** כרטיס מוכר עם ציון אמינות והאותות שממנו הוא מחושב. */

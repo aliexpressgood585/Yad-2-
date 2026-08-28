@@ -5,7 +5,7 @@ import { ViewTransitionLink } from "@/components/view-transition-link";
 
 import { FavoriteButton } from "@/components/listing/favorite-button";
 import { ListingImage } from "@/components/listing/listing-image";
-import { PriceMeter } from "@/components/listing/price-meter";
+import { PriceGauge } from "@/components/listing/price-gauge";
 import { listingImageTransition } from "@/lib/view-transitions";
 import type { ListingCardDto } from "@/lib/listing-dto";
 import { formatPrice } from "@/lib/format";
@@ -20,153 +20,172 @@ type Props = {
 };
 
 /**
- * כרטיס מודעה.
+ * שורת התוצאה.
  *
- * ההיררכיה קבועה ולא משתנה בין קטגוריות: מחיר, כותרת, שלושה שדות מפרט,
- * מיקום וזמן. מה שהוסר במכוון — דירוג המוכר, ספירת צפיות ומספר התמונות.
- * שלושתם רעש ברשימה: הם לא עוזרים לבחור בין מודעות, והם מה שהופך לוח
- * מודעות לצפוף. מקומם בדף המודעה, אחרי שכבר נכנסו.
+ * תוצאות מוצגות כשורות קריאה ברוחב מלא ולא כגריד כרטיסים. הסיבה אינה
+ * טעם: בגריד העין קופצת בשני צירים ומשווה מודעה לשכנתה בטור, ואילו
+ * ההשוואה שקונה באמת עושה היא בין פריטים רצופים — כלומר טבלה. שורה
+ * מלאה גם מאפשרת את הדבר שגריד אינו מאפשר: **טור מחירים אחד שמתיישר
+ * לאורך כל התוצאות**, במונו-רווח, עם הסקאלה מתחת לכל מחיר.
  *
- * **הכרטיס מגיב למכל שלו ולא לחלון.** אותו רכיב עובד בגריד, בסיידבר,
+ * ההיררכיה קבועה ולא משתנה בין קטגוריות: כותרת, שלושה שדות מפרט,
+ * מיקום וזמן — ובטור הקריאה מחיר וסקאלה. מה שהוסר במכוון: דירוג
+ * המוכר, ספירת צפיות ומספר התמונות. שלושתם רעש ברשימה, ומקומם בדף
+ * המודעה אחרי שכבר נכנסו.
+ *
+ * **השורה מגיבה למכל שלה ולא לחלון.** אותו רכיב עובד ברשימה, בסיידבר,
  * ברצועת "נצפו לאחרונה" ובחלונית של המפה בלי prop שמסביר לו איפה הוא
  * נמצא — נקודות השבירה יושבות ב-`@container` (ראה `globals.css`).
- * `density` נשאר prop כי הוא כוונה של המשתמש ולא מידה של המכל.
+ *
+ * `density` נשאר prop כי הוא כוונה של המשתמש ולא מידה של המכל: הוא
+ * קובע אם השורה מציגה את התמונה כלוחית מלאה או כחתימה צרה.
  */
-export function ListingCard({ listing, density = "grid", priority = false, className }: Props) {
-  const isList = density === "list";
+export function ListingCard({ listing, density = "full", priority = false, className }: Props) {
+  const compact = density === "compact";
+
+  /*
+   * שני המשתנים נכתבים יחד ותמיד. `globals.css` בוחר ביניהם לפי הפנים
+   * הפעילה, כי אותה בהירות אינה יכולה לעבור בדיקת ניגודיות גם מול
+   * גרפיט וגם מול עצם.
+   */
+  const accentStyle = listing.accent
+    ? ({
+        "--accent-instrument": listing.accent.instrument,
+        "--accent-day": listing.accent.day,
+      } as React.CSSProperties)
+    : undefined;
 
   return (
     <article
       data-density={density}
+      style={accentStyle}
       className={cn(
-        "listing-card group relative overflow-hidden rounded-lg border border-border bg-card",
-        "transition-shadow duration-ui ease-ui focus-within:ring-2 focus-within:ring-ring hover:shadow-lifted",
-        isList && "flex",
+        "listing-row group flex transition-colors duration-ui ease-ui",
+        "focus-within:ring-2 focus-within:ring-ring",
         className,
       )}
     >
-      <div
-        className={cn(
-          "listing-card-media relative shrink-0",
-          // הרוחב בשורת רשימה גדל דרך שאילתת מכל, לא לפי רוחב החלון
-          isList ? "w-32" : "w-full",
-        )}
-      >
+      <div className={cn("listing-row-media relative", compact && "!w-24")}>
         <ListingImage
           src={listing.imageUrl}
           blurDataURL={listing.blurDataURL}
           categoryIcon={listing.categoryIcon}
-          sizes={isList ? "176px" : "(max-width: 640px) 50vw, 300px"}
+          sizes={compact ? "96px" : "176px"}
           priority={priority}
           viewTransitionName={listingImageTransition(listing.id)}
         />
 
         {/*
-         * תג "מקודם" — קטן, בצבע טקסט משני, על רקע כרטיס חצי-שקוף.
+         * תג "מקודם" — קטן, בצבע טקסט משני, על רקע שלדה.
          * מודעה מקודמת מנצחת במיקום ברשימה, לא בצעקנות.
          * ה-scrim מתחתיו מבטיח קריאוּת גם על פינת תמונה בהירה.
          */}
         {listing.isPromoted ? (
           <>
-            <div className="img-scrim pointer-events-none absolute inset-x-0 bottom-0 h-12" />
-            <span className="absolute bottom-2 start-2 rounded-full bg-card/85 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm">
+            <div className="img-scrim pointer-events-none absolute inset-x-0 bottom-0 h-10" />
+            <span className="absolute bottom-1 start-1 bg-card/90 px-1.5 py-0.5 text-xs text-muted-foreground">
               מקודם
             </span>
           </>
         ) : null}
-
-        {/* מיקום קבוע בכל הכרטיסים — העין לומדת איפה הלב נמצא */}
-        <div className="absolute end-2 top-2">
-          <FavoriteButton listingId={listing.id} />
-        </div>
       </div>
 
-      {/*
-       * min-w-0 חיוני: בלעדיו פריט flex לא יורד מתחת לרוחב התוכן שלו,
-       * ושורת מפרט ארוכה ("יד חמישית ומעלה · 417,851 ק\"מ") דחפה את
-       * גוף הכרטיס אל מחוץ לגבולותיו במקום להיחתך.
-       */}
-      <div className={cn("flex min-w-0 flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
-        <p className="listing-card-price num text-lg font-medium leading-none text-foreground">
-          {formatPrice(listing.price, { currency: listing.currency })}
-        </p>
+      <div className="listing-row-body">
+        {/*
+         * min-w-0 חיוני: בלעדיו פריט flex לא יורד מתחת לרוחב התוכן שלו,
+         * ושורת מפרט ארוכה דוחפת את גוף השורה אל מחוץ לגבולותיה.
+         */}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h3 className="truncate text-base font-semibold leading-snug">
+            {/* הקישור פרוס על כל השורה כדי להגדיל את שטח הלחיצה */}
+            <ViewTransitionLink
+              href={`/item/${listing.slug}`}
+              className="outline-none after:absolute after:inset-0"
+            >
+              <BidiText>{listing.title}</BidiText>
+            </ViewTransitionLink>
+          </h3>
 
-        <PriceMeter meter={listing.priceMeter} />
+          {/*
+           * שדה שלא נכנס יורד כולו, ולא נחתך.
+           *
+           * `.num` מבודד את המספר ל-LTR, וחיתוך בקצה השורה ב-RTL אוכל
+           * דווקא את הספרות המובילות — "417,851 ק\"מ" הופך ל-"7,851
+           * ק\"מ", מספר שגוי שנראה תקין לחלוטין. כמה שדות מוצגים נקבע
+           * ברוחב המכל (`globals.css`), והפריטים עצמם לעולם לא מתכווצים.
+           */}
+          {listing.highlights.length ? (
+            <ul className="listing-row-specs flex items-center gap-x-1.5 overflow-hidden text-xs text-muted-foreground">
+              {listing.highlights.map((h, i) => (
+                <li
+                  key={h.key}
+                  className={cn(
+                    "flex items-center gap-1.5",
+                    // ערך עם ספרות לעולם אינו מתכווץ; טקסט מתקצר במקומו
+                    /\d/.test(h.value) ? "shrink-0" : "min-w-0 truncate",
+                  )}
+                >
+                  {i > 0 ? <span aria-hidden>·</span> : null}
+                  <span className="num">{h.value}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-        <h3 className="truncate text-base font-semibold leading-snug">
-          {/* הקישור פרוס על כל הכרטיס כדי להגדיל את שטח הלחיצה */}
-          <ViewTransitionLink
-            href={`/item/${listing.slug}`}
-            className="outline-none after:absolute after:inset-0"
-          >
-            <BidiText>{listing.title}</BidiText>
-          </ViewTransitionLink>
-        </h3>
+          <p className="truncate text-xs text-muted-foreground/75">
+            {listing.city}
+            {listing.neighborhood ? `, ${listing.neighborhood}` : ""}
+            {" · "}
+            <time dateTime={listing.date}>{timeAgo(listing.date)}</time>
+          </p>
+        </div>
 
         {/*
-         * שדה שלא נכנס יורד כולו, ולא נחתך.
-         *
-         * חיתוך של פריט באמצע הוא לא רק מכוער כאן: `.num` מבודד את
-         * המספר ל-LTR, וחיתוך בקצה השורה ב-RTL אוכל דווקא את הספרות
-         * המובילות — "417,851 ק\"מ" הופך ל-"7,851 ק\"מ", מספר שגוי
-         * שנראה תקין לחלוטין. כמה שדות מוצגים נקבע ברוחב המכל
-         * (`globals.css`), והפריטים עצמם לעולם לא מתכווצים.
+         * טור הקריאה. הסקאלה יושבת מתחת למחיר ולא לצידו — היא קוראת את
+         * המספר שמעליה, ומיקום המחוג בשורה הבאה נמדד מול אותו קו בדיוק.
          */}
-        {listing.highlights.length ? (
-          <ul className="listing-card-specs flex items-center gap-x-1.5 overflow-hidden text-xs text-muted-foreground">
-            {listing.highlights.map((h, i) => (
-              <li
-                key={h.key}
-                className={cn(
-                  "flex items-center gap-1.5",
-                  // ערך עם ספרות לעולם אינו מתכווץ; טקסט מתקצר במקומו
-                  /\d/.test(h.value) ? "shrink-0" : "min-w-0 truncate",
-                )}
-              >
-                {i > 0 ? <span aria-hidden>·</span> : null}
-                <span className="num">{h.value}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <div className="listing-row-readout flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="num text-lg font-medium leading-none text-foreground">
+              {formatPrice(listing.price, { currency: listing.currency })}
+            </p>
+            <PriceGauge meter={listing.priceMeter} className="mt-1.5" />
+          </div>
 
-        <p className="listing-card-meta mt-auto truncate pt-0.5 text-xs text-muted-foreground/70">
-          {listing.city}
-          {listing.neighborhood ? `, ${listing.neighborhood}` : ""}
-          {" · "}
-          <time dateTime={listing.date}>{timeAgo(listing.date)}</time>
-        </p>
+          {/* מיקום קבוע בכל השורות — העין לומדת איפה הלב נמצא */}
+          <div className="relative z-10 shrink-0">
+            <FavoriteButton listingId={listing.id} />
+          </div>
+        </div>
       </div>
     </article>
   );
 }
 
 /**
- * שלד טעינה במידות המדויקות של הכרטיס האמיתי.
+ * שלד טעינה במידות המדויקות של השורה האמיתית.
  * כל סטייה כאן מתורגמת ישירות ל-CLS כשהתוכן מגיע.
  */
-export function ListingCardSkeleton({ density = "grid" }: { density?: Density }) {
-  const isList = density === "list";
+export function ListingCardSkeleton({ density = "full" }: { density?: Density }) {
+  const compact = density === "compact";
   return (
-    <div
-      data-density={density}
-      className={cn(
-        "listing-card overflow-hidden rounded-lg border border-border bg-card",
-        isList && "flex",
-      )}
-      aria-hidden
-    >
+    <div data-density={density} className="listing-row flex" aria-hidden>
       <div
         className={cn(
-          "listing-card-media aspect-[4/3] shrink-0 animate-pulse bg-muted",
-          isList ? "w-32" : "w-full",
+          "listing-row-media aspect-[4/3] animate-pulse bg-muted",
+          compact && "!w-24",
         )}
       />
-      <div className={cn("flex min-w-0 flex-1 flex-col gap-1 p-3", isList && "justify-center")}>
-        <div className="h-5 w-24 animate-pulse rounded-sm bg-muted" />
-        <div className="mt-1 h-4 w-full animate-pulse rounded-sm bg-muted" />
-        <div className="mt-1 h-3 w-2/3 animate-pulse rounded-sm bg-muted" />
-        <div className="mt-auto h-3 w-1/2 animate-pulse rounded-sm bg-muted" />
+      <div className="listing-row-body">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="h-4 w-2/3 animate-pulse bg-muted" />
+          <div className="h-3 w-1/2 animate-pulse bg-muted" />
+          <div className="h-3 w-2/5 animate-pulse bg-muted" />
+        </div>
+        <div className="listing-row-readout">
+          <div className="h-5 w-24 animate-pulse bg-muted" />
+          <div className="mt-2 h-3 w-full animate-pulse bg-muted" />
+        </div>
       </div>
     </div>
   );

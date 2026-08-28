@@ -3,126 +3,146 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   לוח — ערכת עיצוב
+   לוח — ערכת עיצוב · המכשיר
    ==========================================================================
-   מקור: שילוט הדרכים הישראלי והבאוהאוס של תל אביב.
-   ירוק שילוט בין-עירוני הוא צבע הפעולה היחיד; כחול שילוט עירוני הוא
-   צבע המידע; חול ירושלמי הוא הנייר. הנימוק המלא ב-DESIGN.md.
+   הלוח מעוצב כמכשיר מדידה ולא כחנות. משמעות הדבר בפועל:
 
-   ערכי HSL ולא HEX — כדי ש-Tailwind יוכל לגזור שקיפויות (`bg-sign/10`).
+     · חמישה צבעים בלבד, ואחד מהם — ענבר זרחני — הוא צבע הקריאה היחיד.
+       ציאן שמור לפסק דין ("מתחת לחציון") ואינו כפתור בשום מסך.
+     · אפס פינות מעוגלות ואפס צללים. עומק נוצר בקו של פיקסל אחד ובהפרש
+       ערך בין גרפיט לשלדה, לא בטשטוש.
+     · ספרות במונו-רווח עם tabular-nums, כי טור מספרים שאינו מתיישר הוא
+       מכשיר שאי אפשר לקרוא ממנו.
+     · לכל מודעה סקאלה עם שנתות ומחוג. מדד המחיר אינו רכיב אלא הדקדוק.
+
+   הכלל שקודם לכל השאר: **מכשיר שמראה קריאה שאין לו הוא מכשיר מקולקל.**
+   מתחת ל-8 מודעות דומות אין מחוג — לא מחוג חלש ולא מחוג אפור. אין.
+
+   ערכי HSL ולא HEX — כדי ש-Tailwind יוכל לגזור שקיפויות (`bg-primary/10`).
+   הנימוק המלא ב-DESIGN.md.
    ========================================================================== */
 
 @layer base {
+  /*
+   * פנים היום.
+   *
+   * אינה היפוך של פנים המכשיר: ענבר #FFB000 על עצם נותן יחס 1.9:1 והוא
+   * בלתי קריא, ולכן הוא נבנה מחדש כענבר שרוף #7A4A00 (5.8:1). אותו דבר
+   * לציאן. הפלטה שומרת על אותם תפקידים בדיוק, בערכים אחרים.
+   */
   :root {
     /* --- הפלטה הגולמית --------------------------------------------------
-       ink    #14171A   paper  #F7F5F0   sign   #005F3C
-       route  #0B4A8F   stone  #DDD8CE   signal #C2410C              */
-    --ink: 210 12% 9%;
-    --paper: 40 24% 96%;
-    --sign: 158 100% 19%;
-    --route: 211 86% 30%;
-    --stone: 39 20% 84%;
-    --signal: 20 91% 40%;
+       graphite #E6E2D6   chassis #F0EDE3   bone   #16181B
+       amber    #7A4A00   cyan    #0E5F6E   rule   #C9C3B2            */
+    --graphite: 45 24% 87%;
+    --chassis: 46 30% 92%;
+    --bone: 216 10% 10%;
+    --amber: 36 100% 24%;
+    --cyan: 189 77% 24%;
+    --rule: 44 18% 74%;
 
     /* --- תפקידים --------------------------------------------------------- */
-    --background: var(--paper);
-    --foreground: var(--ink);
+    --background: var(--graphite);
+    --foreground: var(--bone);
 
-    /* הכרטיס לבן על נייר החול — ההפרדה נעשית בגוון, לא בקו כבד */
-    --card: 0 0% 100%;
-    --card-foreground: var(--ink);
+    --card: var(--chassis);
+    --card-foreground: var(--bone);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: var(--ink);
+    --popover: var(--chassis);
+    --popover-foreground: var(--bone);
 
-    /* צבע הפעולה היחיד באפליקציה */
-    --primary: var(--sign);
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 158 34% 93%;
+    /* צבע הקריאה היחיד באפליקציה */
+    --primary: var(--amber);
+    --primary-foreground: 46 30% 96%;
+    --primary-soft: 40 40% 84%;
 
-    --secondary: 40 18% 92%;
-    --secondary-foreground: var(--ink);
+    --secondary: 45 20% 82%;
+    --secondary-foreground: var(--bone);
 
-    /* מידע וקישורים — לא פעולה. אין לו כפתור מלא בשום מסך. */
-    --info: var(--route);
-    --info-foreground: 0 0% 100%;
+    /* פסק דין בלבד — "מתחת לחציון". אין לו כפתור מלא בשום מסך. */
+    --info: var(--cyan);
+    --info-foreground: 46 30% 96%;
 
-    /* אזהרות וירידות מחיר בלבד */
-    --accent: var(--signal);
-    --accent-foreground: 0 0% 100%;
+    /* אזהרות. הענבר הוא כבר צבע הקריאה, ולכן אזהרה נבדלת בגוון אדום. */
+    --accent: 8 74% 33%;
+    --accent-foreground: 46 30% 96%;
 
-    --muted: 40 18% 93%;
-    --muted-foreground: 213 8% 38%;
+    --muted: 45 20% 84%;
+    --muted-foreground: 42 6% 31%;
 
-    --destructive: 0 72% 42%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 34%;
+    --destructive-foreground: 46 30% 96%;
 
-    --success: var(--sign);
-    --success-foreground: 0 0% 100%;
+    --success: var(--cyan);
+    --success-foreground: 46 30% 96%;
 
-    --warning: var(--signal);
-    --warning-foreground: 0 0% 100%;
+    --warning: 8 74% 33%;
+    --warning-foreground: 46 30% 96%;
 
-    --border: var(--stone);
-    --input: 39 18% 78%;
-    --ring: var(--sign);
+    --border: var(--rule);
+    --input: 44 16% 66%;
+    --ring: var(--amber);
 
-    --shadow-color: 210 12% 9%;
-    --radius: 0.625rem; /* 10px בכרטיסים; כפתורים נגזרים ל-8px */
+    /*
+     * אפס. פינה מעוגלת היא רמז לתוכנה ידידותית, וזה בדיוק מה שהמכשיר
+     * הזה אינו. הערך נקרא דרך כל טוקני `borderRadius` ב-tailwind.config,
+     * כך ש-`rounded-lg` בקוד קיים פשוט אינו עושה כלום.
+     */
+    --radius: 0px;
   }
 
   /*
-   * מצב לילה נבנה מחדש ואינו היפוך של הבהיר.
-   * היפוך היה הופך את ירוק השילוט לכהה יותר ומאבד ניגודיות; כאן הוא
-   * מתבהר ל-#2FA875 כדי לשמור על AA מול הרקע.
+   * פנים המכשיר — ברירת המחדל של האתר.
+   *
+   * גרפיט #16181B קרקע, שלדה #1E2126 משטח, עצם #E6E2D6 טקסט,
+   * ענבר זרחני #FFB000 קריאה, ציאן #58C6D8 פסק דין.
    */
   .dark {
-    --ink: 40 20% 94%;
-    --paper: 210 8% 10%;
-    --sign: 156 57% 42%;
-    --route: 211 70% 62%;
-    --stone: 210 7% 24%;
-    --signal: 20 85% 58%;
+    --graphite: 216 10% 10%;
+    --chassis: 218 12% 13%;
+    --bone: 45 24% 87%;
+    --amber: 41 100% 50%;
+    --cyan: 188 62% 60%;
+    --rule: 218 11% 19%;
 
-    --background: var(--paper);
-    --foreground: var(--ink);
+    --background: var(--graphite);
+    --foreground: var(--bone);
 
-    --card: 210 8% 13%;
-    --card-foreground: var(--ink);
+    --card: var(--chassis);
+    --card-foreground: var(--bone);
 
-    --popover: 210 8% 14%;
-    --popover-foreground: var(--ink);
+    --popover: var(--chassis);
+    --popover-foreground: var(--bone);
 
-    --primary: var(--sign);
-    --primary-foreground: 158 60% 7%;
-    --primary-soft: 158 26% 18%;
+    --primary: var(--amber);
+    --primary-foreground: 216 10% 8%;
+    --primary-soft: 41 30% 16%;
 
-    --secondary: 210 7% 18%;
-    --secondary-foreground: var(--ink);
+    --secondary: 217 11% 18%;
+    --secondary-foreground: var(--bone);
 
-    --info: var(--route);
-    --info-foreground: 211 60% 8%;
+    --info: var(--cyan);
+    --info-foreground: 216 10% 8%;
 
-    --accent: var(--signal);
-    --accent-foreground: 20 60% 8%;
+    --accent: 8 78% 62%;
+    --accent-foreground: 216 10% 8%;
 
-    --muted: 210 7% 17%;
-    --muted-foreground: 210 8% 65%;
+    --muted: 217 10% 15%;
+    --muted-foreground: 46 8% 57%;
 
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 62%;
+    --destructive-foreground: 216 10% 8%;
 
-    --success: var(--sign);
-    --success-foreground: 158 60% 7%;
+    --success: var(--cyan);
+    --success-foreground: 216 10% 8%;
 
-    --warning: var(--signal);
-    --warning-foreground: 20 60% 8%;
+    --warning: 8 78% 62%;
+    --warning-foreground: 216 10% 8%;
 
-    --border: var(--stone);
-    --input: 210 7% 28%;
-    --ring: var(--sign);
+    --border: var(--rule);
+    --input: 218 11% 27%;
+    --ring: var(--amber);
 
-    --shadow-color: 0 0% 0%;
   }
 
   * {
@@ -142,17 +162,26 @@
     text-rendering: optimizeLegibility;
   }
 
+  /*
+   * כותרות בגרוטסק עברי מעובה.
+   *
+   * `font-stretch` אינו זמין ב-Heebo (אין ציר רוחב), ולכן ה"צר" מושג
+   * במשקל 900 יחד עם מרווח אותיות שלילי — צפוף ככל שאפשר בלי לאבד את
+   * הרווח שבין אותיות עבריות סמוכות. מעבר ל--0.02em האותיות מתחילות
+   * להתחבר ו"נסיעה" נקראת "נסיעה" עם נו״ן וסמ״ך דבוקות.
+   */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-heading font-bold tracking-tight;
+    @apply font-heading font-black;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
-  /* טבעת פוקוס אחידה ונגישה בכל הממשק */
+  /* טבעת פוקוס אחידה ונגישה בכל הממשק — ריבועית, כמו כל השאר */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
@@ -170,11 +199,11 @@
   }
 
   ::selection {
-    @apply bg-primary/20;
+    @apply bg-primary/25;
   }
 
   /* ------------------------------------------------------------------
-     מעבר בין כרטיס לדף מודעה (View Transitions API)
+     מעבר בין שורה לדף מודעה (View Transitions API)
 
      תמונת המודעה נושאת את אותו `view-transition-name` בשני הדפים,
      והדפדפן מזיז אותה בין המצבים. אין כאן ספרייה ואין JavaScript משלנו:
@@ -198,19 +227,22 @@
   }
 
   /*
-   * מספרים בעברית.
+   * מספרים.
    *
    * `direction: ltr` + `unicode-bidi: isolate` — בלעדיהם "₪1,234" מוצג
    * הפוך בתוך משפט עברי.
-   * `tabular-nums` — ספרות ברוחב קבוע, כדי שעמודת מחירים בגריד תתיישר.
+   * מונו-רווח עם `tabular-nums` — ספרות ברוחב קבוע, כדי שטור מספרים
+   * יתיישר לאורך השורות במקום לרקוד. במכשיר מדידה זה לא נוי אלא תנאי
+   * לקריאה: העין משווה מיקום ספרה, לא ערך.
    */
   .num {
     unicode-bidi: isolate;
     direction: ltr;
     display: inline-block;
-    font-family: var(--font-data), var(--font-body), system-ui, sans-serif;
+    font-family: var(--font-data), var(--font-body), ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -218,12 +250,12 @@
   /* דילוג לתוכן — נגישות מקלדת */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100]
-           focus:rounded-md focus:bg-primary focus:px-4 focus:py-2
-           focus:text-primary-foreground focus:shadow-lifted;
+           focus:border focus:border-primary focus:bg-primary focus:px-4 focus:py-2
+           focus:text-primary-foreground;
   }
 
   .surface {
-    @apply rounded-lg border border-border bg-card;
+    @apply border border-border bg-card;
   }
 
   /* גלילה אופקית ללא סרגל גלילה נראה (רצועות קטגוריות) */
@@ -235,7 +267,7 @@
     display: none;
   }
 
-  /* גזירת טקסט לשתי שורות — כותרות כרטיסי מודעה */
+  /* גזירת טקסט לשתי שורות */
   .line-clamp-2-fixed {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -248,28 +280,216 @@
    * תמונות מגיעות ממשתמשים ואי אפשר לדעת אם הפינה בהירה או כהה —
    * הגרדיאנט מבטיח ניגודיות בלי לצבוע את כל התמונה.
    */
+  .img-scrim {
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.55) 0%,
+      rgb(0 0 0 / 0.2) 45%,
+      transparent 100%
+    );
+  }
+
+  /* ==================================================================
+     הסקאלה — הדקדוק של האתר
+
+     פס אופקי עם שנתות ומחוג. השנתות הן רבעוני ההתפלגות, המחוג הוא
+     המקום שבו המחיר של המודעה הזו יושב בשוק שלה.
+
+     השנתות מצוירות ב-`repeating-linear-gradient` ולא באלמנטים, כי
+     חמישה `<span>` לכל שורת תוצאה הם 120 אלמנטים נוספים בעמוד של
+     24 מודעות — ומחיר כזה על קישוט אינו נסבל, גם כשהקישוט הוא נתון.
+     ================================================================== */
+  .gauge {
+    position: relative;
+    height: 0.75rem;
+    /* קו הבסיס */
+    background-image: linear-gradient(
+      to bottom,
+      transparent calc(50% - 0.5px),
+      hsl(var(--border)) calc(50% - 0.5px),
+      hsl(var(--border)) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
+  }
+
+  /* שנתות: קו אנכי כל 10% מרוחב הפס */
+  .gauge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to right,
+      hsl(var(--border)) 0 1px,
+      transparent 1px 10%
+    );
+    /* השנתה האחרונה נופלת בדיוק על הקצה ולכן נחתכת בלעדיו */
+    background-size: calc(100% - 1px) 100%;
+    background-repeat: no-repeat;
+  }
+
+  /* שנתת החציון — ארוכה ובהירה יותר, כי היא נקודת הייחוס */
+  .gauge-median {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: hsl(var(--foreground) / 0.45);
+  }
+
   /*
-   * צבע ההדגשה של המודעה — נגזר מ-blurhash של התמונה הראשונה
-   * (`src/lib/listing-accent.ts`) ומוזרק כמשתנה על עוטף הדף.
+   * המחוג.
    *
-   * שני שימושים בלבד, ושניהם עדינים במכוון: הילה מאחורי הגלריה וקו
-   * מתחת למחיר. כשאין ממה לגזור צבע, המשתנה לא נכתב וה-fallback הוא
-   * טוקן הפלטה — כלומר הדף פשוט נראה כמו קודם.
+   * משולש הפוך שיושב על הפס. הענבר הוא צבע הקריאה, ולכן המחוג הוא
+   * הענבר — והמסקנה ("12% מתחת לחציון") היא הציאן. שני הצבעים,
+   * ושום צבע נוסף.
    */
+  .gauge-needle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-inline-start: -1px;
+    background: hsl(var(--primary));
+  }
+
+  .gauge-needle::after {
+    content: "";
+    position: absolute;
+    inset-block-start: -1px;
+    inset-inline-start: -2px;
+    width: 6px;
+    height: 4px;
+    background: hsl(var(--primary));
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  /* ==================================================================
+     שורת התוצאה
+
+     תוצאות מוצגות כשורות קריאה ברוחב מלא ולא כגריד כרטיסים: גריד
+     מכריח את העין לקפוץ בשני צירים ומשווה מודעה לשכנתה בטור, בעוד
+     שהשוואה אמיתית היא בין שורות רצופות — בדיוק כמו טבלה.
+     ================================================================== */
+  /*
+   * צבע ההדגשה נבחר **על האלמנט שנושא את הצבע**, ולא ב-`:root`.
+   *
+   * זה לא ניסוח אלא תנאי לתקינות: משתנה CSS נפתר במקום שבו הוא מוגדר,
+   * ומה שיורד לצאצאים הוא הערך המחושב. `--listing-accent` שהוגדר על
+   * `.dark` היה נפתר שם — במקום שאין בו `--accent-instrument` — ולכן
+   * נופל תמיד ל-`--rule`, וכל השורות היו מקבלות את אותו קו אפור בדיוק.
+   * הבאג הזה נראה כמו "הצבע לא עובד" ולא כמו שגיאה, ולכן ההערה כאן.
+   */
+  .accent-scope,
+  .listing-row {
+    --listing-accent: var(--accent-day, var(--rule));
+  }
+
+  .dark .accent-scope,
+  .dark .listing-row {
+    --listing-accent: var(--accent-instrument, var(--rule));
+  }
+
+  .listing-row {
+    container-type: inline-size;
+    container-name: row;
+    position: relative;
+    border: 1px solid hsl(var(--listing-accent) / 0.65);
+    background: hsl(var(--card));
+  }
+
+  /*
+   * ההילה מתחת לשורה — השכבה השנייה והאחרונה שהצבע הנגזר נוגע בה.
+   *
+   * `inset-block-start: 100%` מציב אותה מתחת למסגרת ולא מאחוריה, וזה
+   * ההבדל בין "המסגרת קורנת" ל"התמונה דולפת החוצה".
+   */
+  .listing-row::after {
+    content: "";
+    position: absolute;
+    inset-inline: 8%;
+    inset-block-start: 100%;
+    height: 10px;
+    background: hsl(var(--listing-accent) / 0.5);
+    filter: blur(9px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .listing-row:hover {
+    border-color: hsl(var(--listing-accent));
+  }
+
+  .listing-row-media {
+    width: 7rem;
+    flex-shrink: 0;
+  }
+
+  .listing-row-body {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0%;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  /*
+   * טור הקריאה — מחיר וסקאלה, מופרד בקו.
+   *
+   * במכל רחב הוא טור בצד, וזה העיקר: המחירים של כל השורות מתיישרים
+   * לאורך אותו קו אנכי, והעין סורקת טור מספרים במונו-רווח במקום לחפש
+   * מחיר במקום אחר בכל שורה. זה ההבדל בין טבלה לבין ערימת כרטיסים.
+   */
+  @container row (min-width: 34rem) {
+    .listing-row-media {
+      width: 11rem;
+    }
+
+    .listing-row-body {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.875rem 1rem;
+    }
+
+    .listing-row-readout {
+      width: 13rem;
+      flex-shrink: 0;
+      border-inline-start: 1px solid hsl(var(--border));
+      padding-inline-start: 1rem;
+    }
+  }
+
+  /*
+   * מכל צר — שורה בנייד. השדה השלישי יורד.
+   *
+   * שדה שאינו נכנס יורד כולו ואינו נחתך: `.num` מבודד מספר ל-LTR,
+   * וחיתוך בקצה שורה ב-RTL אוכל דווקא את הספרות המובילות —
+   * "417,851 ק\"מ" הופך ל-"7,851 ק\"מ", מספר שגוי שנראה תקין.
+   */
+  @container row (max-width: 30rem) {
+    .listing-row-specs li:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  @container row (max-width: 20rem) {
+    .listing-row-specs li:nth-child(n + 2) {
+      display: none;
+    }
+  }
+
   /* ------------------------------------------------------------------
      ההיסטוגרמה נפרסת בגלילה — scroll-timeline נייטיבי
 
      חריג מפורש לכלל "אפס scroll-reveal" ב-DESIGN.md, והוא מוגבל
      לאלמנט אחד: ההתפלגות בדף המודעה. ההבדל מקישוט הוא שהתנועה כאן
-     *היא* הנתון — כל עמודה עולה לגובה שמייצג את מספר המודעות בתא,
-     ולכן הפרישה קוראת כמו מדידה שמתמלאת ולא כמו אפקט כניסה.
+     *היא* הנתון — כל עמודה עולה לגובה שמייצג את מספר המודעות בתא.
 
      הכול ב-CSS: `animation-timeline: view()` מקדם את האנימציה לפי
      מיקום האלמנט בגלילה, בלי IntersectionObserver ובלי אף שורת
-     JavaScript. דפדפן בלי תמיכה מקבל את העמודות בגובהן המלא מיד —
-     ה-`@supports` הוא ה-fallback, לא תוספת.
-
-     `prefers-reduced-motion` מבטל את התנועה לגמרי.
+     JavaScript. דפדפן בלי תמיכה מקבל את העמודות בגובהן המלא מיד.
      ------------------------------------------------------------------ */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
@@ -277,7 +497,6 @@
         transform-origin: bottom;
         animation: histogram-rise linear both;
         animation-timeline: view();
-        /* מתחיל כשהגרף נכנס לתחתית המסך ומסתיים כשהוא בשליש העליון */
         animation-range: entry 15% cover 40%;
       }
     }
@@ -294,108 +513,21 @@
     }
   }
 
+  /* ההילה מאחורי הגלריה בדף המודעה — אותו צבע נגזר, אותם גבולות */
   .accent-halo::before {
     content: "";
     position: absolute;
     inset: -8% -4% 40%;
     z-index: -1;
-    border-radius: 999px;
-    background: hsl(var(--listing-accent, var(--stone)) / 0.28);
+    background: hsl(var(--listing-accent) / 0.22);
     filter: blur(56px);
     pointer-events: none;
   }
 
-  .dark .accent-halo::before {
-    background: hsl(var(--listing-accent, var(--stone)) / 0.22);
-  }
-
   .accent-rule {
-    height: 3px;
+    height: 2px;
     width: 3.5rem;
-    border-radius: 999px;
-    background: hsl(var(--listing-accent, var(--primary)));
-  }
-
-  /* ------------------------------------------------------------------
-     כרטיס המודעה מגיב למכל שלו ולא לחלון
-
-     אותו רכיב מופיע בגריד רחב, בסיידבר צר, ברצועת "נצפו לאחרונה"
-     ובחלונית של המפה. נקודות שבירה לפי `viewport` שיקרו בכל אחד
-     מהמקומות האלה חוץ מהראשון: סיידבר בן 260px במסך של 1440px קיבל
-     את הפריסה של מסך רחב, כי החלון באמת רחב.
-
-     `container-type: inline-size` הופך את הכרטיס עצמו לנקודת הייחוס,
-     ומכאן הרכיב לא צריך אף prop כדי לדעת איפה הוא יושב.
-
-     כתוב ידנית ולא דרך תוסף Tailwind — זה תוסף שלם בשביל שלוש שאילתות.
-     ------------------------------------------------------------------ */
-  .listing-card {
-    container-type: inline-size;
-    container-name: card;
-  }
-
-  /* תמונה קטנה בשורת רשימה, וגדלה כשיש מקום במכל */
-  @container card (min-width: 26rem) {
-    .listing-card[data-density="list"] .listing-card-media {
-      width: 11rem;
-    }
-  }
-
-  /*
-   * שורת המפרט מקצרת את עצמה לפי המכל.
-   *
-   * זה הפתרון היחיד שאינו מסכן את הנתון: פריט שלא נכנס נעלם כולו,
-   * במקום שספרות יאבדו בקצה השורה ויציגו מספר שגוי. הסף גבוה מרוחב
-   * הכרטיס בשורת רשימה בנייד (343px), שבו עמודת הטקסט צרה במיוחד.
-   */
-  /* בשורת רשימה התמונה גוזלת 8rem, ולכן הסף גבוה מרוחב הכרטיס */
-  @container card (max-width: 24rem) {
-    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 3) {
-      display: none;
-    }
-  }
-
-  @container card (max-width: 17rem) {
-    .listing-card[data-density="list"] .listing-card-specs li:nth-child(n + 2) {
-      display: none;
-    }
-  }
-
-  /* בגריד כל רוחב הכרטיס עומד לרשות הטקסט, פחות הריפוד */
-  @container card (max-width: 12rem) {
-    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 3) {
-      display: none;
-    }
-  }
-
-  @container card (max-width: 9rem) {
-    .listing-card[data-density="grid"] .listing-card-specs li:nth-child(n + 2) {
-      display: none;
-    }
-  }
-
-  /*
-   * מכל צר מאוד — המחיר יורד גודל אחד בסקאלה כדי לא להיחתך.
-   * הסף נמוך בכוונה מכרטיס בגריד של נייד (166px): שם המחיר נשאר
-   * הדבר הבולט בכרטיס, וזו ההיררכיה שנקבעה ב-DESIGN.md.
-   *
-   * שום שדה אינו מוסתר בשום רוחב. הכרטיס מציג מחיר, כותרת, שלושה
-   * שדות מפרט ושורת מיקום וזמן — זו ההגדרה שלו, לא הצעה שתלויה במקום.
-   */
-  @container card (max-width: 10rem) {
-    .listing-card-price {
-      font-size: theme(fontSize.base[0]);
-      line-height: theme(fontSize.base[1].lineHeight);
-    }
-  }
-
-  .img-scrim {
-    background: linear-gradient(
-      to top,
-      rgb(0 0 0 / 0.18) 0%,
-      rgb(0 0 0 / 0.06) 45%,
-      transparent 100%
-    );
+    background: hsl(var(--listing-accent));
   }
 }
 
@@ -408,26 +540,27 @@
   }
 }
 
-/* --- MapLibre: התאמה ל-RTL ולמצב לילה ------------------------------------ */
+/* --- MapLibre: התאמה ל-RTL ולפנים המכשיר --------------------------------- */
 .maplibregl-ctrl-attrib {
   font-size: 10px;
   direction: ltr;
 }
-.dark .maplibregl-ctrl-attrib,
-.dark .maplibregl-ctrl-group {
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-group {
   background: hsl(var(--card));
   color: hsl(var(--foreground));
 }
-.dark .maplibregl-ctrl-group button + button {
+.maplibregl-ctrl-group button + button {
   border-color: hsl(var(--border));
 }
 .maplibregl-popup-content {
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 0;
   overflow: hidden;
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  box-shadow: 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  border: 1px solid hsl(var(--border));
+  box-shadow: none;
 }
 .maplibregl-popup-tip {
   border-top-color: hsl(var(--card)) !important;

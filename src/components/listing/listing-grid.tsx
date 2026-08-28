@@ -5,17 +5,24 @@ import type { ListingCardDto } from "@/lib/listing-dto";
 import type { Density } from "@/stores/density";
 import { cn } from "@/lib/utils";
 
-/** שתי עמודות בנייד — צפיפות שמאפשרת לראות מודעה שלמה בלי גלילה. */
-export const GRID_CLASS = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4";
-export const LIST_CLASS = "flex flex-col gap-2";
+/**
+ * תוצאות הן טור אחד של שורות קריאה, בשני מצבי הצפיפות.
+ *
+ * אין כאן `grid-cols`. גריד כרטיסים ירד מהאתר (DECISIONS.md §38) כי הוא
+ * שובר את הדבר היחיד שהופך את התוצאות לקריאות — טור מחירים אחד שמתיישר
+ * לאורך כל השורות. ההבדל בין המצבים הוא הרווח בין השורות ורוחב לוחית
+ * התמונה בתוכן, לא מספר העמודות.
+ */
+export const FULL_CLASS = "flex flex-col gap-2";
+export const COMPACT_CLASS = "flex flex-col gap-px";
 
 export function densityClass(density: Density): string {
-  return density === "grid" ? GRID_CLASS : LIST_CLASS;
+  return density === "compact" ? COMPACT_CLASS : FULL_CLASS;
 }
 
 export function ListingGrid({
   listings,
-  density = "grid",
+  density = "full",
   priorityCount = 4,
   className,
 }: {
@@ -40,7 +47,7 @@ export function ListingGrid({
 
 export function ListingGridSkeleton({
   count = 8,
-  density = "grid",
+  density = "full",
 }: {
   count?: number;
   density?: Density;
@@ -70,12 +77,12 @@ export function EmptyResults({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-16 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
+    <div className="flex flex-col items-center gap-3 border border-dashed border-border py-16 text-center">
+      <span className="grid size-12 place-items-center border border-border text-muted-foreground">
         <SearchX className="size-6" aria-hidden />
       </span>
       <div>
-        <h2 className="font-heading text-lg font-bold">{title}</h2>
+        <h2 className="font-heading text-lg">{title}</h2>
         <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{body}</p>
       </div>
       {action}

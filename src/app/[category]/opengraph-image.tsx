@@ -24,7 +24,7 @@ export default async function OpengraphImage({
     return new ImageResponse(
       (
         <OgShell>
-          <div style={{ display: "flex", fontSize: 76, fontWeight: 700, color: OG.ink }}>
+          <div style={{ display: "flex", fontSize: 76, fontWeight: 700, color: OG.bone }}>
             {SITE.name}
           </div>
         </OgShell>
@@ -54,7 +54,7 @@ export default async function OpengraphImage({
               display: "flex",
               fontSize: 76,
               fontWeight: 700,
-              color: OG.ink,
+              color: OG.bone,
               lineHeight: 1.1,
             }}
           >
@@ -63,12 +63,12 @@ export default async function OpengraphImage({
 
           {count > 0 ? (
             <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-              <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: OG.sign }}>
+              <div style={{ display: "flex", fontSize: 34, fontWeight: 700, color: OG.amber }}>
                 {count.toLocaleString("en-US")} מודעות
               </div>
               {min !== null ? (
                 <>
-                  <div style={{ display: "flex", fontSize: 34, color: OG.stone }}>·</div>
+                  <div style={{ display: "flex", fontSize: 34, color: OG.rule }}>·</div>
                   <div style={{ display: "flex", fontSize: 34, color: OG.muted }}>
                     {`החל מ-₪${min.toLocaleString("en-US")}`}
                   </div>

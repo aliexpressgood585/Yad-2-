@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Assistant, Frank_Ruhl_Libre, Rubik } from "next/font/google";
+import { Assistant, Heebo, IBM_Plex_Mono } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -8,6 +8,7 @@ import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { CompareBar } from "@/components/compare/compare-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { SiteJsonLd } from "@/components/seo/json-ld";
+import { PALETTE } from "@/lib/palette";
 import { SITE } from "@/lib/site";
 
 import "./globals.css";
@@ -16,16 +17,17 @@ import "maplibre-gl/dist/maplibre-gl.css";
 /*
  * שלושה גופנים, שלושה תפקידים — ראה DESIGN.md.
  *
- * Frank Ruhl Libre הוא סריף עברי אמיתי ולא גרוטסק, וזה מה שנותן לדף
- * אופי במקום להיראות כמו כל לוח אחר. בשימוש מצומצם: כותרות מסך והמחיר
- * הראשי בדף מודעה, ולכן נטענים ממנו שני משקלים בלבד.
+ * Heebo הוא גרוטסק עברי עם משקלים אמיתיים עד 900, וזה הדבר הקרוב ביותר
+ * ל"מעובה-צר" שקיים בעברית בגופן חופשי: אין גרוטסק עברי חופשי עם ציר
+ * רוחב (`font-stretch`), ולכן ה"צר" מושג במשקל 900 יחד עם מרווח אותיות
+ * שלילי ב-globals.css. שני משקלים נטענים בלבד.
  */
-const display = Frank_Ruhl_Libre({
+const display = Heebo({
   subsets: ["hebrew", "latin"],
-  weight: ["500", "700"],
+  weight: ["700", "900"],
   variable: "--font-display",
   display: "swap",
-  fallback: ["Georgia", "serif"],
+  fallback: ["system-ui", "Arial"],
 });
 
 const assistant = Assistant({
@@ -36,13 +38,22 @@ const assistant = Assistant({
   fallback: ["system-ui", "Arial"],
 });
 
-/* ספרות ברוחב קבוע, כדי שעמודת מחירים בגריד תתיישר לאורך השורות. */
-const data = Rubik({
-  subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "700"],
+/*
+ * ספרות במונו-רווח.
+ *
+ * במכשיר מדידה טור מספרים חייב להתיישר לאורך השורות — העין משווה מיקום
+ * ספרה ולא ערך מספרי. Plex Mono הוא מונו אמיתי עם `tnum`, בשונה מגופן
+ * פרופורציונלי עם ספרות טבלאיות שרק מיישר רוחב.
+ *
+ * לגופן אין עברית, וזו החלטה ולא פשרה: `.num` עוטף גם ערכים עבריים
+ * ("יד שנייה"), והם נופלים אחורה ל-Assistant דרך שרשרת ה-fallback.
+ */
+const data = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-data",
   display: "swap",
-  fallback: ["system-ui", "Arial"],
+  fallback: ["ui-monospace", "monospace"],
 });
 
 export const metadata: Metadata = {
@@ -72,10 +83,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#16181A" },
-  ],
+  /*
+   * צבע אחד ולא שניים לפי `prefers-color-scheme`: פנים המכשיר היא
+   * ברירת המחדל של האתר ואינה נגזרת מהעדפת מערכת ההפעלה (ראה
+   * DECISIONS.md §37), ולכן שורת הכתובת בנייד תמיד גרפיטית.
+   */
+  themeColor: PALETTE.graphite,
 };
 
 export default function RootLayout({
@@ -86,7 +99,7 @@ export default function RootLayout({
       lang="he"
       dir="rtl"
       suppressHydrationWarning
-      className={`${display.variable} ${assistant.variable} ${data.variable}`}
+      className={`dark ${display.variable} ${assistant.variable} ${data.variable}`}
     >
       <body className="min-h-dvh font-sans">
         <SiteJsonLd />

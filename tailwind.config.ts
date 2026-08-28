@@ -14,13 +14,15 @@ const config: Config = {
       fontFamily: {
         /*
          * שלושה תפקידים, שלושה גופנים:
-         *   display — Frank Ruhl Libre, סריף עברי. כותרות מסך ומחיר ראשי בלבד.
+         *   heading — Heebo 900, גרוטסק עברי מעובה. כותרות ומחיר ראשי.
          *   sans    — Assistant. כל טקסט הממשק.
-         *   data    — Rubik עם tabular-nums. מחירים, ק"מ, מ"ר, שנה, טלפון.
+         *   data    — IBM Plex Mono עם tabular-nums. כל מספר שנקרא כמדידה.
+         *             ערך עברי בתוך `.num` נופל אחורה ל-Assistant, כי
+         *             ל-Plex Mono אין עברית — וזה בסדר: המונו נחוץ לספרות.
          */
-        heading: ["var(--font-display)", "Georgia", "serif"],
+        heading: ["var(--font-display)", "system-ui", "sans-serif"],
         sans: ["var(--font-body)", "system-ui", "sans-serif"],
-        data: ["var(--font-data)", "var(--font-body)", "system-ui", "sans-serif"],
+        data: ["var(--font-data)", "var(--font-body)", "ui-monospace", "monospace"],
       },
 
       /*
@@ -84,27 +86,47 @@ const config: Config = {
           foreground: "hsl(var(--popover-foreground))",
         },
       },
-      /* 10px כרטיסים, 8px כפתורים, 999px צ'יפים בלבד */
+      /*
+       * אפס פינות מעוגלות.
+       *
+       * הסקאלה כולה מוגדרת מחדש ל-0 — `full` בכלל זה — במקום לעבור על
+       * מאתיים שימושי `rounded-*` בקוד ולמחוק אותם אחד-אחד. הכלל נאכף
+       * במקום אחד, וחריגה ממנו דורשת לשנות את הקובץ הזה במפורש.
+       * `npm run check:design` נופל אם ערך כאן חדל להיות אפס.
+       */
       borderRadius: {
+        none: "0px",
+        sm: "var(--radius)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 2px)",
-        "2xl": "calc(var(--radius) + 6px)",
+        xl: "var(--radius)",
+        "2xl": "var(--radius)",
+        "3xl": "var(--radius)",
+        full: "var(--radius)",
       },
       /*
-       * צל אחד במערכת, ורק ב-hover. במנוחה משטח מופרד בגבול --stone.
-       * ערבוב של כמה עומקי צל הוא מה שגורם ללוחות מודעות להיראות רועשים.
+       * אפס צללים.
+       *
+       * צל הוא סימולציה של עומק פיזי, וזה בדיוק מה שהמכשיר אינו מנסה
+       * להיות. הפרדה בין משטחים נעשית בקו של פיקסל אחד ובהפרש הערך בין
+       * גרפיט (#16181B) לשלדה (#1E2126) — שני אמצעים שאינם מטשטשים כלום
+       * ואינם עולים בפריים.
+       *
+       * גם `overlay` הוא none: שכבת פורטל נבדלת מהתוכן בקו הענבר שלה,
+       * שהוא סימון חד ולא ענן.
        */
       boxShadow: {
-        lifted: "0 1px 2px hsl(var(--shadow-color) / 0.06)",
-        /*
-         * החריג היחיד ל"צל אחד".
-         * תפריט, דיאלוג וטולטיפ מרחפים מעל התוכן בלי גבול שמפריד אותם
-         * ממנו; ב-0 1px 2px הם נראים כאילו נפלו לתוך הדף. הצל הזה מיועד
-         * אך ורק לשכבות פורטל — לא לכרטיס ולא למשטח בתוך הזרימה.
-         */
-        overlay: "0 8px 28px hsl(var(--shadow-color) / 0.16)",
+        none: "none",
+        sm: "none",
+        DEFAULT: "none",
+        md: "none",
+        lg: "none",
+        xl: "none",
+        "2xl": "none",
+        inner: "none",
+        lifted: "none",
+        overlay: "none",
       },
 
       /* תקציב התנועה: משך אחד, easing אחד. ראה DESIGN.md. */

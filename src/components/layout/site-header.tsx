@@ -23,7 +23,16 @@ export async function SiteHeader() {
         <div className="ms-auto flex items-center gap-1 md:ms-0">
           <ThemeToggle />
           <HeaderUserMenu />
-          <Button asChild size="sm" className="hidden md:inline-flex">
+          {/*
+           * חוק הברזל: כפתור מלא אחד לכל מסך.
+           *
+           * ההדר הוא רהיט קבוע, והפעולה המלאה שייכת למסך שנמצאים בו —
+           * "הצגת מספר הטלפון" בדף מודעה, "פרסום מודעה" באשף הפרסום,
+           * "חיפוש" בדף הבית. אילו ההדר היה נושא ענבר מלא, כל מסך באתר
+           * היה מציג שני כפתורי ענבר וההיררכיה שהם אמורים ליצור הייתה
+           * מתבטלת.
+           */}
+          <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
             <Link href="/publish">
               <Plus aria-hidden />
               פרסום מודעה

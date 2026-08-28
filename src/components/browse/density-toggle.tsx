@@ -1,13 +1,13 @@
 "use client";
 
-import { LayoutGrid, Rows3 } from "lucide-react";
+import { Rows2, Rows4 } from "lucide-react";
 
 import { useDensity, type Density } from "@/stores/density";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { value: Density; label: string; Icon: typeof LayoutGrid }[] = [
-  { value: "grid", label: "תצוגת גריד", Icon: LayoutGrid },
-  { value: "list", label: "תצוגת רשימה", Icon: Rows3 },
+const OPTIONS: { value: Density; label: string; Icon: typeof Rows2 }[] = [
+  { value: "full", label: "שורה עם לוחית תמונה", Icon: Rows2 },
+  { value: "compact", label: "שורה צרה", Icon: Rows4 },
 ];
 
 /**
@@ -31,7 +31,7 @@ export function DensityToggle({
 
   return (
     <div
-      className={cn("flex items-center rounded-md border border-border p-0.5", className)}
+      className={cn("flex items-center border border-border p-0.5", className)}
       role="group"
       aria-label={
         isLearned ? "צפיפות התצוגה — נלמדה מהבחירות שלך בקטגוריה הזו" : "צפיפות התצוגה"
@@ -46,7 +46,7 @@ export function DensityToggle({
           aria-pressed={density === value}
           title={label}
           className={cn(
-            "grid size-7 place-items-center rounded-sm transition-colors duration-ui ease-ui",
+            "grid size-7 place-items-center transition-colors duration-ui ease-ui",
             density === value
               ? "bg-secondary text-foreground"
               : "text-muted-foreground hover:text-foreground",

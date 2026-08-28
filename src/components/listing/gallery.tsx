@@ -111,7 +111,7 @@ export function Gallery({
         <Button
           variant="secondary"
           size="icon-sm"
-          className="absolute bottom-3 end-3 z-20 shadow-lifted"
+          className="absolute bottom-3 end-3 z-20"
           onClick={() => setOpen(true)}
           aria-label="מסך מלא"
         >
@@ -191,7 +191,7 @@ function NavButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-background/85 shadow-lifted backdrop-blur transition-opacity",
+        "absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-background/85 backdrop-blur transition-opacity",
         "hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 sm:opacity-70",
         side === "start" ? "start-3" : "end-3",

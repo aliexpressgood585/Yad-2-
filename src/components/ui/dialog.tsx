@@ -40,7 +40,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed start-1/2 top-1/2 z-50 w-full max-w-lg -translate-y-1/2 translate-x-1/2",
-        "max-h-[92dvh] overflow-y-auto border border-border bg-background p-5 shadow-overlay sm:rounded-lg",
+        "max-h-[92dvh] overflow-y-auto border border-border bg-background p-5 sm:rounded-lg",
         "duration-150 data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -81,7 +81,7 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 flex flex-col gap-4 border-border bg-background shadow-overlay",
+        "fixed z-50 flex flex-col gap-4 border-border bg-background",
         "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
         side === "bottom" &&
           "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-2xl border-t p-5 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",

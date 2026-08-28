@@ -56,7 +56,7 @@ export default async function HomePage() {
               <li key={category.id}>
                 <Link
                   href={`/${category.slug}`}
-                  className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-lifted"
+                  className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary"
                 >
                   <span className="grid size-11 place-items-center rounded-lg bg-primary-soft text-primary transition-transform group-hover:scale-105">
                     <CategoryIcon name={category.icon} className="size-5" />
@@ -123,7 +123,7 @@ export default async function HomePage() {
           <ul className="grid gap-5 sm:grid-cols-3">
             {ADVANTAGES.map((a) => (
               <li key={a.title} className="flex gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-background text-primary shadow-lifted">
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-background text-primary">
                   <a.icon className="size-5" aria-hidden />
                 </span>
                 <div>

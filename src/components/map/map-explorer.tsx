@@ -93,11 +93,11 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
         source: SOURCE_ID,
         filter: ["has", "point_count"],
         paint: {
-          "circle-color": PALETTE.sign,
+          "circle-color": PALETTE.amber,
           "circle-opacity": 0.85,
           "circle-radius": ["step", ["get", "point_count"], 16, 10, 22, 50, 30, 200, 38],
           "circle-stroke-width": 3,
-          "circle-stroke-color": "#ffffff",
+          "circle-stroke-color": PALETTE.graphite,
           "circle-stroke-opacity": 0.6,
         },
       });
@@ -112,7 +112,7 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
           "text-size": 13,
           "text-allow-overlap": true,
         },
-        paint: { "text-color": "#ffffff" },
+        paint: { "text-color": PALETTE.graphite },
       });
 
       map.addLayer({
@@ -121,10 +121,10 @@ export function MapExplorer({ categories }: { categories: Category[] }) {
         source: SOURCE_ID,
         filter: ["!", ["has", "point_count"]],
         paint: {
-          "circle-color": PALETTE.signal,
+          "circle-color": PALETTE.cyan,
           "circle-radius": 7,
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff",
+          "circle-stroke-color": PALETTE.graphite,
         },
       });
 

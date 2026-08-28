@@ -26,14 +26,14 @@ export default async function OpengraphImage() {
               display: "flex",
               fontSize: 76,
               fontWeight: 700,
-              color: OG.ink,
+              color: OG.bone,
               lineHeight: 1.1,
             }}
           >
             כל מה שצריך, במקום אחד נקי
           </div>
           {count > 0 ? (
-            <div style={{ display: "flex", fontSize: 34, color: OG.sign, fontWeight: 700 }}>
+            <div style={{ display: "flex", fontSize: 34, color: OG.amber, fontWeight: 700 }}>
               {count.toLocaleString("en-US")} מודעות פעילות
             </div>
           ) : null}

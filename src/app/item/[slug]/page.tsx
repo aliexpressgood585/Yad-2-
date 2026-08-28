@@ -9,6 +9,8 @@ import { Breadcrumbs } from "@/components/browse/breadcrumbs";
 import { Gallery } from "@/components/listing/gallery";
 import { ContactPanel } from "@/components/listing/contact-panel";
 import { PriceDistribution } from "@/components/listing/price-distribution";
+import { PriceGauge } from "@/components/listing/price-gauge";
+import { priceMetersFor } from "@/lib/price-meter";
 import { PriceHistoryNote } from "@/components/listing/price-history-note";
 import { ReportDialog } from "@/components/listing/report-dialog";
 import { ShareButton } from "@/components/listing/share-button";
@@ -160,6 +162,14 @@ export default async function ListingPage({ params }: Props) {
   // צבע ההדגשה נגזר מהתמונה הראשונה — היא זו שמייצגת את המודעה
   const accent = accentFromBlurhash(listing.images[0]?.blurhash);
 
+  /*
+   * הסקאלה מופיעה מתחת למחיר גם כאן ולא רק בשורת התוצאה. זה מה שהופך
+   * את מדד המחיר מרכיב לדקדוק: אותה צורה בדיוק, באותו מקום ביחס למחיר,
+   * בכל מסך שמוצג בו מחיר. `null` כשאין שמונה מודעות דומות — ואז אין
+   * סקאלה, לא סקאלה ריקה.
+   */
+  const meter = (await priceMetersFor([listing.id])).get(listing.id) ?? null;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -202,8 +212,15 @@ export default async function ListingPage({ params }: Props) {
 
   return (
     <div
-      className="container py-5"
-      style={accent ? ({ "--listing-accent": accent } as React.CSSProperties) : undefined}
+      className={accent ? "accent-scope container py-5" : "container py-5"}
+      style={
+        accent
+          ? ({
+              "--accent-instrument": accent.instrument,
+              "--accent-day": accent.day,
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       <script
         type="application/ld+json"
@@ -275,7 +292,9 @@ export default async function ListingPage({ params }: Props) {
               ) : null}
             </p>
 
-            {accent ? <div className="accent-rule mt-2" aria-hidden /> : null}
+            <PriceGauge meter={meter} size="page" className="mt-3 max-w-sm" />
+
+            {accent ? <div className="accent-rule mt-3" aria-hidden /> : null}
 
             <PriceHistoryNote
               history={listing.priceHistory.map((h) => ({

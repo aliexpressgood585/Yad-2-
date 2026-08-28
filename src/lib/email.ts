@@ -48,10 +48,10 @@ function renderEmail({ heading, body, ctaLabel, ctaUrl }: EmailInput): string {
   return `<!doctype html>
 <html lang="he" dir="rtl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:24px;background:${PALETTE.paper};font-family:Arial,Helvetica,sans-serif;color:${PALETTE.ink};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:${PALETTE.white};border-radius:12px;overflow:hidden;">
+<body style="margin:0;padding:24px;background:${PALETTE.graphite};font-family:Arial,Helvetica,sans-serif;color:${PALETTE.bone};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:${PALETTE.chassis};border:1px solid ${PALETTE.rule};overflow:hidden;">
     <tr>
-      <td style="padding:20px 24px;background:${PALETTE.sign};color:${PALETTE.white};font-size:20px;font-weight:bold;">
+      <td style="padding:20px 24px;background:${PALETTE.amber};color:${PALETTE.graphite};font-size:20px;font-weight:bold;">
         ${escape(SITE.name)}
       </td>
     </tr>
@@ -61,15 +61,15 @@ function renderEmail({ heading, body, ctaLabel, ctaUrl }: EmailInput): string {
         <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${PALETTE.muted};">${escape(body)}</p>
         ${
           ctaUrl && ctaLabel
-            ? `<a href="${ctaUrl}" style="display:inline-block;padding:12px 24px;background:${PALETTE.sign};color:${PALETTE.white};text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px;">${escape(ctaLabel)}</a>`
+            ? `<a href="${ctaUrl}" style="display:inline-block;padding:12px 24px;background:${PALETTE.amber};color:${PALETTE.graphite};text-decoration:none;font-weight:bold;font-size:15px;">${escape(ctaLabel)}</a>`
             : ""
         }
       </td>
     </tr>
     <tr>
-      <td style="padding:16px 24px;background:${PALETTE.paper};font-size:12px;color:${PALETTE.muted};">
+      <td style="padding:16px 24px;background:${PALETTE.graphite};font-size:12px;color:${PALETTE.muted};">
         קיבלתם את המייל הזה כי יש לכם חשבון ב${escape(SITE.name)}.
-        <a href="${SITE.url}/my/profile" style="color:${PALETTE.sign};">ניהול העדפות ההתראות</a>
+        <a href="${SITE.url}/my/profile" style="color:${PALETTE.amber};">ניהול העדפות ההתראות</a>
       </td>
     </tr>
   </table>

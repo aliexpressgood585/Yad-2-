@@ -47,7 +47,7 @@ const Switch = React.forwardRef<
     {/* ב-RTL הידית זזה שמאלה כשהמתג דלוק */}
     <SwitchPrimitive.Thumb
       className={cn(
-        "pointer-events-none block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
+        "pointer-events-none block size-5 rounded-full bg-background ring-0 transition-transform",
         "data-[state=checked]:-translate-x-5 data-[state=unchecked]:translate-x-0",
       )}
     />

@@ -7,13 +7,17 @@ import { persist } from "zustand/middleware";
 /**
  * צפיפות התצוגה ברשימות מודעות.
  *
- *   grid — תמונה גדולה, שתי עמודות בנייד. טוב לעיון ולפריטים ויזואליים.
- *   list — תמונה קטנה מימין, שורה אחת לכל מודעה. סריקה מהירה בהרבה,
- *          וזה מה שסוחרי רכב ומחפשי דירות עושים בפועל.
+ * שני המצבים הם שתי שורות קריאה ברוחב מלא ולא גריד מול רשימה: גריד
+ * כרטיסים אינו קיים באתר הזה (ראה DECISIONS.md §38), ומה שנותר לבחור
+ * הוא כמה מקום התמונה מקבלת בתוך השורה.
+ *
+ *   full    — לוחית תמונה מלאה. עיון בפריטים שהמראה שלהם הוא הנתון.
+ *   compact — חתימת תמונה צרה, שורה נמוכה. סריקה מהירה של טור מחירים,
+ *             וזה מה שסוחרי רכב ומחפשי דירות עושים בפועל.
  *
  * הבחירה נשמרת ב-localStorage כי היא העדפת עבודה, לא מצב של מסך אחד.
  */
-export type Density = "grid" | "list";
+export type Density = "full" | "compact";
 
 /**
  * כמה בחירות רצופות באותה קטגוריה הופכות לברירת מחדל שם.
@@ -39,7 +43,7 @@ type DensityState = {
 export const useDensityStore = create<DensityState>()(
   persist(
     (set) => ({
-      density: "grid",
+      density: "full",
       learned: {},
       streaks: {},
       setDensity: (density, categorySlug) =>
@@ -62,19 +66,33 @@ export const useDensityStore = create<DensityState>()(
     }),
     {
       name: "luach-density",
-      version: 2,
+      version: 3,
       /**
        * גרסה 1 שמרה `density` בלבד. שדרוג בלי migrate היה מחזיר
        * `learned` ו-`streaks` כ-undefined לכל מי שכבר ביקר באתר,
        * והקריאה הראשונה אליהם הייתה נופלת.
+       *
+       * גרסה 3 החליפה את שמות המצבים כשהגריד ירד מהאתר. בלי המרה של
+       * הערכים השמורים כל מי שביקר קודם היה נושא `"grid"` שאינו קיים
+       * יותר, ומקבל שורה שאינה מסומנת באף כפתור במחליף.
        */
-      migrate: (persisted) =>
-        ({
-          learned: {},
+      migrate: (persisted) => {
+        const previous = (persisted ?? {}) as Partial<DensityState> & {
+          density?: string;
+          learned?: Record<string, string>;
+        };
+        const rename = (value: string | undefined): Density =>
+          value === "list" || value === "compact" ? "compact" : "full";
+
+        return {
           streaks: {},
-          density: "grid",
-          ...(persisted as object),
-        }) as DensityState,
+          ...previous,
+          density: rename(previous.density),
+          learned: Object.fromEntries(
+            Object.entries(previous.learned ?? {}).map(([slug, d]) => [slug, rename(d)]),
+          ),
+        } as DensityState;
+      },
     },
   ),
 );
@@ -82,12 +100,12 @@ export const useDensityStore = create<DensityState>()(
 /**
  * הצפיפות הנוכחית, בטוחה ל-SSR.
  *
- * בשרת ובהרצה הראשונה בלקוח מוחזר תמיד `grid` — הערך שאיתו נבנה ה-HTML.
+ * בשרת ובהרצה הראשונה בלקוח מוחזר תמיד `full` — הערך שאיתו נבנה ה-HTML.
  * רק אחרי ההידרציה מוחזרת הבחירה השמורה, אחרת React היה מדווח על אי-התאמה
  * בין השרת ללקוח.
  *
  * **ההעדפה הנלמדת גוברת על הגלובלית בקטגוריה שלה.** מי שעבר לרשימה
- * שלוש פעמים ברציפות ברכב מקבל רשימה ברכב, וממשיך לקבל גריד בריהוט —
+ * שלוש פעמים ברציפות ברכב מקבל שורה צרה ברכב, וממשיך לקבל לוחית בריהוט —
  * כי אלה שני סוגי עיון שונים ולא העדפה אחת של אדם אחד.
  */
 export function useDensity(categorySlug?: string): {
@@ -104,7 +122,7 @@ export function useDensity(categorySlug?: string): {
   useEffect(() => setHydrated(true), []);
 
   return {
-    density: hydrated ? (learned ?? density) : "grid",
+    density: hydrated ? (learned ?? density) : "full",
     setDensity: (d: Density) => setDensity(d, categorySlug),
     isLearned: hydrated && learned !== undefined,
   };

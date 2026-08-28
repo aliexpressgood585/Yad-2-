@@ -21,10 +21,11 @@
     "check:format": "tsx scripts/checks/format-check.ts",
     "check:seed": "tsx scripts/checks/seed-check.ts",
     "check:search": "tsx scripts/checks/search-check.ts",
-    "check:all": "npm run check:format && npm run check:search && npm run check:risk && npm run check:valuation && npm run check:accent",
+    "check:all": "npm run check:format && npm run check:search && npm run check:risk && npm run check:valuation && npm run check:accent && npm run check:design",
     "check:risk": "tsx scripts/checks/risk-check.ts",
     "check:valuation": "tsx scripts/checks/valuation-check.ts",
-    "check:accent": "tsx scripts/checks/accent-check.ts"
+    "check:accent": "tsx scripts/checks/accent-check.ts",
+    "check:design": "tsx scripts/checks/design-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -77,6 +78,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",
     "@types/react": "19.0.2",

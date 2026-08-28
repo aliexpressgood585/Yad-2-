@@ -26,10 +26,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
+        {/*
+         * פנים המכשיר היא ברירת המחדל, ואינה נגזרת מהעדפת מערכת ההפעלה.
+         *
+         * `enableSystem` היה מוסר את ההחלטה מהאתר: רוב המשתמשים במחשב
+         * שולחני מגדירים מערכת בהירה, כלומר הפלטה שהמותג מוגדר בה —
+         * גרפיט וענבר זרחני — לא הייתה מוצגת לאיש. פנים היום קיימת
+         * במלואה ונבנתה מחדש לצורך ניגודיות, אבל היא בחירה מפורשת
+         * במחליף הערכה ולא ברירת מחדל שקטה. ראה DECISIONS.md §37.
+         */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <TooltipProvider delayDuration={300}>

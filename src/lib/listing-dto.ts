@@ -1,4 +1,5 @@
 import { blurDataUrl } from "@/lib/blur";
+import { accentFromBlurhash, type ListingAccent } from "@/lib/listing-accent";
 import { formatAttributeEntry, type AttributeEntry } from "@/lib/format";
 import type { PriceMeter } from "@/lib/price-meter";
 import type { ListingCard } from "@/lib/listings";
@@ -26,6 +27,14 @@ export type ListingCardDto = {
   categoryIcon: string;
   /** מיקום המחיר ביחס למודעות דומות. null = אין מספיק בסיס להשוואה. */
   priceMeter: PriceMeter | null;
+  /**
+   * הצבע הדומיננטי של התמונה, בשתי הפנים. צובע את מסגרת השורה ואת
+   * ההילה שמתחתיה — ורק אותן. `null` כשהתמונה אפורה או חסרה.
+   *
+   * מחושב בשרת ולא בלקוח: הוא נגזר מה-blurhash שכבר קיים ב-DTO, וחישוב
+   * בלקוח היה מוסיף עבודה לכל שורה בגלילה אינסופית בלי להרוויח דבר.
+   */
+  accent: ListingAccent | null;
   imageCount: number;
   /**
    * שלושת השדות הדינמיים הבולטים, כל אחד עם התווית שלו.
@@ -97,6 +106,7 @@ export function toListingCardDto(
     imageUrl: image ? (image.thumbUrl ?? image.url) : null,
     categoryIcon: listing.category?.icon ?? "Package",
     priceMeter,
+    accent: accentFromBlurhash(image?.blurhash),
     blurDataURL: image?.blurhash ? blurDataUrl(image.blurhash) : null,
     imageCount: listing.images.length,
     highlights: pickHighlights(listing),

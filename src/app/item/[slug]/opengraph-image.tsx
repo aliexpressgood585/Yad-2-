@@ -43,8 +43,8 @@ export default async function OpengraphImage({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: OG.sign,
-            color: OG.white,
+            background: OG.amber,
+            color: OG.graphite,
             fontSize: 72,
             fontWeight: 700,
           }}
@@ -65,7 +65,7 @@ export default async function OpengraphImage({
           width: "100%",
           height: "100%",
           display: "flex",
-          background: OG.paper,
+          background: OG.graphite,
           direction: "rtl",
         }}
       >
@@ -99,7 +99,7 @@ export default async function OpengraphImage({
               style={{
                 fontSize: 52,
                 fontWeight: 700,
-                color: OG.ink,
+                color: OG.bone,
                 lineHeight: 1.15,
                 display: "flex",
               }}
@@ -109,7 +109,7 @@ export default async function OpengraphImage({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 64, fontWeight: 700, color: OG.sign, display: "flex" }}>
+            <div style={{ fontSize: 64, fontWeight: 700, color: OG.amber, display: "flex" }}>
               {formatPrice(listing.price, { currency: listing.currency })}
             </div>
             <div style={{ fontSize: 30, color: OG.muted, display: "flex" }}>

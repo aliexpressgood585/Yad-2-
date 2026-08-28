@@ -98,6 +98,7 @@ export function HomeHero({
               </SelectContent>
             </Select>
 
+            {/* הפעולה היחידה של דף הבית, ולכן היא שנושאת את הענבר המלא */}
             <Button type="submit" size="lg" className="h-12 px-8">
               חיפוש
             </Button>

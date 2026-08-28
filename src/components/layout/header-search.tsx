@@ -138,7 +138,9 @@ function HeaderSearchInner({ className, inputId }: { className?: string; inputId
           <span className="sr-only">ניקוי החיפוש</span>
         </button>
       ) : null}
-      <Button type="submit" size="sm" className="absolute end-1 h-8">
+{/* חוק הברזל: כפתור מלא אחד למסך. הענבר שמור ל"פרסום מודעה"
+          שבהדר, ולכן שליחת החיפוש היא כפתור מתאר. */}
+      <Button type="submit" variant="outline" size="sm" className="absolute end-1 h-8">
         חיפוש
       </Button>
     </form>

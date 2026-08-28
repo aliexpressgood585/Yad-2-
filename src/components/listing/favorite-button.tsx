@@ -57,7 +57,7 @@ export function FavoriteButton({ listingId, className, variant = "overlay" }: Pr
         "relative z-10 grid place-items-center rounded-full transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         variant === "overlay"
-          ? "size-8 bg-background/85 shadow-lifted backdrop-blur hover:bg-background"
+          ? "size-8 bg-background/85 backdrop-blur hover:bg-background"
           : "size-10 border border-border hover:bg-muted",
         className,
       )}

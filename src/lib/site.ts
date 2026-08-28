@@ -26,7 +26,7 @@ export const SITE = {
     "לוח מודעות ישראלי נקי ומהיר — רכב, נדל\"ן, יד שנייה, דרושים ועוד. בלי עומס פרסומות, עם חיפוש חכם והתראות מיידיות.",
   url: resolveSiteUrl(),
   locale: "he_IL",
-  themeColor: "#005F3C",
+  themeColor: "#16181B",
 } as const;
 
 /**

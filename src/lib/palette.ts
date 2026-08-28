@@ -1,7 +1,7 @@
 /**
  * הפלטה כערכים מוחלטים.
  *
- * בדרך כלל צבע מגיע מטוקן CSS (`hsl(var(--sign))`), וזה הכלל. הקובץ הזה
+ * בדרך כלל צבע מגיע מטוקן CSS (`hsl(var(--amber))`), וזה הכלל. הקובץ הזה
  * קיים בשביל ארבעה הקשרים שלא מריצים CSS ולכן לא יכולים לקרוא טוקן:
  *
  *   next/og      — Satori מרנדר ל-PNG ולא מכיר var()
@@ -10,26 +10,35 @@
  *   MapLibre     — מאפייני paint מקבלים מחרוזת צבע, לא CSS
  *
  * הערכים חייבים להישאר תואמים ל-globals.css. שינוי כאן בלי שינוי שם
- * (או להפך) הוא באג — ראה DESIGN.md.
+ * (או להפך) הוא באג — ראה DESIGN.md, ובדיקת `npm run check:design`.
+ *
+ * `PALETTE` היא פנים המכשיר — הקרקע הגרפיטית, ברירת המחדל של האתר.
+ * `PALETTE_DAY` היא פנים היום, שנבנתה מחדש ואינה היפוך שלה.
  */
 
 export const PALETTE = {
-  ink: "#14171A",
-  paper: "#F7F5F0",
-  sign: "#005F3C",
-  route: "#0B4A8F",
-  stone: "#DDD8CE",
-  signal: "#C2410C",
-  white: "#FFFFFF",
-  /** טקסט משני — --muted-foreground בבהיר */
-  muted: "#5A5F66",
+  /** קרקע — גרפיט */
+  graphite: "#16181B",
+  /** משטח — שלדה */
+  chassis: "#1E2126",
+  /** טקסט — עצם */
+  bone: "#E6E2D6",
+  /** צבע הקריאה היחיד — ענבר זרחני */
+  amber: "#FFB000",
+  /** פסק דין בלבד — ציאן */
+  cyan: "#58C6D8",
+  /** קווי מסגרת ומפרידים */
+  rule: "#2C3037",
+  /** טקסט משני */
+  muted: "#9A9689",
 } as const;
 
-export const PALETTE_DARK = {
-  ink: "#EFECE5",
-  paper: "#16181A",
-  sign: "#2FA875",
-  route: "#6BA6E8",
-  stone: "#393D42",
-  signal: "#E8733C",
+export const PALETTE_DAY = {
+  graphite: "#E6E2D6",
+  chassis: "#F0EDE3",
+  bone: "#16181B",
+  amber: "#7A4A00",
+  cyan: "#0E5F6E",
+  rule: "#C9C3B2",
+  muted: "#54514A",
 } as const;
