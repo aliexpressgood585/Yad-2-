@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { Suspense } from "react";
 
 import { ActiveFilterChips } from "@/components/filters/active-filter-chips";
@@ -19,6 +20,8 @@ import {
   getCategoryPath,
   type CategoryNode,
 } from "@/lib/categories";
+import { currentSessionId, recordEvent } from "@/lib/analytics";
+import { auth } from "@/lib/auth";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { toListingCardDtos } from "@/lib/listing-dto";
 import {
@@ -117,6 +120,36 @@ async function BrowseResults({
   ]);
 
   const items = toListingCardDtos(result.items, result.meters);
+
+  /*
+   * שלב 1 במשפך.
+   *
+   * `after` ולא קריאה רגילה: הכתיבה קורית אחרי שהתשובה כבר נשלחה,
+   * ולכן המדידה אינה מוסיפה ולו מילישנייה אחת לזמן שבו המשתמש מחכה
+   * לתוצאות. רכיב שרת אמור להיות חף מתופעות לוואי, וזה בדיוק הפתח
+   * ש-`after` נועד לו.
+   *
+   * **מזהה הסשן והמשתמש נקראים כאן ולא בתוך ה-callback.** Next חוסם
+   * `cookies()` ו-`headers()` בתוך `after` — הבקשה כבר הסתיימה — והשגיאה
+   * נבלעת ל-stderr בלי להפיל דבר. כלומר אירוע החיפוש פשוט לא היה נרשם,
+   * והמסך היה מראה משפך שמתחיל בצפייה במודעה.
+   *
+   * **עיון בקטגוריה נספר כחיפוש.** בלוח מודעות "מצאתי" הוא מצאתי, בין
+   * אם דרך תיבת החיפוש ובין אם דרך ניווט בקטגוריות; הפרדה ביניהם
+   * הייתה מייצרת משפך שרוב המשתמשים אינם נכנסים אליו בכלל. `query`
+   * נשאר `null` בעיון, וכך אפשר עדיין להפריד בין השניים בדיעבד.
+   */
+  const [sessionId, viewer] = await Promise.all([currentSessionId(), auth()]);
+  after(() =>
+    recordEvent({
+      type: "SEARCH",
+      sessionId,
+      userId: viewer?.user?.id ?? null,
+      categoryId: category?.id ?? null,
+      query: state.q ?? null,
+      resultCount: result.total,
+    }),
+  );
 
   // אותו חילוץ שמזין את toSearchQuery, להצגה למשתמש
   const kept = new Set(state.keep ?? []);

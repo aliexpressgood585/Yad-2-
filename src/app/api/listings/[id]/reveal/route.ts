@@ -1,3 +1,4 @@
+import { recordEvent } from "@/lib/analytics";
 import { auth } from "@/lib/auth";
 import { enforceRateLimit, getClientIp, handleError, hashIp, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
@@ -22,6 +23,7 @@ export async function POST(
       where: { id, deletedAt: null, status: { not: "BANNED" } },
       select: {
         id: true,
+        categoryId: true,
         contactPhone: true,
         user: { select: { phone: true } },
       },
@@ -51,6 +53,14 @@ export async function POST(
         update: { reveals: { increment: 1 } },
       }),
     ]);
+
+    // שלב 3 במשפך
+    await recordEvent({
+      type: "PHONE_REVEAL",
+      userId: session?.user?.id ?? null,
+      listingId: id,
+      categoryId: listing.categoryId,
+    });
 
     return ok({ phone });
   } catch (err) {

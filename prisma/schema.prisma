@@ -600,3 +600,42 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+/// ארבעת השלבים במשפך. ראה GROWTH.md — סעיף המדידה.
+enum AnalyticsEventType {
+  SEARCH
+  LISTING_VIEW
+  PHONE_REVEAL
+  CONTACT
+}
+
+/// יומן אירועים משלנו, בלי SDK חיצוני.
+///
+/// אין כאן קשרים (`relation`) אל `User` או אל `Listing` בכוונה: היומן
+/// הוא append-only, ומחיקת מודעה או משתמש אינה אמורה למחוק את ההיסטוריה
+/// שממנה נמדדת המערכת. `listingId` ו-`userId` הם מזהים ולא מפתחות זרים.
+model AnalyticsEvent {
+  id   String             @id @default(cuid())
+  type AnalyticsEventType
+
+  /// מזהה סשן אנונימי מ-cookie. מתחדש אחרי 30 דקות של חוסר פעילות,
+  /// ואינו מקושר לזהות. זה מה שמאפשר לתפור משפך בתוך ביקור אחד.
+  sessionId String
+  /// מזהה משתמש כשהוא מחובר. אינו נדרש לאף חישוב במשפך.
+  userId    String?
+
+  listingId  String?
+  categoryId String?
+
+  /// מחרוזת החיפוש כפי שהוקלדה. רק באירועי SEARCH.
+  query String?
+  /// כמה תוצאות הוחזרו. רק באירועי SEARCH — `0` הוא הנתון השימושי כאן.
+  resultCount Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([listingId, type, createdAt])
+  @@index([createdAt])
+}

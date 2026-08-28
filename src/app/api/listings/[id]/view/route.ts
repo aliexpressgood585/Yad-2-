@@ -1,3 +1,5 @@
+import { recordEvent } from "@/lib/analytics";
+import { auth } from "@/lib/auth";
 import { handleError, ok } from "@/lib/api";
 import { prisma } from "@/lib/db";
 
@@ -13,7 +15,7 @@ export async function POST(
 
     const exists = await prisma.listing.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true },
+      select: { id: true, categoryId: true },
     });
     if (!exists) return ok({ counted: false });
 
@@ -25,6 +27,16 @@ export async function POST(
         update: { views: { increment: 1 } },
       }),
     ]);
+
+    // שלב 2 במשפך. נרשם כאן ולא בסקריפט צד-לקוח כדי שחוסם פרסומות
+    // לא ימחק דווקא את הצפיות של המשתמשים המנוסים.
+    const session = await auth();
+    await recordEvent({
+      type: "LISTING_VIEW",
+      userId: session?.user?.id ?? null,
+      listingId: id,
+      categoryId: exists.categoryId,
+    });
 
     return ok({ counted: true });
   } catch (err) {

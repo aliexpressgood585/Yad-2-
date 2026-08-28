@@ -6,6 +6,7 @@ import {
   parseBody,
   requireSession,
 } from "@/lib/api";
+import { recordEvent } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
 import { notifyNewMessage } from "@/lib/notifications";
 import { messageSchema, replySchema } from "@/lib/validators";
@@ -23,7 +24,14 @@ export async function POST(req: Request) {
 
     const listing = await prisma.listing.findFirst({
       where: { id: listingId, deletedAt: null },
-      select: { id: true, userId: true, title: true, slug: true, allowChat: true },
+      select: {
+        id: true,
+        userId: true,
+        categoryId: true,
+        title: true,
+        slug: true,
+        allowChat: true,
+      },
     });
     if (!listing) throw new ApiError(404, "המודעה לא נמצאה");
     if (!listing.allowChat) {
@@ -56,6 +64,21 @@ export async function POST(req: Request) {
       conversationId: conversation.id,
       listingTitle: listing.title,
       preview: clean,
+    });
+
+    /*
+     * שלב 4 במשפך — פנייה.
+     *
+     * נרשם רק ב-POST ולא ב-PUT: POST הוא פתיחת פנייה של קונה למוכר,
+     * ו-PUT הוא תגובה בשיחה שכבר קיימת. ספירת כל הודעה הייתה הופכת
+     * שיחה ארוכה אחת לארבעים "פניות", וזה בדיוק המספר שנראה יפה
+     * ואומר כלום.
+     */
+    await recordEvent({
+      type: "CONTACT",
+      userId: session.user.id,
+      listingId: listing.id,
+      categoryId: listing.categoryId,
     });
 
     return ok({ conversationId: conversation.id }, { status: 201 });
