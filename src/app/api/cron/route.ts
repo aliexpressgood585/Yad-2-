@@ -1,6 +1,8 @@
 import { handleError, ok, ApiError } from "@/lib/api";
 import { prisma } from "@/lib/db";
-import { notifyListingExpiring, notifySavedSearchMatch } from "@/lib/notifications";
+import { notifyListingExpiring, notifySavedSearchMatch } from "@/lib/notification-triggers";
+import { drainQueue } from "@/lib/notification-queue";
+import { sendMonthlyPriceReports } from "@/lib/monthly-report";
 import { parseFilters, toSearchQuery } from "@/lib/filters";
 import { getAttributesForCategory, getCategoryBySlug, getCategoryIdsWithDescendants } from "@/lib/categories";
 import { searchListings } from "@/lib/listings";
@@ -11,6 +13,11 @@ export const maxDuration = 60;
 /**
  * משימות מתוזמנות. מיועד להרצה מ-Vercel Cron (ראה vercel.json)
  * או מכל מתזמן חיצוני, עם כותרת Authorization: Bearer $CRON_SECRET.
+ *
+ * **סדר המשימות אינו מקרי.** קודם רצים כל היצרנים של אירועים (פקיעה,
+ * חיפושים שמורים, הדוח החודשי) ורק אחריהם `drain` שמרוקן את התור.
+ * כך אירוע שנוצר היום נשלח היום ולא מחר, והמשתמש מקבל התראה מרוכזת
+ * אחת שמכילה את כל מה שקרה לו — במקום שתיים בהפרש של יממה.
  */
 export async function GET(req: Request) {
   try {
@@ -36,6 +43,12 @@ export async function GET(req: Request) {
     }
     if (job === "all" || job === "saved-searches") {
       results.savedSearches = await runSavedSearchAlerts();
+    }
+    if (job === "all" || job === "monthly-report") {
+      results.monthlyReport = await sendMonthlyPriceReports(new Date());
+    }
+    if (job === "all" || job === "drain") {
+      results.drain = await drainQueue();
     }
 
     return ok({ ran: job, results });
@@ -69,18 +82,18 @@ async function notifyExpiringSoon() {
   });
 
   for (const listing of listings) {
-    const daysLeft = Math.ceil(
-      ((listing.expiresAt?.getTime() ?? Date.now()) - Date.now()) / 86_400_000,
-    );
+    const expiresAt = listing.expiresAt ?? new Date();
+    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000);
     await notifyListingExpiring({
       userId: listing.userId,
       listingId: listing.id,
       listingTitle: listing.title,
       daysLeft,
+      expiresAt,
     });
   }
 
-  return { notified: listings.length };
+  return { queued: listings.length };
 }
 
 /** מסיר סימון קידום ממודעות שהקידום שלהן הסתיים. */
@@ -93,17 +106,24 @@ async function endFinishedBoosts() {
 }
 
 /**
- * מריץ את כל החיפושים השמורים ומודיע על מודעות חדשות שהתווספו
- * מאז ההתראה האחרונה. תדירות OFF מדולגת.
+ * מריץ את כל החיפושים השמורים ומכניס לתור התראה על מודעות חדשות
+ * שהתווספו מאז ההתראה האחרונה. תדירות OFF מדולגת.
  */
 async function runSavedSearchAlerts() {
   const now = new Date();
+  /*
+   * חותמת ההרצה — היום הקלנדרי. היא נכנסת ל-`dedupeKey`, ולכן הרצה
+   * שנייה של ה-cron באותו יום (ניסיון חוזר, הפעלה ידנית, שני מופעים
+   * שהתעוררו יחד) אינה מייצרת התראה שנייה לאותו חיפוש.
+   */
+  const runStamp = now.toISOString().slice(0, 10);
+
   const searches = await prisma.savedSearch.findMany({
     where: { frequency: { not: "OFF" } },
     take: 2000,
   });
 
-  let notified = 0;
+  let queued = 0;
   let matched = 0;
 
   for (const search of searches) {
@@ -147,22 +167,22 @@ async function runSavedSearchAlerts() {
       matched += newCount;
       await notifySavedSearchMatch({
         userId: search.userId,
+        searchId: search.id,
         searchName: search.name,
         count: newCount,
-        searchId: search.id,
-        email: search.frequency !== "INSTANT",
+        runStamp,
       });
       await prisma.savedSearch.update({
         where: { id: search.id },
         data: { lastNotified: now },
       });
-      notified += 1;
+      queued += 1;
     } catch (err) {
       console.error(`[cron] saved search ${search.id} failed`, err);
     }
   }
 
-  return { searches: searches.length, notified, matched };
+  return { searches: searches.length, queued, matched };
 }
 
 /**

@@ -8,7 +8,7 @@ import {
 } from "@/lib/api";
 import { recordEvent } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
-import { notifyNewMessage } from "@/lib/notifications";
+import { notifyNewMessage } from "@/lib/notification-triggers";
 import { messageSchema, replySchema } from "@/lib/validators";
 import { sanitizeText } from "@/lib/utils";
 
@@ -54,12 +54,13 @@ export async function POST(req: Request) {
       select: { id: true, sellerId: true },
     });
 
-    await prisma.message.create({
+    const message = await prisma.message.create({
       data: { conversationId: conversation.id, senderId: session.user.id, body: clean },
     });
 
     await notifyNewMessage({
       recipientId: conversation.sellerId,
+      messageId: message.id,
       senderName: session.user.name ?? "משתמש",
       conversationId: conversation.id,
       listingTitle: listing.title,
@@ -134,6 +135,7 @@ export async function PUT(req: Request) {
 
     await notifyNewMessage({
       recipientId,
+      messageId: message.id,
       senderName: session.user.name ?? "משתמש",
       conversationId,
       listingTitle: conversation.listing.title,

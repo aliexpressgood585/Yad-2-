@@ -3,7 +3,6 @@ import type { NotificationType } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/push";
-import { truncate } from "@/lib/utils";
 import { SITE } from "@/lib/site";
 
 type CreateNotification = {
@@ -21,6 +20,11 @@ type CreateNotification = {
 /**
  * יוצר התראה באתר ובמקביל שולח מייל / Push לפי הצורך.
  * כשלים בערוצים חיצוניים אינם מפילים את הפעולה שקראה לפונקציה.
+ *
+ * זו פונקציית **המסירה** בלבד. מי מחליט שצריך להתריע, על מה, ומתי —
+ * זה `notification-queue.ts`, והטריגרים עצמם ב-`notification-triggers.ts`.
+ * הפרדה זו היא מה שמאפשר קיבוץ ושעות שקט: אילו הטריגרים היו קוראים
+ * לכאן ישירות, כל אירוע היה הופך להתראה נפרדת ברגע שהוא קרה.
  */
 export async function createNotification(input: CreateNotification) {
   const notification = await prisma.notification.create({
@@ -69,59 +73,4 @@ export async function createNotification(input: CreateNotification) {
 
   await Promise.allSettled(tasks);
   return notification;
-}
-
-/** התראה על הודעה חדשה בצ'אט. */
-export async function notifyNewMessage(input: {
-  recipientId: string;
-  senderName: string;
-  conversationId: string;
-  listingTitle: string;
-  preview: string;
-}) {
-  await createNotification({
-    userId: input.recipientId,
-    type: "NEW_MESSAGE",
-    title: `הודעה חדשה מ${input.senderName}`,
-    body: `${truncate(input.preview, 120)} — בנוגע ל"${truncate(input.listingTitle, 60)}"`,
-    url: `/my/messages/${input.conversationId}`,
-  });
-}
-
-/** התראה על מודעות חדשות שתואמות חיפוש שמור. */
-export async function notifySavedSearchMatch(input: {
-  userId: string;
-  searchName: string;
-  count: number;
-  searchId: string;
-  email: boolean;
-}) {
-  await createNotification({
-    userId: input.userId,
-    type: "SAVED_SEARCH_MATCH",
-    title:
-      input.count === 1
-        ? `מודעה חדשה תואמת ל"${input.searchName}"`
-        : `${input.count} מודעות חדשות תואמות ל"${input.searchName}"`,
-    body: "לחצו כדי לראות את המודעות שהתווספו מאז הביקור האחרון שלכם.",
-    url: `/my/searches?highlight=${input.searchId}`,
-    email: input.email,
-  });
-}
-
-/** התראה למוכר שהמודעה שלו עומדת לפוג. */
-export async function notifyListingExpiring(input: {
-  userId: string;
-  listingId: string;
-  listingTitle: string;
-  daysLeft: number;
-}) {
-  await createNotification({
-    userId: input.userId,
-    type: "LISTING_EXPIRING",
-    title: `המודעה "${truncate(input.listingTitle, 50)}" תפוג בקרוב`,
-    body: `נותרו ${input.daysLeft} ימים. אפשר לחדש אותה בלחיצה אחת מהאזור האישי.`,
-    url: "/my",
-    email: true,
-  });
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 
 import { MarkAllRead } from "@/components/my/mark-all-read";
+import { NotificationPreferences } from "@/components/my/notification-preferences";
 import { PushToggle } from "@/components/my/push-toggle";
 import { EmptyResults } from "@/components/listing/listing-grid";
 import { auth } from "@/lib/auth";
@@ -17,11 +18,22 @@ export const metadata: Metadata = {
 export default async function NotificationsPage() {
   const session = await auth();
 
-  const notifications = await prisma.notification.findMany({
-    where: { userId: session!.user.id },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const [notifications, preferences] = await Promise.all([
+    prisma.notification.findMany({
+      where: { userId: session!.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: session!.user.id },
+      select: {
+        notifyEmail: true,
+        notifyPush: true,
+        quietHours: true,
+        monthlyReport: true,
+      },
+    }),
+  ]);
 
   const unread = notifications.filter((n) => !n.readAt).length;
 
@@ -45,6 +57,8 @@ export default async function NotificationsPage() {
       </header>
 
       <PushToggle />
+
+      <NotificationPreferences initial={preferences} />
 
       {notifications.length === 0 ? (
         <EmptyResults

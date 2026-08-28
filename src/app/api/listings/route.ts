@@ -8,6 +8,7 @@ import {
   requireSession,
 } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import { notifyPriceDrop } from "@/lib/notification-triggers";
 import {
   buildAttributeRows,
   deriveListingFields,
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     if (body.listingId) {
       const existing = await prisma.listing.findFirst({
         where: { id: body.listingId, userId: session.user.id, deletedAt: null },
-        select: { id: true, slug: true, price: true, status: true },
+        select: { id: true, slug: true, price: true, status: true, title: true },
       });
       if (!existing) throw new ApiError(404, "המודעה לא נמצאה");
 
@@ -147,6 +148,28 @@ export async function POST(req: Request) {
       ]);
 
       await runFraudChecks(existing.id);
+
+      /*
+       * טריגר 2 — ירידת מחיר במודעה שמישהו סימן.
+       *
+       * כאן ולא ב-cron: `existing.price` הוא המחיר הקודם, והוא קיים רק
+       * ברגע הזה. משימה מתוזמנת הייתה צריכה להשוות מול `PriceHistory`
+       * ולנחש איזו שורה היא "הקודמת", והייתה מתריעה באיחור של עד יממה
+       * על בדיוק הדבר שאנשים רוצים לדעת עליו מיד.
+       *
+       * הפונקציה עצמה מסננת עלייה, ירידה זניחה ואת הבעלים.
+       */
+      if (priceChanged && existing.price !== null && input.price !== null) {
+        await notifyPriceDrop({
+          listingId: existing.id,
+          listingTitle: title,
+          listingSlug: existing.slug,
+          ownerId: session.user.id,
+          oldPrice: existing.price,
+          newPrice: input.price,
+        });
+      }
+
       revalidatePath(`/item/${existing.slug}`);
 
       return ok({ id: existing.id, slug: existing.slug, status: publishing ? "ACTIVE" : existing.status });

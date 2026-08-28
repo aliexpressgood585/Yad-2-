@@ -119,7 +119,18 @@ model User {
   businessLogo   String?
   businessCity   String?
 
+  // --- העדפות התראה ---
+  /// שליחת התראות בדוא"ל. ההתראה באתר נשמרת בכל מקרה.
+  notifyEmail    Boolean   @default(true)
+  /// שליחת Web Push.
+  notifyPush     Boolean   @default(true)
+  /// כיבוד שעות שקט — לילה ושבת. ראה `src/lib/quiet-hours.ts`.
+  quietHours     Boolean   @default(true)
+  /// הדוח החודשי של מדד המחירים בדוא"ל.
+  monthlyReport  Boolean   @default(true)
+
   accounts           Account[]
+  notificationJobs   NotificationJob[]
   sessions           Session[]
   listings           Listing[]
   favorites          Favorite[]
@@ -638,4 +649,57 @@ model AnalyticsEvent {
   @@index([sessionId, createdAt])
   @@index([listingId, type, createdAt])
   @@index([createdAt])
+}
+
+/// מצב עבודה בתור ההתראות.
+enum NotificationJobStatus {
+  /// ממתינה לשליחה (ייתכן שגם למועד עתידי — שעות שקט או קיבוץ)
+  PENDING
+  /// נשלחה
+  SENT
+  /// נכשלה סופית אחרי כל הניסיונות
+  FAILED
+}
+
+/// תור עבודות עמיד להתראות.
+///
+/// שתי הבטחות, ושתיהן מכניקה ולא כוונה טובה:
+///
+///   **לא נשלח פעמיים** — `dedupeKey` הוא `@unique`, וההכנסה לתור היא
+///   `createMany({ skipDuplicates: true })`. אותו אירוע שנרשם פעמיים
+///   (ניסיון חוזר, שתי בקשות מקבילות, cron שרץ פעמיים) מייצר שורה אחת.
+///
+///   **לא הולך לאיבוד** — העבודה נשארת `PENDING` עד שנשלחה בפועל.
+///   נפילה באמצע משאירה אותה בתור עם `claimedAt` ישן, והריצה הבאה
+///   תופסת אותה מחדש. אין כאן "נשלח והתפוצץ".
+model NotificationJob {
+  id     String           @id @default(cuid())
+  userId String
+  type   NotificationType
+
+  /// מזהה האירוע. זו ההגנה מפני שליחה כפולה.
+  dedupeKey String @unique
+
+  /// מתי מותר לשלוח. נדחה קדימה בשעות שקט ובניסיון חוזר.
+  scheduledFor DateTime
+
+  /// הנתונים להרכבת ההתראה (כותרת מודעה, מחיר, מספר תוצאות…)
+  payload Json
+
+  status   NotificationJobStatus @default(PENDING)
+  attempts Int                   @default(0)
+
+  /// נעילה אופטימית. עובד שני לא ייגע בעבודה שננעלה לפני פחות מ-5 דקות.
+  claimedAt  DateTime?
+  claimToken String?
+
+  sentAt    DateTime?
+  lastError String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([userId, status])
 }
