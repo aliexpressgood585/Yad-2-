@@ -50,6 +50,16 @@ export function HeaderSearchSlot({
         className,
       )}
       aria-hidden={!visible}
+      /*
+       * `inert` יחד עם `aria-hidden`, ולא רק `aria-hidden`.
+       *
+       * `aria-hidden` מסתיר מקורא מסך אבל **אינו** מוציא את תיבת
+       * החיפוש מסדר המקלדת. משתמש שגולל בטאב הגיע לשדה שאינו נראה,
+       * המיקוד נעלם מהמסך, והוא הקליד לתוך כלום. `pointer-events-none`
+       * מונע עכבר בלבד. Lighthouse מדווח על זה כ-`aria-hidden-focus`,
+       * וזו אחת התקלות שקורא מסך חווה כאתר שבור.
+       */
+      inert={!visible}
     >
       <HeaderSearch inputId={inputId} />
     </div>

@@ -88,7 +88,7 @@ export async function PriceDistribution({
       <p className="mt-3 text-xs text-muted-foreground">
         ההשוואה היא מול מודעות פעילות באותה תת-קטגוריה ובטווח הקרוב של שנת הייצור או מספר
         החדרים.{" "}
-        <Link href={pricePaths.valuation} className="text-info hover:underline">
+        <Link href={pricePaths.valuation} className="text-info underline underline-offset-4 hover:no-underline">
           בדיקת שווי לפריט משלך
         </Link>
       </p>

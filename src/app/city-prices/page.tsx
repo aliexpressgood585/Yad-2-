@@ -75,7 +75,7 @@ export default async function CityPricesIndex() {
       )}
 
       <p className="mt-8 text-sm">
-        <Link href={pricePaths.valuation} className="text-info hover:underline">
+        <Link href={pricePaths.valuation} className="text-info underline underline-offset-4 hover:no-underline">
           בדיקת שווי לדירה מסוימת — לפי שכונה, חדרים ומ&quot;ר
         </Link>
       </p>

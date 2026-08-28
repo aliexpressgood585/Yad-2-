@@ -362,7 +362,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1.5">
+    /*
+     * `data-required` מסמן שדה חובה במבנה ולא רק בכוכבית שליד התווית.
+     * בדיקת הקבלה ממלאת לפיו את השדות הדינמיים, ולכן הוספת שדה חובה
+     * חדש לקטגוריה — שהיא שינוי נתונים ולא שינוי קוד — אינה שוברת את
+     * הבדיקה.
+     */
+    <div className="space-y-1.5" data-required={required ? "" : undefined}>
       <Label htmlFor={id} required={required}>
         {label}
       </Label>

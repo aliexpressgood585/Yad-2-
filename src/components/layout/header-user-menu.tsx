@@ -37,7 +37,15 @@ export function HeaderUserMenu() {
       <Button asChild variant="ghost" size="sm">
         <Link href="/auth/login">
           <UserIcon aria-hidden />
-          <span className="hidden sm:inline">התחברות</span>
+          {/*
+           * `sr-only` ולא `hidden` בנייד.
+           *
+           * `hidden` מסיר את המילה גם מעץ הנגישות, והאייקון לצידה
+           * הוא `aria-hidden` — כלומר בנייד הקישור נשאר בלי שם קריא
+           * בכלל, וקורא מסך מקריא "קישור". Lighthouse תפס את זה
+           * כ-`link-name`, ובאתר אמיתי זה קישור שאי אפשר להשתמש בו.
+           */}
+          <span className="sr-only sm:not-sr-only">התחברות</span>
         </Link>
       </Button>
     );

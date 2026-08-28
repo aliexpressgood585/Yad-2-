@@ -235,6 +235,15 @@ async function BrowseResults({
             <ActiveFilterChips attributes={attributes} />
           </div>
 
+          {/*
+           * כותרת סמויה לאזור התוצאות.
+           *
+           * בלעדיה המסך קופץ מ-`h1` של הכותרת ישירות ל-`h3` של שורות
+           * התוצאה, וזו קפיצה בסדר הכותרות — קורא מסך שמנווט לפי
+           * כותרות מאבד את המבנה. Lighthouse מדווח על זה כ-`heading-order`.
+           */}
+          <h2 className="sr-only">תוצאות החיפוש</h2>
+
           {items.length === 0 ? (
             <EmptyResults
               title={hasQuery ? `לא נמצאו תוצאות עבור "${state.q}"` : "אין מודעות בקטגוריה הזו"}

@@ -95,7 +95,7 @@ export default async function PriceGuideIndex() {
       )}
 
       <p className="mt-8 text-sm">
-        <Link href={pricePaths.valuation} className="text-info hover:underline">
+        <Link href={pricePaths.valuation} className="text-info underline underline-offset-4 hover:no-underline">
           בדיקת שווי לרכב מסוים — לפי שנה, יד וקילומטראז&apos;
         </Link>
       </p>

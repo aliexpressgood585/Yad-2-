@@ -67,8 +67,23 @@ const SelectContent = React.forwardRef<
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
+      /*
+       * הגובה מוגבל לגובה **הפנוי** ולא ל-20rem קבועים.
+       *
+       * `max-h-80` לבדו מייצר פאנל של 320 פיקסלים גם כשהמפעיל יושב
+       * שמונים פיקסלים מתחתית המסך, ואז חצי מהרשימה — כולל האפשרות
+       * הראשונה — נמצא מחוץ לאזור הנראה ואי אפשר ללחוץ עליו בכלל.
+       * בדסקטופ זה כמעט לא קורה, ובטלפון זה קורה כמעט תמיד.
+       * `--radix-select-content-available-height` הוא המקום שבו Radix
+       * מוסר את המספר הזה, ו-`collisionPadding` משאיר נשימה מהקצוות.
+       *
+       * בדיקת הקבלה בנייד היא שמצאה את זה, פעמיים
+       * ("Element is outside of the viewport").
+       */
+      collisionPadding={12}
       className={cn(
-        "relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground",
+        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground",
+        "max-h-[min(20rem,var(--radix-select-content-available-height))]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
@@ -78,11 +93,20 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectScrollUpButton />
+      {/*
+       * הרוחב נכפה למפעיל, **הגובה לא**.
+       *
+       * `h-[var(--radix-select-trigger-height)]` כופה על אזור הגלילה
+       * את גובה המפעיל — כארבעים פיקסל — וכל האפשרויות נדחסות לחלון
+       * של שורה אחת. בדסקטופ זה נראה כמו רשימה שנגללת, ובחלון של טלפון
+       * האפשרות הראשונה נופלת מחוץ לשטח הנראה ואי אפשר ללחוץ עליה
+       * בכלל. בדיקת הקבלה בנייד היא שמצאה את זה
+       * ("Element is outside of the viewport"), ולא עין אנושית.
+       */}
       <SelectPrimitive.Viewport
         className={cn(
           "p-1",
-          position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+          position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
       >
         {children}

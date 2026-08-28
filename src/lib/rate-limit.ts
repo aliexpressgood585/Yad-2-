@@ -25,6 +25,30 @@ export const RATE_LIMITS = {
 
 export type RateLimitKey = keyof typeof RATE_LIMITS;
 
+/**
+ * מכפיל למגבלות, ממשתנה סביבה.
+ *
+ * קיים בשביל מקרה אחד שאין לו פתרון אחר: בדיקות מקצה לקצה רצות כולן
+ * מאותה כתובת IP, ויוצרות בכל ריצה כמה חשבונות ומודעות. `register`
+ * מוגבל לחמישה בשעה, ולכן ריצה שנייה של החבילה נופלת על המגביל ולא
+ * על באג — כלומר בדיקה שנכשלת מסיבה שאינה קשורה למה שהיא בודקת, וזה
+ * הכשל שגורם לאנשים להפסיק להריץ בדיקות.
+ *
+ * **אסור להגדיר את זה בפרודקשן.** המגביל הוא קו ההגנה מול ספאם
+ * ומול גרידה של מספרי טלפון, והמכפיל מבטל אותו בפועל. הוא מתועד
+ * ב-`.env.example` עם האזהרה הזו.
+ */
+const MULTIPLIER = (() => {
+  const raw = Number(process.env.RATE_LIMIT_MULTIPLIER);
+  return Number.isFinite(raw) && raw >= 1 ? Math.min(raw, 1000) : 1;
+})();
+
+/** התצורה בפועל של פעולה, אחרי המכפיל. */
+export function limitFor(key: RateLimitKey): { limit: number; windowSec: number } {
+  const cfg = RATE_LIMITS[key];
+  return { limit: cfg.limit * MULTIPLIER, windowSec: cfg.windowSec };
+}
+
 const hasUpstash =
   Boolean(process.env.UPSTASH_REDIS_REST_URL) &&
   Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
@@ -37,7 +61,7 @@ function upstashLimiter(key: RateLimitKey): Ratelimit | null {
   if (!redis) return null;
   let limiter = limiters.get(key);
   if (!limiter) {
-    const cfg = RATE_LIMITS[key];
+    const cfg = limitFor(key);
     limiter = new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(cfg.limit, `${cfg.windowSec} s`),
@@ -57,7 +81,7 @@ function upstashLimiter(key: RateLimitKey): Ratelimit | null {
 const memory = new Map<string, { count: number; resetAt: number }>();
 
 function memoryLimit(key: RateLimitKey, id: string): RateLimitResult {
-  const cfg = RATE_LIMITS[key];
+  const cfg = limitFor(key);
   const mapKey = `${key}:${id}`;
   const now = Date.now();
   const windowMs = cfg.windowSec * 1000;

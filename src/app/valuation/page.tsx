@@ -172,7 +172,7 @@ async function VehicleResult({ values }: { values: ValuationFormValues }) {
     >
       {guideHref ? (
         <p className="text-sm">
-          <Link href={guideHref} className="inline-flex items-center gap-1 text-info hover:underline">
+          <Link href={guideHref} className="inline-flex items-center gap-1 text-info underline underline-offset-4 hover:no-underline">
             מחירון {requested} — מגמה שנתית וכל המודעות
             <ArrowLeft className="size-4" aria-hidden />
           </Link>
@@ -219,7 +219,7 @@ async function RealEstateResult({ values }: { values: ValuationFormValues }) {
       <p className="text-sm">
         <Link
           href={pricePaths.city(slugify(values.city))}
-          className="inline-flex items-center gap-1 text-info hover:underline"
+          className="inline-flex items-center gap-1 text-info underline underline-offset-4 hover:no-underline"
         >
           מחירי הדירות ב{values.city} — לפי מספר חדרים ולאורך השנה
           <ArrowLeft className="size-4" aria-hidden />

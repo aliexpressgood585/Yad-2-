@@ -153,7 +153,7 @@ export default async function MakeGuidePage({ params }: Props) {
       <p className="mt-8 text-sm">
         <Link
           href={`${pricePaths.valuation}?type=vehicle&make=${encodeURIComponent(manufacturer)}`}
-          className="text-info hover:underline"
+          className="text-info underline underline-offset-4 hover:no-underline"
         >
           בדיקת שווי ל{manufacturer} לפי דגם, שנה, יד וקילומטראז&apos;
         </Link>
