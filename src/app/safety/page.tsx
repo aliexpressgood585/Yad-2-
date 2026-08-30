@@ -2,49 +2,55 @@ import type { Metadata } from "next";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { ContentPage } from "@/components/content-page";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 
-export const metadata: Metadata = {
-  title: "מדריך בטיחות",
-  description:
-    "איך לקנות ולמכור בבטחה: סימני אזהרה להונאות, כללי פגישה בטוחה ומה לעשות אם נתקלתם בניסיון רמייה.",
-  alternates: { canonical: "/safety" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("safety.9d342f"),
+    description: t("safety.metaDescription"),
+    alternates: { canonical: "/safety" },
+  };
+}
 
-const RED_FLAGS = [
-  "בקשה להעברה בנקאית או תשלום מראש לפני שראיתם את הפריט.",
-  "מחיר נמוך בצורה קיצונית ביחס לשוק — כמעט תמיד זו הונאה.",
-  'המוכר טוען שהוא בחו"ל ושולח "שליח מטעמו".',
-  "לחץ לסגור עסקה מיד, או טענה שיש עוד קונים ממש עכשיו.",
-  "בקשה לקוד אימות שקיבלתם ב-SMS — לעולם אל תמסרו אותו.",
-  "דרישה לתשלום בכרטיסי מתנה, קריפטו או אמצעים לא הפיכים.",
-  "סירוב לשיחת טלפון או להיפגש פנים מול פנים.",
+const RED_FLAGS: MessageKey[] = [
+  "safety.14fe48",
+  "safety.a98618",
+  "safety.36b50b",
+  "safety.65e501",
+  "safety.4b6fde",
+  "safety.289d18",
+  "safety.64c0fa",
 ];
 
-const SAFE_RULES = [
-  "היפגשו במקום ציבורי ומואר, רצוי בשעות היום.",
-  "קחו מלווה, במיוחד בעסקאות בסכומים גבוהים.",
-  "בדקו את הפריט פיזית לפני שאתם משלמים.",
-  "שלמו במזומן או בהעברה רק אחרי שקיבלתם את הפריט.",
-  "ברכב — בצעו בדיקה במכון בדיקה מורשה על חשבונכם.",
-  'בנדל"ן — ודאו זהות בעל הנכס בנסח טאבו לפני מסירת כסף.',
-  "שמרו את ההתכתבות באתר; היא מסייעת אם צריך לברר משהו בהמשך.",
+const SAFE_RULES: MessageKey[] = [
+  "safety.ebd09a",
+  "safety.2c8097",
+  "safety.8531e2",
+  "safety.020c18",
+  "safety.208032",
+  "safety.86f9cd",
+  "safety.d62c13",
 ];
 
-export default function SafetyPage() {
+export default async function SafetyPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="מדריך בטיחות"
-      intro="רוב העסקאות בלוח עוברות חלק. הכללים הבאים מצמצמים כמעט לאפס את הסיכון להיתקל בהונאה."
+      title={t("safety.9d342f")}
+      intro={t("safety.918c33")}
     >
       <section>
         <h2 className="flex items-center gap-2">
           <AlertTriangle className="size-5 text-destructive" aria-hidden />
-          סימני אזהרה
+          {t("safety.redFlagsHeading")}
         </h2>
-        <p>אם נתקלתם באחד מאלה — עצרו. כמעט בכל המקרים מדובר בניסיון הונאה:</p>
+        <p>{t("safety.2bf010")}</p>
         <ul>
           {RED_FLAGS.map((flag) => (
-            <li key={flag}>{flag}</li>
+            <li key={flag}>{t(flag)}</li>
           ))}
         </ul>
       </section>
@@ -52,40 +58,37 @@ export default function SafetyPage() {
       <section>
         <h2 className="flex items-center gap-2">
           <CheckCircle2 className="size-5 text-success" aria-hidden />
-          כללי עסקה בטוחה
+          {t("safety.safeRulesHeading")}
         </h2>
         <ul>
           {SAFE_RULES.map((rule) => (
-            <li key={rule}>{rule}</li>
+            <li key={rule}>{t(rule)}</li>
           ))}
         </ul>
       </section>
 
       <section>
-        <h2>מה אנחנו עושים כדי להגן עליכם</h2>
+        <h2>{t("safety.f4d92d")}</h2>
         <ul>
-          <li>אימות טלפון חובה לפני פרסום מודעה ראשונה.</li>
+          <li>{t("safety.afca4b")}</li>
           <li>
-            מנגנון אוטומטי שמסמן מודעות חשודות — מחיר חריג ביחס לחציון הקטגוריה, ניסוחים
-            אופייניים להונאה, תמונות שכבר הופיעו במודעה אחרת וחשבונות חדשים שמפרסמים בקצב
-            חריג.
+            {t("safety.f811dc")}
           </li>
-          <li>באנר אזהרה גלוי בדף המודעה כשהסימן חזק מספיק.</li>
-          <li>מספר הטלפון שלכם נחשף רק בלחיצה מפורשת, ובקצב מוגבל שמונע גרידה.</li>
-          <li>המיקום במפה מוצג כאזור מקורב בלבד — לעולם לא הכתובת המדויקת.</li>
-          <li>צוות מודרציה שבודק כל דיווח.</li>
+          <li>{t("safety.1d77a6")}</li>
+          <li>{t("safety.83d4b3")}</li>
+          <li>{t("safety.1458d9")}</li>
+          <li>{t("safety.56a214")}</li>
         </ul>
       </section>
 
       <section>
-        <h2>נתקלתם בהונאה?</h2>
+        <h2>{t("safety.2281e1")}</h2>
         <ol>
-          <li>אל תמשיכו בקשר עם הצד השני.</li>
+          <li>{t("safety.e028e4")}</li>
           <li>
-            דווחו על המודעה בלחיצה על &quot;דיווח על המודעה&quot; בתחתית דף המודעה. הדיווח
-            מגיע ישירות לצוות המודרציה.
+            {t("safety.deb355")}
           </li>
-          <li>אם הועבר כסף — פנו מיידית לבנק או לחברת האשראי ולמשטרת ישראל (מוקד 105).</li>
+          <li>{t("safety.ddf4a4")}</li>
         </ol>
       </section>
     </ContentPage>

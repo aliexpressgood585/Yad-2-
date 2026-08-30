@@ -1,69 +1,74 @@
 import type { Metadata } from "next";
 
 import { ContentPage } from "@/components/content-page";
+import { getT } from "@/i18n/server";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "הצהרת נגישות",
-  description:
-    "הצהרת הנגישות של לוח — עמידה בתקן ישראלי 5568 ובהנחיות WCAG 2.1 ברמה AA.",
-  alternates: { canonical: "/accessibility" },
-};
+/*
+ * `generateMetadata` ולא קבוע `metadata`: קבוע מחושב פעם אחת בבנייה,
+ * והכותרת בלשונית הדפדפן הייתה נשארת עברית בכל שפה. הפונקציה נקראת לכל
+ * בקשה ורואה את העוגייה.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("accessibility.6e51d1"),
+    description: t("accessibility.metaDescription"),
+    alternates: { canonical: "/accessibility" },
+  };
+}
 
-export default function AccessibilityPage() {
+export default async function AccessibilityPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="הצהרת נגישות"
-      intro={`${SITE.name} מחויב לכך שכל אדם יוכל להשתמש באתר באופן עצמאי ומלא.`}
-      updatedAt="אוגוסט 2026"
+      title={t("accessibility.6e51d1")}
+      intro={t("accessibility.intro", { site: SITE.name })}
+      updatedAt={t("accessibility.2847f5")}
     >
       <section>
-        <h2>רמת הנגישות</h2>
+        <h2>{t("accessibility.109973")}</h2>
         <p>
-          האתר נבנה בהתאם לתקן הישראלי ת&quot;י 5568 המבוסס על הנחיות WCAG 2.1 של ארגון
-          W3C, ברמת התאמה AA.
+          {t("accessibility.cca661")}
         </p>
       </section>
 
       <section>
-        <h2>מה יישמנו בפועל</h2>
+        <h2>{t("accessibility.40dadb")}</h2>
         <ul>
-          <li>ניווט מלא במקלדת בכל מסכי האתר, כולל גלריית התמונות והמפה.</li>
-          <li>קישור &quot;דילוג לתוכן הראשי&quot; שנחשף בלחיצת Tab ראשונה.</li>
-          <li>טבעת מיקוד (focus ring) ברורה ואחידה בכל רכיב אינטראקטיבי.</li>
-          <li>מבנה כותרות היררכי ותקין, ותגיות ARIA שמתארות רכיבים מורכבים.</li>
-          <li>כל שדות הטפסים מקושרים לתווית, ושגיאות מוכרזות לקוראי מסך.</li>
-          <li>יחסי ניגודיות של 4.5:1 לפחות בטקסט רגיל, במצב בהיר ובמצב לילה.</li>
-          <li>תמונות דקורטיביות מסומנות כך שקוראי מסך מדלגים עליהן.</li>
-          <li>אזורי תוכן מתעדכן (תוצאות חיפוש, צ&apos;אט) מוכרזים באמצעות aria-live.</li>
-          <li>
-            כיבוד העדפת המערכת <code>prefers-reduced-motion</code> — כל האנימציות
-            מתבטלות עבור מי שביקש זאת.
-          </li>
-          <li>האתר עובד בזום של עד 200% ללא אובדן תוכן או פונקציונליות.</li>
-          <li>שטחי לחיצה בגודל מינימלי נוח לשימוש בנייד.</li>
+          <li>{t("accessibility.85d561")}</li>
+          <li>{t("accessibility.3ae3cf")}</li>
+          <li>{t("accessibility.55afeb")}</li>
+          <li>{t("accessibility.30dd24")}</li>
+          <li>{t("accessibility.f0633a")}</li>
+          <li>{t("accessibility.fc14cd")}</li>
+          <li>{t("accessibility.bb0297")}</li>
+          <li>{t("accessibility.d67c32")}</li>
+          {/*
+            * משפט אחד עם פרמטר, ולא שני חצאים סביב <code>. סדר המילים
+            * באנגלית ובערבית שונה, וחצי משפט אינו ניתן לתרגום.
+            */}
+          <li>{t("accessibility.reducedMotion", { property: "prefers-reduced-motion" })}</li>
+          <li>{t("accessibility.941be2")}</li>
+          <li>{t("accessibility.53917d")}</li>
         </ul>
       </section>
 
       <section>
-        <h2>מגבלות ידועות</h2>
+        <h2>{t("accessibility.0c4c81")}</h2>
         <p>
-          תצוגת המפה האינטראקטיבית מוגבלת מטבעה בעבודה עם קורא מסך. לכל מודעה שמופיעה
-          במפה קיים גם ייצוג טקסטואלי מלא ברשימות התוצאות ובדף המודעה עצמו, ואפשר לבצע
-          כל פעולה גם בלעדיה.
+          {t("accessibility.f7a0a2")}
         </p>
         <p>
-          תוכן שמועלה על ידי משתמשים (כותרות, תיאורים ותמונות) אינו בשליטתנו המלאה, ולכן
-          ייתכן שחלקו אינו נגיש במלואו. אנחנו מסירים תוכן כזה כשמדווחים לנו עליו.
+          {t("accessibility.f64f30")}
         </p>
       </section>
 
       <section>
-        <h2>פניות בנושא נגישות</h2>
+        <h2>{t("accessibility.5c743d")}</h2>
         <p>
-          נתקלתם בבעיית נגישות? נשמח שתעדכנו אותנו דרך עמוד העזרה, ונטפל בפנייה בהקדם.
-          בפנייה מומלץ לפרט את הדף שבו נתקלתם בבעיה, את הדפדפן ואת טכנולוגיית הסיוע שבה
-          אתם משתמשים.
+          {t("accessibility.9ecdba")}
         </p>
       </section>
     </ContentPage>

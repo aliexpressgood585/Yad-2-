@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
+import { Rich } from "@/i18n/rich";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 import {
   Accordion,
   AccordionContent,
@@ -10,67 +13,74 @@ import {
 } from "@/components/ui/misc";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "עזרה ותמיכה",
-  description: "שאלות נפוצות על פרסום מודעות, חיפוש, התראות ובטיחות בלוח.",
-  alternates: { canonical: "/help" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("help.title"),
+    description: t("help.metaDescription"),
+    alternates: { canonical: "/help" },
+  };
+}
 
-const FAQ = [
+const FAQ: { q: MessageKey; a: MessageKey }[] = [
   {
-    q: "כמה עולה לפרסם מודעה?",
-    a: "הפרסום חינם לחלוטין, ללא הגבלה על מספר המודעות. חבילות הקידום בתשלום הן אופציונליות לגמרי ומיועדות למי שרוצה חשיפה נוספת.",
+    q: "help.a514a3",
+    a: "help.fd5c05",
   },
   {
-    q: "למה אני צריך לאמת טלפון לפני פרסום?",
-    a: "אימות הטלפון הוא ההגנה המרכזית שלנו מפני מודעות פיקטיביות וספאם. האימות חד-פעמי ולוקח פחות מדקה. המספר שלכם לא מוצג בפומבי — הוא נחשף רק כשמתעניין לוחץ במפורש על ״הצגת מספר״.",
+    q: "help.4d88b7",
+    a: "help.2e59aa",
   },
   {
-    q: "כמה זמן המודעה שלי נשארת באוויר?",
-    a: "45 יום. חמישה ימים לפני התפוגה נשלחת תזכורת, ואפשר לחדש את המודעה בלחיצה אחת מהאזור האישי. חידוש גם מקפיץ אותה לראש הרשימה בקטגוריה.",
+    q: "help.b10289",
+    a: "help.24c6ed",
   },
   {
-    q: "איך עובדות ההתראות על חיפוש שמור?",
-    a: "בכל דף תוצאות יש כפתור ״שמירת חיפוש״ ששומר את כל הפילטרים הנוכחיים. אפשר לבחור התראה מיידית, סיכום יומי או סיכום שבועי. ההתראות מגיעות באתר, במייל ובהתראת Push אם הפעלתם אותה.",
+    q: "help.9ecfcc",
+    a: "help.e7484e",
   },
   {
-    q: "האם המיקום המדויק שלי מוצג?",
-    a: "לא. במפה מוצג עיגול אזור מקורב ברדיוס של כמה מאות מטרים סביב המיקום, לא נקודה מדויקת. גם נתוני המיקום שמוטבעים בתמונות (EXIF/GPS) נמחקים אוטומטית בשרת בזמן ההעלאה.",
+    q: "help.110dbe",
+    a: "help.e54ea8",
   },
   {
-    q: "איך משווים בין מודעות?",
-    a: "בכל כרטיס מודעה יש כפתור השוואה (סמל מאזניים). אפשר לבחור עד 4 מודעות מאותה קטגוריה, ואז לעבור לדף ההשוואה שמציג טבלה עם כל המפרט — כשההבדלים בין המודעות מודגשים.",
+    q: "help.375664",
+    a: "help.cc875a",
   },
   {
-    q: "מה עושים אם קיבלתי הודעה חשודה?",
-    a: "אל תעבירו כסף ואל תמסרו קוד אימות. דווחו על המודעה מתוך דף המודעה, והצוות שלנו יבדוק. פרטים נוספים במדריך הבטיחות.",
+    q: "help.70afca",
+    a: "help.79d286",
   },
   {
-    q: "איך מוחקים חשבון?",
-    a: "פנו אלינו דרך עמוד זה ונטפל בבקשה. מחיקת החשבון מסירה גם את כל המודעות הפעילות שלכם.",
+    q: "help.9a0707",
+    a: "help.1e021b",
   },
 ];
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="עזרה ותמיכה"
-      intro={`כל מה שצריך לדעת כדי להפיק מ${SITE.name} את המקסימום. לא מצאתם תשובה? כתבו לנו.`}
+      title={t("help.36762c")}
+      intro={t("help.intro", { site: SITE.name })}
     >
       <Accordion type="single" collapsible className="not-prose">
         {FAQ.map((item, i) => (
           <AccordionItem key={item.q} value={`faq-${i}`}>
-            <AccordionTrigger className="text-start font-medium">{item.q}</AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
+            <AccordionTrigger className="text-start font-medium">{t(item.q)}</AccordionTrigger>
+            <AccordionContent className="text-muted-foreground">{t(item.a)}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
 
       <section>
-        <h2>עדיין צריכים עזרה?</h2>
+        <h2>{t("help.c2ce32")}</h2>
         <p>
-          כתבו לנו ונחזור אליכם בתוך יום עסקים. לנושאי בטיחות והונאות מומלץ לקרוא קודם את{" "}
-          <Link href="/safety">מדריך הבטיחות</Link>.
+          <Rich
+            message={t("help.contact")}
+            slots={{ guide: (text) => <Link href="/safety">{text}</Link> }}
+          />
         </p>
       </section>
     </ContentPage>

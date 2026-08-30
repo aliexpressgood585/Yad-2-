@@ -4,55 +4,59 @@ import { Gauge, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
 
 import { ContentPage } from "@/components/content-page";
 import { Button } from "@/components/ui/button";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "אודות",
-  description: `${SITE.name} — לוח מודעות ישראלי נקי, מהיר והוגן. הסיפור והעקרונות שמאחורי האתר.`,
-  alternates: { canonical: "/about" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("about.title"),
+    description: t("about.metaDescription", { site: SITE.name }),
+    alternates: { canonical: "/about" },
+  };
+}
 
-const PRINCIPLES = [
+const PRINCIPLES: { icon: typeof Gauge; title: MessageKey; body: MessageKey }[] = [
   {
     icon: Gauge,
-    title: "מהירות לפני הכול",
-    body: "עמודים נטענים מיידית, החיפוש מגיב תוך כדי הקלדה, ואין באנרים שקופצים ומזיזים את התוכן.",
+    title: "about.221426",
+    body: "about.2fedb3",
   },
   {
     icon: Sparkles,
-    title: "ממשק נקי",
-    body: "לא יותר מרכיב מסחרי אחד לעמוד. כל שאר המסך שייך למודעות עצמן.",
+    title: "about.5c4759",
+    body: "about.7aa86e",
   },
   {
     icon: ShieldCheck,
-    title: "שקיפות ואמון",
-    body: "ציון אמינות מוכר שמורכב מאותות גלויים בלבד, ואזהרה ברורה כשמשהו נראה חשוד.",
+    title: "about.84394b",
+    body: "about.ff439b",
   },
   {
     icon: HeartHandshake,
-    title: "פרטיות כברירת מחדל",
-    body: "מיקום מקורב במקום כתובת, מחיקת EXIF אוטומטית, וטלפון שנחשף רק בלחיצה.",
+    title: "about.f7770f",
+    body: "about.c50521",
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title={`על ${SITE.name}`}
-      intro="בנינו את הלוח שהיינו רוצים להשתמש בו בעצמנו: מהיר, נקי, והוגן לשני הצדדים של העסקה."
+      title={t("about.pageTitle", { site: SITE.name })}
+      intro={t("about.430d29")}
     >
       <section>
-        <h2>למה עוד לוח מודעות</h2>
+        <h2>{t("about.222adf")}</h2>
         <p>
-          לוחות המודעות הגדולים בישראל עובדים — אבל הם כבדים, עמוסים בפרסומות, והחיפוש
-          בהם לא תמיד מבין מה חיפשתם. רצינו לבדוק מה קורה כשמתחילים מחדש ושמים את חוויית
-          המשתמש במקום הראשון: חיפוש שמבין עברית ושסולח על שגיאות כתיב, פילטרים שמותאמים
-          לכל קטגוריה בנפרד, וממשק שנטען מהר גם ברשת סלולרית איטית.
+          {t("about.5f5d0f")}
         </p>
       </section>
 
       <section>
-        <h2>העקרונות שלנו</h2>
+        <h2>{t("about.c7e6ea")}</h2>
         <ul className="not-prose grid list-none gap-4 ps-0 sm:grid-cols-2">
           {PRINCIPLES.map((p) => (
             <li key={p.title} className="flex gap-3">
@@ -69,23 +73,21 @@ export default function AboutPage() {
       </section>
 
       <section>
-        <h2>איך אנחנו מתפרנסים</h2>
+        <h2>{t("about.93dc77")}</h2>
         <p>
-          פרסום מודעה הוא ותמיד יישאר חינם. ההכנסות מגיעות מחבילות קידום אופציונליות
-          למוכרים שרוצים חשיפה נוספת, ומפתרונות לעסקים. אנחנו לא מוכרים מידע אישי, ולא
-          נכניס לאתר רשתות פרסום שעוקבות אחריכם.
+          {t("about.2477d3")}
         </p>
       </section>
 
       <section className="not-prose flex flex-wrap gap-2 rounded-lg bg-muted/50 p-5">
         <div className="flex-1">
-          <h2 className="font-heading text-lg font-bold">מוכנים להתחיל?</h2>
+          <h2 className="font-heading text-lg font-bold">{t("about.f87974")}</h2>
           <p className="text-sm text-muted-foreground">
-            פרסום מודעה לוקח פחות מדקה, והיא באוויר מיד.
+            {t("about.0ba617")}
           </p>
         </div>
         <Button asChild size="lg">
-          <Link href="/publish">פרסום מודעה</Link>
+          <Link href="/publish">{t("about.02b929")}</Link>
         </Button>
       </section>
     </ContentPage>

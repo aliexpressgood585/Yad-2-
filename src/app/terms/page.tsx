@@ -2,99 +2,97 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
+import { Rich } from "@/i18n/rich";
+import { getT } from "@/i18n/server";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "תנאי שימוש",
-  description: `תנאי השימוש של ${SITE.name} — הכללים לפרסום מודעות ולשימוש באתר.`,
-  alternates: { canonical: "/terms" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("terms.title"),
+    description: t("terms.metaDescription", { site: SITE.name }),
+    alternates: { canonical: "/terms" },
+  };
+}
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="תנאי שימוש"
-      intro={`השימוש ב${SITE.name} מותנה בהסכמה לתנאים שלהלן. הם כתובים בלשון זכר מטעמי נוחות בלבד ומתייחסים לכל המגדרים.`}
-      updatedAt="אוגוסט 2026"
+      title={t("terms.21c6a1")}
+      intro={t("terms.intro", { site: SITE.name })}
+      updatedAt={t("terms.2847f5")}
     >
       <section>
-        <h2>1. מהות השירות</h2>
+        <h2>{t("terms.57a2ef")}</h2>
         <p>
-          האתר מספק פלטפורמה טכנולוגית שמפגישה בין מפרסמי מודעות למתעניינים. האתר אינו
-          צד לעסקה, אינו מוכר, אינו קונה ואינו מתווך. כל התקשרות נעשית ישירות בין
-          המשתמשים ובאחריותם המלאה.
+          {t("terms.6df62a")}
         </p>
       </section>
 
       <section>
-        <h2>2. חשבון משתמש</h2>
+        <h2>{t("terms.dbb0e9")}</h2>
         <ul>
-          <li>ההרשמה מותרת מגיל 18 ומעלה, או באישור אפוטרופוס.</li>
-          <li>יש למסור פרטים נכונים ומדויקים ולשמור על סודיות אמצעי ההתחברות.</li>
-          <li>אימות מספר טלפון נדרש לפני פרסום מודעה ראשונה.</li>
-          <li>אין לפתוח מספר חשבונות במטרה לעקוף מגבלות או חסימות.</li>
+          <li>{t("terms.994e39")}</li>
+          <li>{t("terms.b78176")}</li>
+          <li>{t("terms.1a6dad")}</li>
+          <li>{t("terms.ad58fc")}</li>
         </ul>
       </section>
 
       <section>
-        <h2>3. כללי פרסום</h2>
-        <p>המודעה חייבת לתאר נכונה פריט או שירות אמיתי שברשות המפרסם. אסור לפרסם:</p>
+        <h2>{t("terms.444d58")}</h2>
+        <p>{t("terms.4e9d11")}</p>
         <ul>
-          <li>פריטים שהחזקתם או מכירתם אסורה בחוק, כולל נשק, סמים וזיופים.</li>
-          <li>בעלי חיים בניגוד לחוק צער בעלי חיים.</li>
-          <li>תוכן מטעה, מחירים פיקטיביים או מודעות פיתיון.</li>
-          <li>תוכן פוגעני, מפלה, מאיים או פורנוגרפי.</li>
-          <li>מודעות כפולות של אותו פריט, או פרסום מסחרי מוסווה כמודעה פרטית.</li>
-          <li>פרטי קשר של צד שלישי ללא הסכמתו.</li>
-          <li>תוכן שמפר זכויות יוצרים, סימני מסחר או פרטיות של אחרים.</li>
+          <li>{t("terms.3fc9db")}</li>
+          <li>{t("terms.beb3bb")}</li>
+          <li>{t("terms.f1fd7f")}</li>
+          <li>{t("terms.77e2db")}</li>
+          <li>{t("terms.c515ba")}</li>
+          <li>{t("terms.2ef6b7")}</li>
+          <li>{t("terms.a84b78")}</li>
         </ul>
         <p>
-          פרסום מודעה מהווה מתן רישיון לא בלעדי לאתר להציג את תוכנה ואת תמונותיה לצורך
-          תפעול השירות וקידומו.
+          {t("terms.34dd63")}
         </p>
       </section>
 
       <section>
-        <h2>4. אכיפה</h2>
+        <h2>{t("terms.deb747")}</h2>
         <p>
-          אנו רשאים להסיר מודעה, להשהות או לחסום חשבון בכל מקרה של הפרת התנאים, חשד
-          להונאה או פגיעה במשתמשים אחרים. כל פעולת אכיפה מתועדת ביומן פעולות פנימי.
-          במקרה של הסרה תישלח הודעה למפרסם, וניתן לפנות אלינו לבירור.
+          {t("terms.7515c8")}
         </p>
       </section>
 
       <section>
-        <h2>5. שירותים בתשלום</h2>
+        <h2>{t("terms.6eb325")}</h2>
         <p>
-          פרסום מודעה הוא ללא תשלום. חבילות קידום נרכשות מראש, פועלות למשך התקופה
-          שנרכשה, ואינן ניתנות להחזר לאחר תחילת הקידום — אלא אם המודעה הוסרה שלא באשמת
-          המפרסם.
+          {t("terms.e90c88")}
         </p>
       </section>
 
       <section>
-        <h2>6. הגבלת אחריות</h2>
+        <h2>{t("terms.023d8b")}</h2>
         <p>
-          האתר אינו אחראי לטיב, לאיכות, לבעלות או לחוקיות של פריטים ושירותים המפורסמים
-          בו, ואינו אחראי לנזק שנגרם כתוצאה מעסקה בין משתמשים. השירות ניתן כמות שהוא
-          (AS IS). מומלץ לפעול לפי{" "}
-          <Link href="/safety">מדריך הבטיחות</Link> בכל עסקה.
+          <Rich
+            message={t("terms.liability")}
+            slots={{ guide: (text) => <Link href="/safety">{text}</Link> }}
+          />
         </p>
       </section>
 
       <section>
-        <h2>7. שינויים בתנאים</h2>
+        <h2>{t("terms.497f04")}</h2>
         <p>
-          אנו רשאים לעדכן את התנאים מעת לעת. שינוי מהותי יפורסם באתר. המשך שימוש לאחר
-          העדכון מהווה הסכמה לתנאים המעודכנים.
+          {t("terms.64c7b9")}
         </p>
       </section>
 
       <section>
-        <h2>8. דין וסמכות שיפוט</h2>
+        <h2>{t("terms.da4baa")}</h2>
         <p>
-          על תנאים אלה יחולו דיני מדינת ישראל. סמכות השיפוט הבלעדית נתונה לבתי המשפט
-          המוסמכים במחוז תל אביב.
+          {t("terms.3af9b6")}
         </p>
       </section>
     </ContentPage>

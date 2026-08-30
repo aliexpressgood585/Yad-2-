@@ -2,89 +2,96 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ContentPage } from "@/components/content-page";
+import { Rich } from "@/i18n/rich";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 import { SITE } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "מדיניות פרטיות",
-  description: `כיצד ${SITE.name} אוסף, משתמש ומגן על המידע האישי שלכם.`,
-  alternates: { canonical: "/privacy" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("privacy.title"),
+    description: t("privacy.metaDescription", { site: SITE.name }),
+    alternates: { canonical: "/privacy" },
+  };
+}
 
-export default function PrivacyPage() {
+const COLLECTED: MessageKey[] = [
+  "privacy.collected.identity",
+  "privacy.collected.content",
+  "privacy.collected.location",
+  "privacy.collected.usage",
+];
+
+export default async function PrivacyPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="מדיניות פרטיות"
-      intro="אנחנו אוספים את המינימום ההכרחי כדי שהשירות יעבוד, ולא מוכרים מידע אישי לאף אחד."
-      updatedAt="אוגוסט 2026"
+      title={t("privacy.cb28e8")}
+      intro={t("privacy.5de7c3")}
+      updatedAt={t("privacy.2847f5")}
     >
       <section>
-        <h2>איזה מידע נאסף</h2>
+        <h2>{t("privacy.270d9f")}</h2>
         <ul>
-          <li>
-            <strong>פרטי חשבון:</strong> שם, מספר טלפון וכתובת אימייל. הטלפון משמש
-            לאימות ולקשר בין קונה למוכר.
-          </li>
-          <li>
-            <strong>תוכן שאתם מפרסמים:</strong> מודעות, תמונות והודעות בצ&apos;אט.
-          </li>
-          <li>
-            <strong>מיקום:</strong> העיר שבחרתם למודעה. מיקום מדויק מהדפדפן נאסף רק אם
-            אישרתם במפורש, ומשמש אך ורק למיון לפי מרחק — הוא אינו נשמר בשרת.
-          </li>
-          <li>
-            <strong>נתוני שימוש:</strong> צפיות במודעות וחשיפות טלפון, לצורך
-            הסטטיסטיקות שאנחנו מציגים למוכר ולזיהוי שימוש לרעה. כתובות IP נשמרות
-            כגיבוב (hash) בלבד, לא כטקסט גלוי.
-          </li>
+          {/*
+            * כל פריט הוא מחרוזת אחת עם תגית <label>, ולא כותרת מודגשת
+            * ואחריה טקסט נפרד. הפרדה לשניים מחייבת שהמודגש יבוא ראשון
+            * בכל שפה, וזה אינו נכון באנגלית.
+            */}
+          {COLLECTED.map((key) => (
+            <li key={key}>
+              <Rich message={t(key)} slots={{ label: (text) => <strong>{text}</strong> }} />
+            </li>
+          ))}
         </ul>
       </section>
 
       <section>
-        <h2>מה אנחנו לא עושים</h2>
+        <h2>{t("privacy.4c317d")}</h2>
         <ul>
-          <li>לא מוכרים ולא משכירים מידע אישי לצדדים שלישיים.</li>
-          <li>לא מציגים את מספר הטלפון שלכם בפומבי — הוא נחשף רק בלחיצה מפורשת.</li>
-          <li>לא שומרים נתוני מיקום מדויקים של מודעה — רק אזור מקורב.</li>
+          <li>{t("privacy.b18e55")}</li>
+          <li>{t("privacy.6f9a41")}</li>
+          <li>{t("privacy.cd5b57")}</li>
           <li>
-            לא שומרים את נתוני ה-EXIF של התמונות. כל המטא-דאטה, כולל קואורדינטות GPS,
-            נמחקת בשרת מיד בהעלאה.
+            {t("privacy.f475f9")}
           </li>
-          <li>לא משתמשים בעוגיות מעקב פרסומיות של צד שלישי.</li>
+          <li>{t("privacy.211921")}</li>
         </ul>
       </section>
 
       <section>
-        <h2>שמירה ומחיקה</h2>
+        <h2>{t("privacy.dbf8e4")}</h2>
         <p>
-          מודעות נשמרות 45 יום ולאחר מכן עוברות לסטטוס &quot;פג תוקף&quot;. מודעות
-          שנמחקו נשמרות במחיקה רכה לתקופה קצרה לצורכי אכיפה וטיפול בדיווחים, ואז נמחקות
-          לצמיתות. שיחות צ&apos;אט נשמרות כל עוד החשבון פעיל.
+          {t("privacy.8f8504")}
         </p>
       </section>
 
       <section>
-        <h2>הזכויות שלכם</h2>
+        <h2>{t("privacy.db72cb")}</h2>
         <p>
-          בהתאם לחוק הגנת הפרטיות התשמ&quot;א-1981, אתם רשאים לעיין במידע שנשמר עליכם,
-          לבקש את תיקונו או את מחיקתו. פנייה בנושא אפשרית דרך{" "}
-          <Link href="/help">עמוד העזרה</Link>.
+          <Rich
+            message={t("privacy.rights")}
+            slots={{ help: (text) => <Link href="/help">{text}</Link> }}
+          />
         </p>
       </section>
 
       <section>
-        <h2>עוגיות</h2>
+        <h2>{t("privacy.cc968e")}</h2>
         <p>
-          אנחנו משתמשים בעוגיות הכרחיות בלבד: שמירת ההתחברות, העדפת מצב תצוגה (בהיר או
-          לילה) ורשימת ההשוואה. פרטים נוספים ב<Link href="/cookies">מדיניות העוגיות</Link>.
+          <Rich
+            message={t("privacy.cookies")}
+            slots={{ policy: (text) => <Link href="/cookies">{text}</Link> }}
+          />
         </p>
       </section>
 
       <section>
-        <h2>אבטחת מידע</h2>
+        <h2>{t("privacy.88cc23")}</h2>
         <p>
-          סיסמאות נשמרות מוצפנות בלבד (bcrypt), קודי אימות נשמרים כגיבוב ופגים תוך חמש
-          דקות, וכל התעבורה מוצפנת ב-HTTPS. פעולות רגישות מוגבלות בקצב כדי למנוע שימוש
-          לרעה.
+          {t("privacy.5b4e84")}
         </p>
       </section>
     </ContentPage>

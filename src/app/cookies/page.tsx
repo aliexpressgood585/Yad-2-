@@ -1,83 +1,58 @@
 import type { Metadata } from "next";
 
 import { ContentPage } from "@/components/content-page";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 
-export const metadata: Metadata = {
-  title: "מדיניות עוגיות",
-  description: "אילו עוגיות ואחסון מקומי משמשים באתר ולמה.",
-  alternates: { canonical: "/cookies" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: t("cookies.d6aa07"),
+    description: t("cookies.intro"),
+    alternates: { canonical: "/cookies" },
+  };
+}
 
-const COOKIES = [
-  {
-    name: "authjs.session-token",
-    purpose: "שמירת ההתחברות שלכם בין ביקורים.",
-    duration: "30 יום",
-    type: "הכרחית",
-  },
-  {
-    name: "authjs.csrf-token",
-    purpose: "הגנה מפני זיוף בקשות בין אתרים (CSRF).",
-    duration: "הפעלה נוכחית",
-    type: "הכרחית",
-  },
-  {
-    name: "luach_sid",
-    purpose:
-      "מזהה אקראי לביקור הנוכחי, כדי לספור כמה ביקורים הגיעו מחיפוש לפנייה למוכר. " +
-      "אינו מקושר לזהות, אינו נשמר בין ביקורים ואינו נשלח לאף גורם חיצוני.",
-    duration: "30 דקות מהפעולה האחרונה",
-    type: "מדידה",
-  },
-  {
-    name: "theme",
-    purpose: "זכירת בחירת מצב התצוגה — פנים המכשיר או פנים היום.",
-    duration: "שנה",
-    type: "העדפה",
-  },
-  {
-    name: "luach-compare",
-    purpose: "רשימת המודעות שבחרתם להשוואה (אחסון מקומי, לא נשלח לשרת).",
-    duration: "עד לניקוי ידני",
-    type: "העדפה",
-  },
-  {
-    name: "luach-recent",
-    purpose: 'מזהי המודעות שנצפו לאחרונה, לרצועת "נצפו לאחרונה" (אחסון מקומי).',
-    duration: "עד לניקוי ידני",
-    type: "העדפה",
-  },
-  {
-    name: "luach-publish-draft",
-    purpose: "טיוטת המודעה שאתם כותבים, כדי שלא תאבד ברענון (אחסון מקומי).",
-    duration: "עד לפרסום או לניקוי",
-    type: "פונקציונלית",
-  },
+/*
+ * הטבלה מחזיקה מפתחות ולא טקסט. השם הטכני של העוגייה אינו מתורגם —
+ * הוא מה שהמשתמש יראה בכלי הדפדפן.
+ */
+const COOKIES: { name: string; purpose: MessageKey; duration: MessageKey; type: MessageKey }[] = [
+  { name: "authjs.session-token", purpose: "cookies.p.session", duration: "cookies.d.30days", type: "cookies.t.essential" },
+  { name: "authjs.csrf-token", purpose: "cookies.p.csrf", duration: "cookies.d.session", type: "cookies.t.essential" },
+  { name: "luach_sid", purpose: "cookies.p.sid", duration: "cookies.d.30minutes", type: "cookies.t.measurement" },
+  { name: "luach_locale", purpose: "cookies.p.locale", duration: "cookies.d.year", type: "cookies.t.preference" },
+  { name: "theme", purpose: "cookies.p.theme", duration: "cookies.d.year", type: "cookies.t.preference" },
+  { name: "luach-compare", purpose: "cookies.p.compare", duration: "cookies.d.untilCleared", type: "cookies.t.preference" },
+  { name: "luach-recent", purpose: "cookies.p.recent", duration: "cookies.d.untilCleared", type: "cookies.t.preference" },
+  { name: "luach-publish-draft", purpose: "cookies.p.draft", duration: "cookies.d.untilPublished", type: "cookies.t.functional" },
 ];
 
-export default function CookiesPage() {
+export default async function CookiesPage() {
+  const { t } = await getT();
+
   return (
     <ContentPage
-      title="מדיניות עוגיות"
-      intro="אנחנו משתמשים בעוגיות הכרחיות, בעוגיית מדידה אחת ובאחסון מקומי בלבד. אין באתר עוגיות מעקב פרסומיות ואין SDK של צד שלישי — המדידה נעשית בשרת שלנו ולא עוזבת אותו."
-      updatedAt="אוגוסט 2026"
+      title={t("cookies.d6aa07")}
+      intro={t("cookies.intro")}
+      updatedAt={t("cookies.2847f5")}
     >
       <div className="not-prose overflow-x-auto rounded-lg border border-border">
         <table className="w-full min-w-[560px] text-sm">
-          <caption className="sr-only">רשימת העוגיות והאחסון המקומי באתר</caption>
+          <caption className="sr-only">{t("cookies.7193f1")}</caption>
           <thead className="border-b border-border bg-muted/50">
             <tr>
               <th scope="col" className="p-3 text-start font-medium">
-                שם
+                {t("cookies.346853")}
               </th>
               <th scope="col" className="p-3 text-start font-medium">
-                מטרה
+                {t("cookies.9d66d6")}
               </th>
               <th scope="col" className="p-3 text-start font-medium">
-                תוקף
+                {t("cookies.4531ad")}
               </th>
               <th scope="col" className="p-3 text-start font-medium">
-                סוג
+                {t("cookies.27fd0e")}
               </th>
             </tr>
           </thead>
@@ -87,9 +62,9 @@ export default function CookiesPage() {
                 <td className="p-3 font-mono text-xs" dir="ltr">
                   {c.name}
                 </td>
-                <td className="p-3 text-muted-foreground">{c.purpose}</td>
-                <td className="p-3 text-muted-foreground">{c.duration}</td>
-                <td className="p-3 text-muted-foreground">{c.type}</td>
+                <td className="p-3 text-muted-foreground">{t(c.purpose)}</td>
+                <td className="p-3 text-muted-foreground">{t(c.duration)}</td>
+                <td className="p-3 text-muted-foreground">{t(c.type)}</td>
               </tr>
             ))}
           </tbody>
@@ -97,11 +72,9 @@ export default function CookiesPage() {
       </div>
 
       <section>
-        <h2>ניהול העוגיות</h2>
+        <h2>{t("cookies.ac519c")}</h2>
         <p>
-          אפשר למחוק עוגיות ואחסון מקומי בכל עת מהגדרות הדפדפן. שימו לב שמחיקת העוגיות
-          ההכרחיות תנתק אתכם מהחשבון, ומחיקת האחסון המקומי תאפס את רשימת ההשוואה ואת
-          המודעות שנצפו לאחרונה.
+          {t("cookies.9e64e7")}
         </p>
       </section>
     </ContentPage>
