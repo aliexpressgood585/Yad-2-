@@ -32,6 +32,62 @@ import { scanFile } from "./scan";
 
 const HEB = /[֐-׿]/;
 
+/**
+ * ישויות HTML שמופיעות בטקסט JSX.
+ *
+ * ב-JSX `&quot;` הוא מרכאה שהדפדפן מפענח. באותה מחרוזת בתוך קטלוג
+ * JavaScript אין מי שיפענח אותה, והמשתמש רואה `&quot;` כטקסט. הפענוח
+ * חייב לקרות בזמן החילוץ.
+ */
+const ENTITIES: Record<string, string> = {
+  "&quot;": '"',
+  "&apos;": "'",
+  "&nbsp;": " ",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&ndash;": "–",
+  "&mdash;": "—",
+  "&hellip;": "…",
+};
+
+/**
+ * טקסט JSX → מחרוזת קטלוג.
+ *
+ * שתי פעולות, ושתיהן נדרשות:
+ *
+ *   **פענוח ישויות** — ראה למעלה.
+ *
+ *   **כיווץ רווחים** — ב-JSX שורה חדשה והזחה מתכווצות לרווח אחד בזמן
+ *   הרינדור. מחרוזת שנשמרת עם ההזחה של הקוד בתוכה נראית זהה בפסקה,
+ *   אבל ב-`aria-label` ובכותרת היא נשלחת כמו שהיא לקורא מסך.
+ */
+function normalizeJsxText(raw: string): string {
+  let text = raw.trim().replace(/\s+/g, " ");
+  for (const [entity, char] of Object.entries(ENTITIES)) {
+    text = text.split(entity).join(char);
+  }
+  return text;
+}
+
+/**
+ * האם הטקסט הזה הוא רק חלק ממשפט שנקטע על ידי אלמנט.
+ *
+ * `<p>הטקסט <code>x</code> ממשיך כאן</p>` מייצר שני צמתי טקסט. חילוץ
+ * של כל אחד בנפרד מייצר שני מפתחות שאי אפשר לתרגם: סדר המילים
+ * באנגלית שונה, והמתרגם מקבל חצי משפט בלי הקשר. מקרים כאלה מדווחים
+ * לטיפול ידני — שם אפשר להפוך אותם למחרוזת אחת עם פרמטר.
+ */
+function isSplitSentence(node: ts.JsxText): boolean {
+  const parent = node.parent;
+  if (!ts.isJsxElement(parent) && !ts.isJsxFragment(parent)) return false;
+
+  const meaningful = parent.children.filter(
+    (child) => !(ts.isJsxText(child) && !child.text.trim()),
+  );
+  return meaningful.length > 1;
+}
+
 /** `src/components/publish/step-details.tsx` → `publish.stepDetails` */
 export function namespaceFor(file: string): string {
   const parts = file
@@ -84,16 +140,22 @@ export function extractFile(file: string, write: boolean): FileResult {
   const entries = new Map<string, string>();
   const edits: Edit[] = [];
   const skipped: FileResult["skipped"][number][] = [];
+  const splitSentences: number[] = [];
 
   const hits = scanFile(file).filter((h) => classify(h) !== "data");
 
   const walk = (node: ts.Node) => {
     /* טקסט JSX קבוע */
     if (ts.isJsxText(node) && HEB.test(node.text) && node.text.trim()) {
+      if (isSplitSentence(node)) {
+        splitSentences.push(sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1);
+        return;
+      }
       const raw = node.text;
-      const text = raw.trim();
-      const lead = raw.slice(0, raw.indexOf(text[0]!));
-      const tail = raw.slice(raw.indexOf(text[0]!) + text.length);
+      const trimmed = raw.trim();
+      const text = normalizeJsxText(raw);
+      const lead = raw.slice(0, raw.indexOf(trimmed[0]!));
+      const tail = raw.slice(raw.indexOf(trimmed[0]!) + trimmed.length);
       const key = keyFor(file, text);
       entries.set(key, text);
       /*
@@ -131,10 +193,25 @@ export function extractFile(file: string, write: boolean): FileResult {
   };
   walk(sf);
 
-  /* מה שנשאר אחרי המעבר — הכלי לא נגע בו */
+  /*
+   * מה שנשאר אחרי המעבר — הכלי לא נגע בו.
+   *
+   * ההשוואה על הצורה המנורמלת: הסריקה מחזירה את הטקסט הגולמי עם
+   * ישויות ה-HTML וההזחה, והקטלוג מחזיק אותו מפוענח ומכווץ. השוואה
+   * גולמית הייתה מדווחת כל מחרוזת עם `&quot;` כאילו לא טופלה.
+   */
   const handled = new Set([...entries.values()]);
+  const splitLines = new Set(splitSentences);
   for (const hit of hits) {
-    if (handled.has(hit.text)) continue;
+    if (handled.has(normalizeJsxText(hit.text))) continue;
+    if (splitLines.has(hit.line)) {
+      skipped.push({
+        line: hit.line,
+        reason: "משפט שנקטע על ידי אלמנט",
+        text: hit.text.replace(/\s+/g, " ").slice(0, 70),
+      });
+      continue;
+    }
     skipped.push({
       line: hit.line,
       reason: hit.kind === "tmplx" ? "תבנית עם ביטויים" : `מחרוזת מחוץ ל-JSX (${hit.kind})`,
@@ -172,6 +249,32 @@ if (process.argv[1]?.endsWith("extract.ts")) {
     }
   }
 
-  console.log(`\nמפתחות חדשים: ${all.size}`);
-  for (const [key, value] of all) console.log(`  ${JSON.stringify(key)}: ${JSON.stringify(value)},`);
+  /*
+   * הכתיבה לקטלוג העברי נעשית כאן ולא בהדפסה למסך.
+   *
+   * בהרצה הראשונה המפתחות רק הודפסו, והמיפוי בין מפתח לטקסט אבד ברגע
+   * שהקבצים נכתבו — הטקסט העברי כבר לא היה בקוד, והמפתח הוא גיבוב שאי
+   * אפשר להפוך. כלי שמשנה קבצים חייב לכתוב גם את מה שנדרש כדי להבין
+   * אותם.
+   */
+  if (!dry && all.size) {
+    const path = "src/i18n/messages/he.ts";
+    const catalog = readFileSync(path, "utf8");
+    const anchor = catalog.lastIndexOf("} as const;");
+    const existing = new Set([...catalog.matchAll(/^\s*"([^"]+)":/gm)].map((m) => m[1]));
+
+    const fresh = [...all].filter(([key]) => !existing.has(key));
+    if (fresh.length) {
+      const block =
+        `\n  /* --- ${files[0]?.replace(/^src\//, "") ?? ""} ---------------------------------- */\n` +
+        fresh.map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join("\n") +
+        "\n";
+      writeFileSync(path, catalog.slice(0, anchor) + block + catalog.slice(anchor));
+    }
+    console.log(`\nנכתבו ${fresh.length} מפתחות ל-${path}`);
+    console.log("נותר לכתוב את אותם מפתחות ב-en.ts וב-ar.ts — המהדר ידרוש אותם.");
+  } else {
+    console.log(`\nמפתחות חדשים: ${all.size}`);
+    for (const [key, value] of all) console.log(`  ${JSON.stringify(key)}: ${JSON.stringify(value)},`);
+  }
 }
