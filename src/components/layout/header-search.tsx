@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 /** השהיה בין הקלדה לעדכון התוצאות. */
@@ -27,6 +28,7 @@ function HeaderSearchInner({ className, inputId }: { className?: string; inputId
   const pathname = usePathname();
   const params = useSearchParams();
   const [value, setValue] = React.useState(params.get("q") ?? "");
+  const { t } = useT();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const typingRef = React.useRef(false);
 
@@ -100,7 +102,7 @@ function HeaderSearchInner({ className, inputId }: { className?: string; inputId
       className={cn("relative flex items-center", className)}
     >
       <label htmlFor={inputId} className="sr-only">
-        חיפוש מודעות
+        {t("search.listings")}
       </label>
       <Search
         className="pointer-events-none absolute start-3 size-4 text-muted-foreground"
@@ -115,7 +117,7 @@ function HeaderSearchInner({ className, inputId }: { className?: string; inputId
           typingRef.current = true;
           setValue(e.target.value);
         }}
-        placeholder="מה מחפשים? רכב, דירה, ספה…"
+        placeholder={t("search.placeholder")}
         autoComplete="off"
         className={cn(
           "h-10 w-full rounded-lg border border-input bg-muted/50 ps-9 pe-24 text-sm",
@@ -135,13 +137,13 @@ function HeaderSearchInner({ className, inputId }: { className?: string; inputId
           className="absolute end-[4.75rem] rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <X className="size-3.5" aria-hidden />
-          <span className="sr-only">ניקוי החיפוש</span>
+          <span className="sr-only">{t("search.clear")}</span>
         </button>
       ) : null}
 {/* חוק הברזל: כפתור מלא אחד למסך. הענבר שמור ל"פרסום מודעה"
           שבהדר, ולכן שליחת החיפוש היא כפתור מתאר. */}
       <Button type="submit" variant="outline" size="sm" className="absolute end-1 h-8">
-        חיפוש
+        {t("search.submit")}
       </Button>
     </form>
   );

@@ -24,9 +24,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/misc";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/i18n/client";
 
 export function HeaderUserMenu() {
   const { data: session, status } = useSession();
+  const { t } = useT();
 
   if (status === "loading") {
     return <Skeleton className="size-9 rounded-full" />;
@@ -45,21 +47,21 @@ export function HeaderUserMenu() {
            * בכלל, וקורא מסך מקריא "קישור". Lighthouse תפס את זה
            * כ-`link-name`, ובאתר אמיתי זה קישור שאי אפשר להשתמש בו.
            */}
-          <span className="sr-only sm:not-sr-only">התחברות</span>
+          <span className="sr-only sm:not-sr-only">{t("auth.login")}</span>
         </Link>
       </Button>
     );
   }
 
   const user = session.user;
-  const initials = (user.name ?? "מ").trim().charAt(0);
+  const initials = (user.name ?? t("user.anonymous")).trim().charAt(0);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           className="rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label="התפריט שלי"
+          aria-label={t("user.myMenu")}
         >
           <Avatar className="size-9">
             {user.image ? <AvatarImage src={user.image} alt="" /> : null}
@@ -79,45 +81,45 @@ export function HeaderUserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/my">
-            <LayoutDashboard aria-hidden /> המודעות שלי
+            <LayoutDashboard aria-hidden />  {t("nav.myListings")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/my/favorites">
-            <Heart aria-hidden /> מועדפים
+            <Heart aria-hidden />  {t("nav.favorites")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/my/searches">
-            <SearchIcon aria-hidden /> חיפושים שמורים
+            <SearchIcon aria-hidden />  {t("nav.savedSearches")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/my/messages">
-            <MessageCircle aria-hidden /> הודעות
+            <MessageCircle aria-hidden />  {t("nav.messages")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/my/notifications">
-            <Bell aria-hidden /> התראות
+            <Bell aria-hidden />  {t("nav.notifications")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/my/profile">
-            <UserIcon aria-hidden /> הפרופיל שלי
+            <UserIcon aria-hidden />  {t("nav.myProfile")}
           </Link>
         </DropdownMenuItem>
         {user.role === "ADMIN" ? (
           <DropdownMenuItem asChild>
             <Link href="/admin">
-              <Shield aria-hidden /> פאנל ניהול
+              <Shield aria-hidden />  {t("nav.adminPanel")}
             </Link>
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem destructive onClick={() => void signOut({ callbackUrl: "/" })}>
-          <LogOut aria-hidden /> התנתקות
+          <LogOut aria-hidden />  {t("auth.logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

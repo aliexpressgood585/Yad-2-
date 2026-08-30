@@ -16,21 +16,24 @@ import {
 } from "@/components/ui/dialog";
 import { CategoryIcon } from "@/components/category-icon";
 import { Separator } from "@/components/ui/separator";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 type NavCategory = { id: string; slug: string; name: string; icon: string };
 
-const SECONDARY_LINKS = [
-  { href: "/map", label: "תצוגת מפה" },
-  { href: "/search", label: "חיפוש מתקדם" },
-  { href: "/my/favorites", label: "מועדפים" },
-  { href: "/my/searches", label: "חיפושים שמורים" },
-  { href: "/compare", label: "השוואת מודעות" },
-  { href: "/help", label: "עזרה ובטיחות" },
+const SECONDARY_LINKS: { href: string; label: MessageKey }[] = [
+  { href: "/map", label: "chrome.mapView" },
+  { href: "/search", label: "nav.advancedSearch" },
+  { href: "/my/favorites", label: "nav.favorites" },
+  { href: "/my/searches", label: "nav.savedSearches" },
+  { href: "/compare", label: "nav.compare" },
+  { href: "/help", label: "nav.helpAndSafety" },
 ];
 
 export function MobileNav({ categories }: { categories: NavCategory[] }) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
+  const { t } = useT();
 
   // סגירת התפריט בכל ניווט
   React.useEffect(() => {
@@ -40,7 +43,7 @@ export function MobileNav({ categories }: { categories: NavCategory[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="פתיחת התפריט">
+        <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("nav.openMenu")}>
           <Menu aria-hidden />
         </Button>
       </DialogTrigger>
@@ -50,9 +53,9 @@ export function MobileNav({ categories }: { categories: NavCategory[] }) {
             <Logo href={null} />
           </div>
         </DialogTitle>
-        <DialogDescription className="sr-only">תפריט ניווט ראשי</DialogDescription>
+        <DialogDescription className="sr-only">{t("nav.mainMenu")}</DialogDescription>
 
-        <nav aria-label="קטגוריות" className="flex flex-col gap-0.5">
+        <nav aria-label={t("chrome.categories")} className="flex flex-col gap-0.5">
           {categories.map((c) => (
             <Link
               key={c.id}
@@ -67,20 +70,20 @@ export function MobileNav({ categories }: { categories: NavCategory[] }) {
 
         <Separator />
 
-        <nav aria-label="קישורים נוספים" className="flex flex-col gap-0.5">
+        <nav aria-label={t("nav.moreLinks")} className="flex flex-col gap-0.5">
           {SECONDARY_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className="rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             >
-              {l.label}
+              {t(l.label)}
             </Link>
           ))}
         </nav>
 
         <Button asChild className="mt-auto" size="lg">
-          <Link href="/publish">פרסום מודעה חינם</Link>
+          <Link href="/publish">{t("nav.publishFree")}</Link>
         </Button>
       </SheetContent>
     </Dialog>

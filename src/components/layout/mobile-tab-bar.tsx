@@ -4,19 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, Home, MessageCircle, PlusCircle, Search } from "lucide-react";
 
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/utils";
 
-const TABS = [
-  { href: "/", label: "בית", icon: Home, exact: true },
-  { href: "/search", label: "חיפוש", icon: Search },
-  { href: "/publish", label: "פרסום", icon: PlusCircle, highlight: true },
-  { href: "/my/favorites", label: "מועדפים", icon: Heart },
-  { href: "/my/messages", label: "הודעות", icon: MessageCircle },
+/*
+ * התוויות הן מפתחות ולא טקסט. המערך יושב ברמת המודול ומחושב פעם אחת
+ * לתהליך, ולכן טקסט מתורגם בתוכו היה נקבע לפי השפה של הבקשה הראשונה.
+ */
+const TABS: { href: string; label: MessageKey; icon: typeof Home; exact?: boolean; highlight?: boolean }[] = [
+  { href: "/", label: "tabBar.home", icon: Home, exact: true },
+  { href: "/search", label: "tabBar.search", icon: Search },
+  { href: "/publish", label: "tabBar.publish", icon: PlusCircle, highlight: true },
+  { href: "/my/favorites", label: "tabBar.favorites", icon: Heart },
+  { href: "/my/messages", label: "tabBar.messages", icon: MessageCircle },
 ];
 
 /** סרגל ניווט תחתון — מובייל בלבד. */
 export function MobileTabBar() {
   const pathname = usePathname();
+  const { t } = useT();
 
   // מוסתר במסכים שבהם הוא מפריע (אשף פרסום, צ'אט פתוח)
   if (/^\/(publish|admin)(\/|$)/.test(pathname) || /^\/my\/messages\/./.test(pathname)) {
@@ -25,7 +32,7 @@ export function MobileTabBar() {
 
   return (
     <nav
-      aria-label="ניווט מהיר"
+      aria-label={t("tabBar.quickNav")}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <ul className="grid grid-cols-5">
@@ -48,7 +55,7 @@ export function MobileTabBar() {
                   className={cn("size-5", tab.highlight && "size-7 text-primary")}
                   aria-hidden
                 />
-                {tab.label}
+                {t(tab.label)}
               </Link>
             </li>
           );

@@ -44,6 +44,46 @@ export const he = {
   "footer.cookies": "מדיניות עוגיות",
   "footer.rights": "כל הזכויות שמורות.",
   "footer.builtIn": "נבנה בישראל · אתר נגיש לפי תקן ישראלי 5568 (WCAG 2.1 AA)",
+  /* --- ניווט --------------------------------------------------------------- */
+  "nav.openMenu": "פתיחת התפריט",
+  "nav.mainMenu": "תפריט ניווט ראשי",
+  "nav.moreLinks": "קישורים נוספים",
+  "nav.publishFree": "פרסום מודעה חינם",
+  "nav.advancedSearch": "חיפוש מתקדם",
+  "nav.favorites": "מועדפים",
+  "nav.savedSearches": "חיפושים שמורים",
+  "nav.compare": "השוואת מודעות",
+  "nav.helpAndSafety": "עזרה ובטיחות",
+  "nav.myListings": "המודעות שלי",
+  "nav.messages": "הודעות",
+  "nav.notifications": "התראות",
+  "nav.myProfile": "הפרופיל שלי",
+  "nav.adminPanel": "פאנל ניהול",
+
+  /* --- סרגל תחתון ---------------------------------------------------------- */
+  "tabBar.quickNav": "ניווט מהיר",
+  "tabBar.home": "בית",
+  "tabBar.search": "חיפוש",
+  "tabBar.publish": "פרסום",
+  "tabBar.favorites": "מועדפים",
+  "tabBar.messages": "הודעות",
+
+  /* --- ערכת צבעים ---------------------------------------------------------- */
+  "theme.choose": "בחירת ערכת צבעים",
+  "theme.instrument": "פנים המכשיר",
+  "theme.day": "פנים היום",
+
+  /* --- חיפוש בהדר ---------------------------------------------------------- */
+  "search.listings": "חיפוש מודעות",
+  "search.placeholder": "מה מחפשים? רכב, דירה, ספה…",
+  "search.clear": "ניקוי החיפוש",
+  "search.submit": "חיפוש",
+
+  /* --- משתמש --------------------------------------------------------------- */
+  "user.myMenu": "התפריט שלי",
+  "user.anonymous": "משתמש",
+  "auth.login": "התחברות",
+  "auth.logout": "התנתקות",
 } as const;
 
 export type MessageKey = keyof typeof he;

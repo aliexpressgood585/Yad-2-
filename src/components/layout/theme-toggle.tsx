@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,23 +22,24 @@ import {
  */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { t } = useT();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="בחירת ערכת צבעים">
+        <Button variant="ghost" size="icon" aria-label={t("theme.choose")}>
           {/* עד שהרכיב נטען בצד לקוח מציגים אייקון קבוע כדי למנוע אי-התאמת hydration */}
           {!mounted || theme !== "light" ? <Moon aria-hidden /> : <Sun aria-hidden />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">
         <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon aria-hidden /> פנים המכשיר
+          <Moon aria-hidden />  {t("theme.instrument")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun aria-hidden /> פנים היום
+          <Sun aria-hidden />  {t("theme.day")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
