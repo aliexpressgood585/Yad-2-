@@ -7,8 +7,16 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/misc";
+import { LocaleProvider } from "@/i18n/client";
+import { LOCALE_DIR, type Locale } from "@/i18n/config";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  locale,
+  children,
+}: {
+  locale: Locale;
+  children: React.ReactNode;
+}) {
   const [queryClient] = React.useState(
     () =>
       new QueryClient({
@@ -24,7 +32,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <SessionProvider>
+    <LocaleProvider locale={locale}>
+      <SessionProvider>
       <QueryClientProvider client={queryClient}>
         {/*
          * פנים המכשיר היא ברירת המחדל, ואינה נגזרת מהעדפת מערכת ההפעלה.
@@ -45,7 +54,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             {children}
             <Toaster
               position="bottom-center"
-              dir="rtl"
+              dir={LOCALE_DIR[locale]}
               richColors
               closeButton
               toastOptions={{
@@ -57,6 +66,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
-    </SessionProvider>
+      </SessionProvider>
+    </LocaleProvider>
   );
 }

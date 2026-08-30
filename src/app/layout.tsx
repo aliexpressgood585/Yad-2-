@@ -8,6 +8,8 @@ import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { CompareBar } from "@/components/compare/compare-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { SiteJsonLd } from "@/components/seo/json-ld";
+import { LOCALE_DIR } from "@/i18n/config";
+import { getLocale, getT } from "@/i18n/server";
 import { PALETTE } from "@/lib/palette";
 import { SITE } from "@/lib/site";
 
@@ -91,21 +93,24 @@ export const viewport: Viewport = {
   themeColor: PALETTE.graphite,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  const { t } = await getT();
+
   return (
     <html
-      lang="he"
-      dir="rtl"
+      lang={locale}
+      dir={LOCALE_DIR[locale]}
       suppressHydrationWarning
       className={`dark ${display.variable} ${assistant.variable} ${data.variable}`}
     >
       <body className="min-h-dvh font-sans">
         <SiteJsonLd />
-        <Providers>
+        <Providers locale={locale}>
           <a href="#main" className="skip-link">
-            דילוג לתוכן הראשי
+            {t("chrome.skipToContent")}
           </a>
           <div className="flex min-h-dvh flex-col">
             <SiteHeader />
